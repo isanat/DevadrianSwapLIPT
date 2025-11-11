@@ -121,7 +121,6 @@ export function LiptRocket() {
     crashPointRef.current = crashPoint;
     let current = 1.0;
     let step = 0;
-    const maxSteps = 200;
 
     setGameStatus('in_progress');
     setMultiplier(1.0);
@@ -130,36 +129,43 @@ export function LiptRocket() {
 
     const tick = () => {
       step++;
+      
+      // 1. INCREMENTO LENTO E REALISTA
+      const baseGrowth = 0.001; // cresce devagar
+      const acceleration = 0.0008 * current; // acelera com o tempo
+      current += baseGrowth + acceleration;
+    
+      setMultiplier(current);
+    
+      // 2. PROGRESSO SUAVE E VISUAL
+      const progress = crashPoint > 1.01
+        ? Math.min(95, ((current - 1) / (crashPoint - 1)) * 95)
+        : 0;
+      setRocketPosition(progress);
+    
+      // 3. CRASH
       if (current >= crashPoint) {
-        if(intervalRef.current) clearInterval(intervalRef.current);
+        clearInterval(intervalRef.current!);
         setRocketPosition(100);
         setMultiplier(crashPoint);
         setGameStatus('crashed');
         toast({
-          variant: "destructive",
-          title: t('gameZone.rocket.toast.crashed.title'),
-          description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
+            variant: "destructive",
+            title: t('gameZone.rocket.toast.crashed.title'),
+            description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
         });
         return;
       }
-      
-      if (step > maxSteps && gameStatus !== 'cashed_out') {
-        if(intervalRef.current) clearInterval(intervalRef.current);
+    
+      // 4. SEGURANÇA
+      if (step > 300) {
+        clearInterval(intervalRef.current!);
         setGameStatus('crashed');
-        setMultiplier(crashPoint);
-        return;
       }
-
-      current *= 1.08;
-      
-      setMultiplier(current);
-
-      const progress = Math.min(95, ((current - 1) / (crashPoint - 1)) * 95);
-      setRocketPosition(progress);
     };
 
     intervalRef.current = setInterval(tick, 50);
-  }, [t, toast, gameStatus]);
+  }, [t, toast]);
 
 
   useEffect(() => {
