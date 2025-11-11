@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -129,10 +129,15 @@ export function LiptRocket() {
         if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current);
         }
+        // Cleanup pixi app on component unmount
+        if (appRef.current) {
+            appRef.current.destroy(true, { children: true, texture: true, baseTexture: true });
+            appRef.current = undefined;
+        }
     };
-  }, [canvasRef.current]);
+  }, [canvasRef]);
 
- const startGame = useCallback(() => {
+  const startGame = useCallback(() => {
     if (!appRef.current || !rocketRef.current) return;
     
     setGameStatus('in_progress');
@@ -160,11 +165,14 @@ export function LiptRocket() {
     const crashPoint = generateCrashPoint();
     crashPointRef.current = crashPoint;
     let current = 1.00;
+    let step = 0;
 
     audioRef.current.launch?.play().catch(()=>{});
     audioRef.current.smokePlayed = false;
 
     const animate = () => {
+        step++;
+
         const baseGrowth = 0.001; 
         const acceleration = 0.0008 * current;
         current += baseGrowth + acceleration;
@@ -172,7 +180,8 @@ export function LiptRocket() {
         setMultiplier(current);
 
         if (rocket && app) {
-            const progress = Math.min(0.9, (current - 1) / (crashPoint - 1));
+            const progress = crashPoint > 1.01 ? Math.min(0.95, (current - 1) / (crashPoint - 1)) : 0;
+            
             const targetY = app.screen.height - 80 - progress * (app.screen.height - 100);
             rocket.y = targetY; // Smooth Y movement
             
@@ -232,56 +241,58 @@ export function LiptRocket() {
             });
         }
         
-        if (current < crashPoint) {
+        if (current < crashPoint && step < 300) {
             animationFrameId.current = requestAnimationFrame(animate);
         } else {
             // --- CRASH ---
-            setMultiplier(crashPoint);
-            setGameStatus('crashed');
-            setCrashHistory(prev => [crashPoint, ...prev].slice(0, 10));
-            audioRef.current.crash?.play().catch(()=>{});
+            if(gameStatus === 'in_progress') { // Ensure crash logic only runs once
+              setMultiplier(crashPoint);
+              setGameStatus('crashed');
+              setCrashHistory(prev => [crashPoint, ...prev].slice(0, 10));
+              audioRef.current.crash?.play().catch(()=>{});
 
-            // Explosion effect
-            if(rocket) {
-                rocket.alpha = 0; // Hide rocket
-                if (rocket.flame) rocket.flame.visible = false;
+              // Explosion effect
+              if(rocket) {
+                  rocket.alpha = 0; // Hide rocket
+                  if (rocket.flame) rocket.flame.visible = false;
 
-                for (let i = 0; i < 30; i++) {
-                    const explosion_p = new PIXI.Graphics() as PIXI.Graphics & { vx: number; vy: number };
-                    explosion_p.beginFill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a, 1);
-                    explosion_p.drawCircle(0, 0, Math.random() * 4 + 1);
-                    explosion_p.endFill();
-                    explosion_p.x = rocket.x;
-                    explosion_p.y = rocket.y;
-                    explosion_p.vx = (Math.random() - 0.5) * (Math.random() * 12);
-                    explosion_p.vy = (Math.random() - 0.5) * (Math.random() * 12);
-                    app.stage.addChild(explosion_p);
+                  for (let i = 0; i < 30; i++) {
+                      const explosion_p = new PIXI.Graphics() as PIXI.Graphics & { vx: number; vy: number };
+                      explosion_p.beginFill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a, 1);
+                      explosion_p.drawCircle(0, 0, Math.random() * 4 + 1);
+                      explosion_p.endFill();
+                      explosion_p.x = rocket.x;
+                      explosion_p.y = rocket.y;
+                      explosion_p.vx = (Math.random() - 0.5) * (Math.random() * 12);
+                      explosion_p.vy = (Math.random() - 0.5) * (Math.random() * 12);
+                      app.stage.addChild(explosion_p);
 
-                    const fadeAway = () => {
-                        explosion_p.x += explosion_p.vx;
-                        explosion_p.y += explosion_p.vy;
-                        explosion_p.alpha -= 0.03;
-                        if (explosion_p.alpha > 0) {
-                            requestAnimationFrame(fadeAway);
-                        } else {
-                            app.stage.removeChild(explosion_p);
-                            explosion_p.destroy();
-                        }
-                    };
-                    fadeAway();
-                }
+                      const fadeAway = () => {
+                          explosion_p.x += explosion_p.vx;
+                          explosion_p.y += explosion_p.vy;
+                          explosion_p.alpha -= 0.03;
+                          if (explosion_p.alpha > 0) {
+                              requestAnimationFrame(fadeAway);
+                          } else {
+                              app.stage.removeChild(explosion_p);
+                              explosion_p.destroy();
+                          }
+                      };
+                      fadeAway();
+                  }
+              }
+
+              toast({
+                  variant: "destructive",
+                  title: t('gameZone.rocket.toast.crashed.title'),
+                  description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
+              });
             }
-
-            toast({
-                variant: "destructive",
-                title: t('gameZone.rocket.toast.crashed.title'),
-                description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
-            });
         }
     };
 
     animationFrameId.current = requestAnimationFrame(animate);
-  }, [t, toast]);
+  }, [t, toast, gameStatus]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
