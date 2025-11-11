@@ -10,7 +10,7 @@ export function StatsGroup() {
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <StatsCard
             title="LIPT Token Price"
-            value={`$${liptPrice.toFixed(2)}`}
+            value={`$${liptPrice.toFixed(4)}`}
             icon={<TrendingUp className="h-5 w-5 text-primary" />}
             description="Current market price"
         />

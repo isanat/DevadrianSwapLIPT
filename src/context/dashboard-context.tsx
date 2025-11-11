@@ -131,7 +131,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   useEffect(() => {
     const priceInterval = setInterval(() => {
       setLiptPrice(prevPrice => {
-        const change = (Math.random() - 0.5) * 0.1; // small random change
+        const change = (Math.random() - 0.5) * 0.01; // small random change
         const newPrice = prevPrice + change;
         return newPrice > 0 ? newPrice : 0.01; // ensure price doesn't go below zero
       });
