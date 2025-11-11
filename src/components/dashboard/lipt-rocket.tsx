@@ -8,12 +8,31 @@ import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
-import { Rocket, Star } from 'lucide-react';
+import { Rocket, Star, Zap } from 'lucide-react';
 
 const RocketIcon = ({ crashed }: { crashed: boolean }) => (
   <div className={cn("relative transition-all duration-500 w-16 h-16 md:w-20 md:h-20", crashed && "opacity-0 scale-50 rotate-45")}>
     <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-8 bg-orange-400 rounded-t-full blur-md transition-all duration-300", crashed ? "opacity-0" : "opacity-100")} />
     <Rocket className={cn("w-full h-full text-slate-300 -rotate-45 transition-transform duration-300", crashed && "rotate-0")} />
+  </div>
+);
+
+const Explosion = () => (
+  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div className="relative">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-3 h-3 bg-red-500 rounded-full animate-ping"
+          style={{
+            top: `${Math.sin(i * 30 * Math.PI / 180) * 30}px`,
+            left: `${Math.cos(i * 30 * Math.PI / 180) * 30}px`,
+            animationDelay: `${i * 0.05}s`,
+          }}
+        />
+      ))}
+      <Zap className="w-16 h-16 text-yellow-400 animate-pulse" />
+    </div>
   </div>
 );
 
@@ -110,9 +129,21 @@ export function LiptRocket() {
   const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
   const [rocketPosition, setRocketPosition] = useState(0);
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
+  const [crashHistory, setCrashHistory] = useState<number[]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const crashPointRef = useRef(1.0);
+  const audioRef = useRef<{ launch?: HTMLAudioElement; crash?: HTMLAudioElement }>({});
+
+  useEffect(() => {
+    // Carregar sons (coloca os arquivos em /public/sounds/)
+    audioRef.current.launch = new Audio('/sounds/rocket-launch.mp3');
+    audioRef.current.crash = new Audio('/sounds/explosion.mp3');
+    return () => {
+      audioRef.current.launch?.pause();
+      audioRef.current.crash?.pause();
+    };
+  }, []);
 
   const startGame = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -127,37 +158,42 @@ export function LiptRocket() {
     setRocketPosition(0);
     setCashedOutMultiplier(null);
 
+    // Som de lançamento
+    audioRef.current.launch?.play().catch(() => {});
+
     const tick = () => {
       step++;
-      
-      // 1. INCREMENTO LENTO E REALISTA
-      const baseGrowth = 0.001; // cresce devagar
-      const acceleration = 0.0008 * current; // acelera com o tempo
-      current += baseGrowth + acceleration;
-    
+      current += 0.001 + 0.0008 * current;
       setMultiplier(current);
-    
-      // 2. PROGRESSO SUAVE E VISUAL
+
       const progress = crashPoint > 1.01
         ? Math.min(95, ((current - 1) / (crashPoint - 1)) * 95)
         : 0;
       setRocketPosition(progress);
-    
-      // 3. CRASH
+
       if (current >= crashPoint) {
         clearInterval(intervalRef.current!);
         setRocketPosition(100);
         setMultiplier(crashPoint);
         setGameStatus('crashed');
+
+        // Atualiza histórico
+        setCrashHistory(prev => {
+          const updated = [crashPoint, ...prev].slice(0, 10);
+          return updated;
+        });
+
+        // Som de explosão
+        audioRef.current.crash?.play().catch(() => {});
+
         toast({
-            variant: "destructive",
-            title: t('gameZone.rocket.toast.crashed.title'),
-            description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
+          variant: "destructive",
+          title: t('gameZone.rocket.toast.crashed.title'),
+          description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
         });
         return;
       }
-    
-      // 4. SEGURANÇA
+
       if (step > 300) {
         clearInterval(intervalRef.current!);
         setGameStatus('crashed');
@@ -166,7 +202,6 @@ export function LiptRocket() {
 
     intervalRef.current = setInterval(tick, 50);
   }, [t, toast]);
-
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -204,7 +239,7 @@ export function LiptRocket() {
     if (gameStatus !== 'in_progress') return;
 
     if (intervalRef.current) clearInterval(intervalRef.current);
-    
+
     const bet = parseFloat(betAmount);
     const winnings = bet * multiplier;
     updateLiptBalance(winnings);
@@ -248,19 +283,35 @@ export function LiptRocket() {
         return null;
     }
   };
-  
-  const debugMultiplier = gameStatus === 'crashed' ? crashPointRef.current.toFixed(2) : '...';
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4 p-4 rounded-lg bg-background/50 border">
+      {/* Histórico de Crashes */}
+      {crashHistory.length > 0 && (
+        <div className="flex gap-1 flex-wrap justify-center">
+          {crashHistory.map((m, i) => (
+            <span
+              key={i}
+              className={cn(
+                "px-2 py-1 text-xs font-bold rounded",
+                m < 2 ? "bg-red-900 text-red-300" : m < 5 ? "bg-yellow-900 text-yellow-300" : "bg-green-900 text-green-300"
+              )}
+            >
+              {m.toFixed(2)}x
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="w-full h-72 md:h-80 bg-gradient-to-b from-gray-900 via-indigo-900/80 to-blue-900/50 rounded-lg overflow-hidden relative flex items-end justify-center border-b-2 border-primary/20">
         <StarField />
         {[1, 2, 3].map(i => <ShootingStar key={i} id={i} />)}
+        {gameStatus === 'crashed' && <Explosion />}
 
         <div
           className="absolute bottom-4 transition-all duration-75 ease-out"
           style={{ 
-            transform: `translateY(-${rocketPosition * 3}px) scale(${1 + rocketPosition / 1000})`
+            transform: `translateY(-${rocketPosition * 3}px) scale(${1 + rocketPosition / 800})`
           }}
         >
           <RocketIcon crashed={gameStatus === 'crashed'} />
@@ -281,7 +332,6 @@ export function LiptRocket() {
               {gameStatus === 'waiting' ? '...' : `${multiplier.toFixed(2)}x`}
             </h2>
           )}
-           {/* <div className="text-xs text-yellow-300 mt-12">Próximo crash: {debugMultiplier}x</div> */}
         </div>
       </div>
 
