@@ -8,27 +8,29 @@ import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
+
 // 🎯 Segmentos com pesos (probabilidades) ajustados para vantagem da casa
+// Cores inspiradas na imagem e com bom contraste
 const segments = [
     // --- Vitória da Casa (Baixo Retorno/Perda) ---
-    { value: 0,   label: '0x',   color: 'hsl(0 60% 30%)',    weight: 12 }, // Vermelho Escuro (Perda Total)
-    { value: 0.5, label: '0.5x', color: 'hsl(25 80% 45%)',   weight: 10 }, // Laranja Escuro (Perda Parcial)
-    { value: 0,   label: '0x',   color: 'hsl(0 0% 15%)',     weight: 12 }, // Preto Fosco (Perda Total)
-    { value: 0.5, label: '0.5x', color: 'hsl(40 80% 45%)',   weight: 10 }, // Ouro Escuro (Perda Parcial)
+    { value: 0,   label: '0x',   color: '#DC2626',    weight: 12 }, // Vermelho Vivo (Perda Total)
+    { value: 0.5, label: '0.5x', color: '#EA580C',    weight: 10 }, // Laranja Vivo (Perda Parcial)
+    { value: 0,   label: '0x',   color: '#1F2937',    weight: 12 }, // Cinza Escuro/Preto (Perda Total)
+    { value: 0.5, label: '0.5x', color: '#FCD34D',    weight: 10 }, // Amarelo Vivo (Perda Parcial)
 
     // --- Neutro (1x) ---
-    { value: 1,   label: '1x',   color: 'hsl(200 60% 50%)',  weight: 8 },  // Azul Médio
-    { value: 1,   label: '1x',   color: 'hsl(120 40% 50%)',  weight: 8 },  // Verde Floresta
+    { value: 1,   label: '1x',   color: '#3B82F6',    weight: 8 },  // Azul Vivo
+    { value: 1,   label: '1x',   color: '#22C55E',    weight: 8 },  // Verde Vivo
 
     // --- Vitória do Jogador (Alto Retorno) ---
-    { value: 1.3, label: '1.3x', color: 'hsl(280 60% 60%)',  weight: 10 }, // Lilás Forte
-    { value: 2,   label: '2x',   color: 'hsl(270 80% 65%)',  weight: 6 },  // Roxo Vibrante
-    { value: 3,   label: '3x',   color: 'hsl(320 80% 70%)',  weight: 4 },  // Rosa Neon
+    { value: 1.3, label: '1.3x', color: '#A855F7',    weight: 10 }, // Roxo Vivo
+    { value: 2,   label: '2x',   color: '#EC4899',    weight: 6 },  // Rosa Vibrante
+    { value: 3,   label: '3x',   color: '#F43F5E',    weight: 4 },  // Vermelho-Rosa Intenso
     
     // --- Outros Neutros/Perdas ---
-    { value: 0,   label: '0x',   color: 'hsl(15 50% 35%)',   weight: 12 }, // Marrom (Perda Total)
-    { value: 0.5, label: '0.5x', color: 'hsl(50 50% 50%)',   weight: 10 }, // Amarelo (Perda Parcial)
-    { value: 1,   label: '1x',   color: 'hsl(0 0% 80%)',     weight: 8 },  // Cinza Claro
+    { value: 0,   label: '0x',   color: '#78350F',    weight: 12 }, // Marrom Escuro (Perda Total)
+    { value: 0.5, label: '0.5x', color: '#EAB308',    weight: 10 }, // Amarelo Dourado (Perda Parcial)
+    { value: 1,   label: '1x',   color: '#D1D5DB',    weight: 8 },  // Cinza Claro (1x)
 ];
 
 
@@ -59,53 +61,85 @@ const getWeightedRandomSegment = () => {
   return segments[segments.length - 1];
 };
 
+
 const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
   const transitionStyle = isSpinning
-    ? { transition: 'transform 8s cubic-bezier(0.25, 1, 0.5, 1)' } // ease-out-cubic
+    ? { transition: 'transform 8s cubic-bezier(0.25, 1, 0.5, 1)' } // Animação mais suave e lenta
     : { transition: 'none' };
 
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto my-8 shadow-[inset_0_0_20px_rgba(255,255,255,0.3),0_0_25px_rgba(0,0,0,0.7)] rounded-full">
-      {/* Ponteiro */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-accent z-20" />
+    <div className="relative w-72 h-72 md:w-96 md:h-96 mx-auto my-8 flex items-center justify-center">
+      {/* Borda externa vermelha com bolinhas douradas */}
+      <div className="absolute w-full h-full rounded-full bg-red-600 shadow-lg flex items-center justify-center p-2">
+        {/* Pinos Dourados */}
+        {Array.from({ length: 24 }).map((_, i) => (
+          <div 
+            key={i}
+            className="absolute w-4 h-4 rounded-full bg-yellow-400 shadow-md"
+            style={{
+              transform: `rotate(${(360 / 24) * i}deg) translate(185px) `, // Ajuste 'translate' para o tamanho da borda
+              transformOrigin: 'center',
+              left: '50%',
+              top: '50%',
+              marginLeft: '-8px', // Centraliza o pino
+              marginTop: '-8px'  // Centraliza o pino
+            }}
+          />
+        ))}
 
-      <div
-        className={cn('relative w-full h-full rounded-full flex items-center justify-center')}
-        style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
-      >
-        {/* Fundo da roda */}
+        {/* Container da roleta interna */}
         <div
-          className="absolute w-full h-full rounded-full border-4 border-primary/40"
-          style={{ background: getConicGradient() }}
-        />
+          className={cn(
+            'relative w-[calc(100%-24px)] h-[calc(100%-24px)] rounded-full flex items-center justify-center', // Subtrai o padding da borda
+            'shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]' // Sombra interna para profundidade
+          )}
+          style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
+        >
+          {/* Fundo da roda com gradiente */}
+          <div
+            className="absolute w-full h-full rounded-full border-4 border-gray-700" // Borda sutil entre segmentos e centro
+            style={{ background: getConicGradient() }}
+          />
 
-        {/* Marcadores de texto */}
-        {segments.map((seg, i) => {
-          const startAngle =
-            -90 +
-            (segments.slice(0, i).reduce((sum, s) => sum + (s.weight / totalWeight) * 360, 0) +
-              (seg.weight / totalWeight) * 180);
-          return (
-            <span
-              key={i}
-              className="absolute left-1/2 top-1/2 text-white text-sm font-bold drop-shadow-md"
-              style={{
-                transform: `rotate(${startAngle}deg) translateX(110px) rotate(${-startAngle}deg)`,
-                color: seg.color === 'hsl(0 0% 95%)' ? '#000' : '#fff'
-              }}
-            >
-              {seg.label}
+          {/* Marcadores de texto */}
+          {segments.map((seg, i) => {
+            const startAngle =
+              -90 +
+              (segments.slice(0, i).reduce((sum, s) => sum + (s.weight / totalWeight) * 360, 0) +
+                (seg.weight / totalWeight) * 180);
+            return (
+              <span
+                key={i}
+                className="absolute left-1/2 top-1/2 text-sm md:text-base font-extrabold rotate-[270deg]" // Rotaciona 270 para ficar de lado
+                style={{
+                  // Move o texto para a borda interna
+                  transform: `rotate(${startAngle}deg) translateX(110px) rotate(${90 - startAngle}deg)`, // Ajuste para texto de lado
+                  color: seg.color === '#D1D5DB' || seg.color === '#FCD34D' ? '#000' : '#fff', // Texto preto em cores claras
+                  textShadow: '0 0 5px rgba(0,0,0,0.8)'
+                }}
+              >
+                {seg.label}
+              </span>
+            );
+          })}
+
+          {/* Círculo central "SPIN" */}
+          <div className="absolute w-28 h-28 rounded-full bg-red-600 border-4 border-yellow-400 z-10 shadow-[0_0_15px_rgba(255,255,0,0.7)] flex items-center justify-center">
+            <span className="text-3xl font-black text-yellow-400 uppercase">
+              Spin
             </span>
-          );
-        })}
-
-        {/* Círculo central */}
-        <div className="absolute w-16 h-16 rounded-full bg-card border-4 border-primary z-10 shadow-md" />
+          </div>
+        </div>
       </div>
+
+      {/* Ponteiro sobre a borda */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-red-700 shadow-xl z-40 transform -translate-y-full" />
+
     </div>
   );
 };
 
+// ... (O restante do componente WheelOfFortune permanece o mesmo)
 export function WheelOfFortune() {
   const { t } = useI18n();
   const { toast } = useToast();
