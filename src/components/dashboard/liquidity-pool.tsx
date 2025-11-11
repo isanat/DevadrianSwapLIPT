@@ -6,12 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplets, Plus, HelpCircle } from 'lucide-react';
+import { Droplets, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useDashboard } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/context/i18n-context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpTooltip } from './help-tooltip';
 
 export function LiquidityPool() {
   const { 
@@ -62,18 +62,10 @@ export function LiquidityPool() {
             <Droplets className="h-6 w-6 text-primary" />
             {t('liquidityPool.title')}
           </CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <HelpCircle size={18} className="text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>{t('liquidityPool.tooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HelpTooltip
+            title={t('liquidityPool.title')}
+            content={<p>{t('liquidityPool.tooltip')}</p>}
+          />
         </div>
         <CardDescription>{t('liquidityPool.description')}</CardDescription>
       </CardHeader>

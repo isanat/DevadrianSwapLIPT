@@ -5,14 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pickaxe, Bolt, Clock, Zap, HelpCircle } from 'lucide-react';
+import { Pickaxe, Bolt, Zap } from 'lucide-react';
 import { useDashboard, MINING_PLANS } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpTooltip } from './help-tooltip';
 
 const ActiveMiner = ({ miner }: { miner: any }) => {
   const [progress, setProgress] = useState(0);
@@ -74,8 +74,14 @@ const ActiveMiner = ({ miner }: { miner: any }) => {
 export function MiningPool() {
   const { miningPower, minedRewards, liptBalance, activateMiner, claimMinedRewards, miners } = useDashboard();
   const [selectedPlan, setSelectedPlan] = useState(MINING_PLANS[0]);
+  const [displayLiptBalance, setDisplayLiptBalance] = React.useState('0');
+
   const { toast } = useToast();
   const { t } = useI18n();
+
+  useEffect(() => {
+    setDisplayLiptBalance(liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+  }, [liptBalance]);
 
   const handleActivateMiner = () => {
     if(liptBalance >= selectedPlan.cost) {
@@ -104,18 +110,10 @@ export function MiningPool() {
             <Pickaxe className="h-6 w-6 text-primary" />
             {t('miningPool.title')}
           </CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <HelpCircle size={18} className="text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>{t('miningPool.tooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HelpTooltip
+            title={t('miningPool.title')}
+            content={<p>{t('miningPool.tooltip')}</p>}
+          />
         </div>
         <CardDescription>{t('miningPool.description')}</CardDescription>
       </CardHeader>
@@ -163,7 +161,7 @@ export function MiningPool() {
               </div>
               <div className="space-y-2">
                 <Button className="w-full" variant="default" onClick={handleActivateMiner}>{t('miningPool.activateButton')} '{selectedPlan.name}'</Button>
-                <p className="text-xs text-muted-foreground text-center">{t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
+                <p className="text-xs text-muted-foreground text-center">{t('stakingPool.walletBalance')}: {displayLiptBalance} LIPT</p>
               </div>
             </div>
           </TabsContent>

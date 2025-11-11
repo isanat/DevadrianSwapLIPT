@@ -4,10 +4,9 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Crown, HelpCircle } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
+import { HelpTooltip } from './help-tooltip';
 
 const mockLeaderboardData = [
   { rank: 1, name: 'CryptoKing', commission: 2500.75, avatar: '1' },
@@ -40,18 +39,10 @@ export function Leaderboard() {
             <Crown className="h-6 w-6 text-primary" />
             {t('leaderboard.title')}
           </CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <HelpCircle size={18} className="text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>{t('leaderboard.tooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HelpTooltip
+            title={t('leaderboard.title')}
+            content={<p>{t('leaderboard.tooltip')}</p>}
+          />
         </div>
         <CardDescription>{t('leaderboard.description')}</CardDescription>
       </CardHeader>

@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Banknote, ArrowRightLeft, HelpCircle } from 'lucide-react';
+import { Banknote, ArrowRightLeft } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/context/i18n-context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpTooltip } from './help-tooltip';
 
 export function TokenPurchase() {
   const { liptPrice, purchaseLipt, usdtBalance } = useDashboard();
@@ -60,18 +60,10 @@ export function TokenPurchase() {
             <Banknote className="h-6 w-6 text-primary" />
             {t('tokenPurchase.title')}
           </CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <HelpCircle size={18} className="text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>{t('tokenPurchase.tooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HelpTooltip
+            title={t('tokenPurchase.title')}
+            content={<p>{t('tokenPurchase.tooltip')}</p>}
+          />
         </div>
         <CardDescription>{t('tokenPurchase.description')}</CardDescription>
       </CardHeader>

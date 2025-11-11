@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Copy, Gift, Users, Award, Star, HelpCircle } from 'lucide-react';
+import { Copy, Gift, Users, Award, Star } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from '@/context/dashboard-context';
 import { useI18n } from '@/context/i18n-context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpTooltip } from './help-tooltip';
 
 const mockReferrals = [
     { id: 1, level: 1, members: 5, commission: 120.50 },
@@ -43,18 +43,10 @@ export function ReferralDashboard() {
               <Gift className="h-6 w-6 text-primary" />
               {t('referralProgram.title')}
             </CardTitle>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                    <HelpCircle size={18} className="text-muted-foreground" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p>{t('referralProgram.tooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <HelpTooltip
+              title={t('referralProgram.title')}
+              content={<p>{t('referralProgram.tooltip')}</p>}
+            />
           </div>
           <CardDescription>{t('referralProgram.description')}</CardDescription>
         </CardHeader>

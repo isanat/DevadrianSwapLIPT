@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Archive, Download, Clock, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Archive, Download, Clock, AlertTriangle } from 'lucide-react';
 import { useDashboard, STAKING_PLANS } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HelpTooltip } from './help-tooltip';
 
 const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: string, penalty: number) => void; }) => {
   const { unstakeLipt } = useDashboard();
@@ -148,18 +148,10 @@ export function StakingPool() {
             <Archive className="h-6 w-6 text-primary" />
             {t('stakingPool.title')}
           </CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <HelpCircle size={18} className="text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>{t('stakingPool.tooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HelpTooltip
+            title={t('stakingPool.title')}
+            content={<p>{t('stakingPool.tooltip')}</p>}
+          />
         </div>
         <CardDescription>{t('stakingPool.description')}</CardDescription>
       </CardHeader>
