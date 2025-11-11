@@ -16,11 +16,12 @@ const segments = [
     { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
     { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
     { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5  }, // Purple
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
-    { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 }, // Blue
     { value: 0.5, label: '0.5x', color: '#f97316', weight: 25 }, // Orange
+    { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 }, // Blue
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red (Duplicate for house edge)
     { value: 1,   label: '1x',   color: '#16a34a', weight: 15 }, // Darker Green
 ];
+
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
@@ -100,7 +101,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
               key={i}
               className="absolute left-1/2 top-1/2 text-white text-lg font-bold drop-shadow-md"
               style={{
-                transform: `rotate(${textAngle}deg) translate(85px) rotate(${-textAngle}deg)`,
+                transform: `rotate(${textAngle}deg) translate(105px) rotate(${-textAngle}deg)`,
                 transformOrigin: 'center',
               }}
             >
@@ -172,7 +173,7 @@ export function WheelOfFortune() {
 
     // A rotação final deve apontar o ponteiro para o targetAngle
     const randomSpins = Math.floor(Math.random() * 4) + 8; // 8 a 11 voltas
-    const finalRotation = (randomSpins * 360) - targetAngle + 90; // +90 para ajustar para o ponteiro de cima
+    const finalRotation = (randomSpins * 360) - targetAngle;
     
     setRotation(finalRotation);
 
