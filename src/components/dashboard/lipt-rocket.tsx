@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Rocket, Star } from 'lucide-react';
 
 const RocketIcon = ({crashed}: {crashed: boolean}) => (
-  <div className={cn("relative transition-transform duration-500 w-16 h-16 md:w-20 md:h-20", crashed && "opacity-0 scale-50")}>
+  <div className={cn("relative transition-all duration-500 w-16 h-16 md:w-20 md:h-20", crashed && "opacity-0 scale-50 rotate-45")}>
       <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-8 bg-orange-400 rounded-t-full blur-md transition-all duration-300", crashed ? "opacity-0" : "opacity-100")}/>
       <Rocket className={cn("w-full h-full text-slate-300 -rotate-45 transition-transform duration-300", crashed && "rotate-0")}/>
   </div>
@@ -94,14 +94,10 @@ export function LiptRocket() {
 
   const calculateCrashPoint = () => {
     const r = Math.random();
-    // This formula creates a distribution where crashes at low multipliers are more common.
-    // 99 / (100 - r * 100) -> A number between 0.99 and infinity.
-    // We cap it at a reasonable max and ensure it's at least 1.01.
     const crashPoint = 99 / (100 - r * 100);
     return Math.max(1.01, crashPoint);
   };
   
-  // Use a ref to get the latest gameStatus inside setInterval/requestAnimationFrame
   const gameStatusRef = useRef(gameStatus);
   useEffect(() => {
     gameStatusRef.current = gameStatus;
@@ -115,30 +111,26 @@ export function LiptRocket() {
     let animationFrameId: number;
 
     const gameLoop = () => {
-      const elapsedTime = (Date.now() - startTime) / 1000; // time in seconds
-      // Exponential growth, but slower and controlled
-      currentMultiplier = Math.pow(1.05, elapsedTime * 4) + 0.01 * elapsedTime;
-
-      if (gameStatusRef.current === 'cashed_out' || gameStatusRef.current === 'crashed') {
+      if (gameStatusRef.current !== 'in_progress') {
         cancelAnimationFrame(animationFrameId);
         return;
       }
       
+      const elapsedTime = (Date.now() - startTime) / 1000;
+      currentMultiplier = 1 + 0.1 * Math.pow(elapsedTime, 1.5);
+
       if (currentMultiplier >= crashPoint) {
         setGameStatus('crashed');
         setMultiplier(crashPoint);
         setRocketPosition(100);
-        if (gameStatusRef.current !== 'cashed_out') {
-           toast({
-            variant: "destructive",
-            title: t('gameZone.rocket.toast.crashed.title'),
-            description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: t('gameZone.rocket.toast.crashed.title'),
+          description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
+        });
       } else {
         setMultiplier(currentMultiplier);
-        // The visual progress is now smoother and logarithmic, giving a sense of acceleration
-        const progress = Math.min(90, (Math.log10(currentMultiplier) / 2) * 100);
+        const progress = Math.min(90, (Math.log(currentMultiplier) / Math.log(crashPoint)) * 100);
         setRocketPosition(progress);
         animationFrameId = requestAnimationFrame(gameLoop);
       }
@@ -218,6 +210,7 @@ export function LiptRocket() {
         <StarField />
         <ShootingStar />
         <ShootingStar />
+        <ShootingStar />
 
         <div 
           className="absolute bottom-4 transition-transform duration-100 ease-linear"
@@ -237,7 +230,7 @@ export function LiptRocket() {
                     </span>
                 </div>
             ) : (
-                <h2 className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg">
+                <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
                     {gameStatus === 'waiting' ? '...' : `${multiplier.toFixed(2)}x`}
                 </h2>
             )}
