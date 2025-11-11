@@ -162,9 +162,11 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
         }
         setFeesEarned(prev => prev + 0.05 * lpTokens); // Simulate LP fee earnings
 
-        if (miners.length > 0) {
+        setMiners(currentMiners => {
+          if (currentMiners.length === 0) return [];
+    
           let newMined = 0;
-          const updatedMiners = miners.map(miner => {
+          const updatedMiners = currentMiners.map(miner => {
             const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
             if (!isExpired) {
               const rewardPerSecond = miner.plan.power / 3600;
@@ -172,17 +174,20 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
               return { ...miner, minedAmount: miner.minedAmount + rewardPerSecond * 5 };
             }
             return miner;
-          }).filter(miner => {
+          });
+    
+          setMinedRewards(prev => prev + newMined);
+          
+          // Filter out expired miners
+          return updatedMiners.filter(miner => {
             const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
             return !isExpired;
           });
-          setMinedRewards(prev => prev + newMined);
-          // setMiners(updatedMiners); // This can cause issues if not handled carefully, better to just let rewards accumulate
-        }
+        });
 
     }, 5000); // run every 5 seconds
     return () => clearInterval(interval);
-  }, [stakes, lpTokens, miners]);
+  }, [stakes, lpTokens]);
 
   // Simulate real-time LIPT price change
   useEffect(() => {
@@ -352,3 +357,5 @@ export const useDashboard = () => {
   }
   return context;
 };
+
+    
