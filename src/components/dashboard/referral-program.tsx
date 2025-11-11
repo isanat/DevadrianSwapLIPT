@@ -90,7 +90,7 @@ export function ReferralDashboard() {
                         <TableRow key={referral.id}>
                             <TableCell className="font-medium">{t('referralProgram.level')} {referral.level}</TableCell>
                             <TableCell className="text-center">{referral.members}</TableCell>
-                            <TableCell className="text-right">{referral.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-right">{referral.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

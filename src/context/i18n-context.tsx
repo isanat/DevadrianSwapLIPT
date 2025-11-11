@@ -19,11 +19,9 @@ const translations = {
       },
       liptBalance: {
         title: 'Your LIPT Balance',
-        description: 'In your wallet',
       },
       usdtBalance: {
         title: 'Your USDT Balance',
-        description: 'In your wallet',
       },
       totalInvested: {
         title: 'Total Invested',
@@ -167,11 +165,9 @@ const translations = {
       },
       liptBalance: {
         title: 'Seu Saldo LIPT',
-        description: 'Na sua carteira',
       },
       usdtBalance: {
         title: 'Seu Saldo USDT',
-        description: 'Na sua carteira',
       },
       totalInvested: {
         title: 'Total Investido',
@@ -315,11 +311,9 @@ const translations = {
       },
       liptBalance: {
         title: 'Tu Saldo LIPT',
-        description: 'En tu billetera',
       },
       usdtBalance: {
         title: 'Tu Saldo USDT',
-        description: 'En tu billetera',
       },
       totalInvested: {
         title: 'Total Invertido',
@@ -463,11 +457,9 @@ const translations = {
       },
       liptBalance: {
         title: 'Il Tuo Saldo LIPT',
-        description: 'Nel tuo portafoglio',
       },
       usdtBalance: {
         title: 'Il Tuo Saldo USDT',
-        description: 'Nel tuo portafoglio',
       },
       totalInvested: {
         title: 'Totale Investito',
