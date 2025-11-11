@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Crown, HelpCircle } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 
 const mockLeaderboardData = [
   { rank: 1, name: 'CryptoKing', commission: 2500.75, avatar: '1' },
@@ -35,14 +36,19 @@ export function Leaderboard() {
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="flex items-center gap-2">
-            <Crown className="h-6 w-6 text-primary" />
-            {t('leaderboard.title')}
-          </CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Crown className="h-6 w-6 text-primary" />
+              {t('leaderboard.title')}
+            </CardTitle>
+            <CardDescription>{t('leaderboard.description')}</CardDescription>
+          </div>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle size={18} className="text-muted-foreground" />
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <HelpCircle size={18} className="text-muted-foreground" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p>{t('leaderboard.tooltip')}</p>
@@ -50,7 +56,6 @@ export function Leaderboard() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <CardDescription>{t('leaderboard.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow p-0">
         <Table>

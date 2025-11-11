@@ -144,14 +144,19 @@ export function StakingPool() {
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="h-6 w-6 text-primary" />
-            {t('stakingPool.title')}
-          </CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Archive className="h-6 w-6 text-primary" />
+              {t('stakingPool.title')}
+            </CardTitle>
+            <CardDescription>{t('stakingPool.description')}</CardDescription>
+          </div>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle size={18} className="text-muted-foreground" />
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <HelpCircle size={18} className="text-muted-foreground" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p>{t('stakingPool.tooltip')}</p>
@@ -159,7 +164,6 @@ export function StakingPool() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <CardDescription>{t('stakingPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">

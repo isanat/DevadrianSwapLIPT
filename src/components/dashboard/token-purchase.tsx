@@ -56,14 +56,19 @@ export function TokenPurchase() {
     <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="flex items-center gap-2">
-            <Banknote className="h-6 w-6 text-primary" />
-            {t('tokenPurchase.title')}
-          </CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="h-6 w-6 text-primary" />
+              {t('tokenPurchase.title')}
+            </CardTitle>
+            <CardDescription>{t('tokenPurchase.description')}</CardDescription>
+          </div>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle size={18} className="text-muted-foreground" />
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <HelpCircle size={18} className="text-muted-foreground" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p>{t('tokenPurchase.tooltip')}</p>
@@ -71,7 +76,6 @@ export function TokenPurchase() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <CardDescription>{t('tokenPurchase.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

@@ -100,14 +100,19 @@ export function MiningPool() {
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="flex items-center gap-2">
-            <Pickaxe className="h-6 w-6 text-primary" />
-            {t('miningPool.title')}
-          </CardTitle>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Pickaxe className="h-6 w-6 text-primary" />
+              {t('miningPool.title')}
+            </CardTitle>
+            <CardDescription>{t('miningPool.description')}</CardDescription>
+          </div>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle size={18} className="text-muted-foreground" />
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <HelpCircle size={18} className="text-muted-foreground" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p>{t('miningPool.tooltip')}</p>
@@ -115,7 +120,6 @@ export function MiningPool() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <CardDescription>{t('miningPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
@@ -153,7 +157,7 @@ export function MiningPool() {
                                 <Bolt size={14} /> 
                                 {plan.power} LIPT/{t('miningPool.hour')}
                               </div>
-                              <div className="text-xs text-muted-foreground">{t('miningPool.cost')}: {plan.cost.toLocaleString('en-US', {useGrouping:true})} LIPT</div>
+                              <div className="text-xs text-muted-foreground">{t('miningPool.cost')}: {plan.cost.toLocaleString('en-US',{useGrouping:true})} LIPT</div>
                               <div className="text-xs text-muted-foreground">{plan.duration} {t('stakingPool.days')}</div>
                           </Label>
                       ))}
