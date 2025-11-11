@@ -8,6 +8,7 @@ import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import { WheelOfFortune } from './wheel-of-fortune';
 import { GameReport } from './game-report';
+import { LiptRocket } from './lipt-rocket';
 
 export function GameZone() {
   const { t } = useI18n();
@@ -39,7 +40,7 @@ export function GameZone() {
         <Tabs defaultValue="wheel" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="wheel">{t('gameZone.wheelOfFortune.title')}</TabsTrigger>
-            <TabsTrigger value="rocket" disabled>
+            <TabsTrigger value="rocket">
                 <Rocket className="h-4 w-4 mr-2"/>
                 {t('gameZone.rocket.title')}
             </TabsTrigger>
@@ -68,8 +69,8 @@ export function GameZone() {
                 </TabsContent>
              </Tabs>
           </TabsContent>
-          <TabsContent value="rocket">
-            {/* Rocket Game Component will go here */}
+          <TabsContent value="rocket" className="mt-4">
+            <LiptRocket />
           </TabsContent>
           <TabsContent value="lottery">
             {/* Lottery Game Component will go here */}

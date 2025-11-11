@@ -237,6 +237,26 @@ const translations = {
       },
       rocket: {
         title: 'LIPT Rocket',
+        placeBet: 'Place Bet',
+        cashOut: 'Cash Out',
+        playAgain: 'Play Again',
+        waitingForNextRound: 'Waiting for next round...',
+        crashed: 'Crashed!',
+        youCashedOut: 'You Cashed Out!',
+        toast: {
+          betPlaced: {
+            title: 'Bet Placed',
+            description: 'Your bet of {amount} LIPT is locked in.',
+          },
+          cashedOut: {
+            title: 'Success!',
+            description: 'You cashed out {amount} LIPT at {multiplier}x.',
+          },
+          crashed: {
+            title: 'Crashed!',
+            description: 'The rocket crashed at {multiplier}x. Better luck next time.',
+          },
+        },
       },
       lottery: {
         title: 'Daily Lottery',
@@ -474,6 +494,26 @@ const translations = {
       },
       rocket: {
         title: 'Foguete LIPT',
+        placeBet: 'Apostar',
+        cashOut: 'Retirar',
+        playAgain: 'Jogar Novamente',
+        waitingForNextRound: 'Aguardando próxima ronda...',
+        crashed: 'Explodiu!',
+        youCashedOut: 'Você Retirou!',
+        toast: {
+          betPlaced: {
+            title: 'Aposta Feita',
+            description: 'A sua aposta de {amount} LIPT foi registada.',
+          },
+          cashedOut: {
+            title: 'Sucesso!',
+            description: 'Você retirou {amount} LIPT em {multiplier}x.',
+          },
+          crashed: {
+            title: 'Explodiu!',
+            description: 'O foguete explodiu em {multiplier}x. Mais sorte na próxima vez.',
+          },
+        },
       },
       lottery: {
         title: 'Loteria Diária',
@@ -711,6 +751,26 @@ const translations = {
       },
       rocket: {
         title: 'Cohete LIPT',
+        placeBet: 'Apostar',
+        cashOut: 'Retirar',
+        playAgain: 'Jugar de Nuevo',
+        waitingForNextRound: 'Esperando siguiente ronda...',
+        crashed: '¡Explotó!',
+        youCashedOut: '¡Retiraste!',
+        toast: {
+          betPlaced: {
+            title: 'Aposta Realizada',
+            description: 'Tu apuesta de {amount} LIPT ha sido registrada.',
+          },
+          cashedOut: {
+            title: '¡Éxito!',
+            description: 'Has retirado {amount} LIPT a {multiplier}x.',
+          },
+          crashed: {
+            title: '¡Explotó!',
+            description: 'El cohete explotó a {multiplier}x. Mejor suerte la próxima vez.',
+          },
+        },
       },
       lottery: {
         title: 'Lotería Diaria',
@@ -948,6 +1008,26 @@ const translations = {
       },
       rocket: {
         title: 'Razzo LIPT',
+        placeBet: 'Scommetti',
+        cashOut: 'Incassa',
+        playAgain: 'Gioca Ancora',
+        waitingForNextRound: 'In attesa del prossimo round...',
+        crashed: 'Esploso!',
+        youCashedOut: 'Hai Incassato!',
+        toast: {
+          betPlaced: {
+            title: 'Scommessa Piazzata',
+            description: 'La tua scommessa di {amount} LIPT è stata registrata.',
+          },
+          cashedOut: {
+            title: 'Successo!',
+            description: 'Hai incassato {amount} LIPT a {multiplier}x.',
+          },
+          crashed: {
+            title: 'Esploso!',
+            description: 'Il razzo è esploso a {multiplier}x. Meglio fortuna la prossima volta.',
+          },
+        },
       },
       lottery: {
         title: 'Lotteria Giornaliera',
