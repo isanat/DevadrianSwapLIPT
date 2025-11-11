@@ -22,7 +22,6 @@ const segments = [
     { value: 1,   label: '1x',   color: '#16a34a', weight: 15 }, // Darker Green
 ];
 
-
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
 // 🎨 Gera o gradiente conic proporcional
@@ -99,7 +98,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
           return (
             <span
               key={i}
-              className="absolute left-1/2 top-1/2 text-white text-lg font-bold drop-shadow-md"
+              className="absolute left-1/2 top-1/2 text-white text-base font-bold drop-shadow-md"
               style={{
                 transform: `rotate(${textAngle}deg) translate(105px) rotate(${-textAngle}deg)`,
                 transformOrigin: 'center',
@@ -113,7 +112,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         {/* Centro */}
         <div className="absolute w-20 h-20 rounded-full bg-gray-800 border-4 border-yellow-400 z-10 shadow-lg flex items-center justify-center">
             <div className="w-12 h-12 rounded-full bg-blue-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)] flex items-center justify-center text-white font-bold">
-              GIRAR
+              {t('gameZone.wheelOfFortune.spinButton').split(' ')[0].toUpperCase()}
             </div>
         </div>
       </div>
