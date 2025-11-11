@@ -4,8 +4,9 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Crown } from 'lucide-react';
+import { Crown, HelpCircle } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mockLeaderboardData = [
   { rank: 1, name: 'CryptoKing', commission: 2500.75, avatar: '1' },
@@ -33,10 +34,22 @@ export function Leaderboard() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Crown className="h-6 w-6 text-primary" />
-          {t('leaderboard.title')}
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-6 w-6 text-primary" />
+            {t('leaderboard.title')}
+          </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle size={18} className="text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{t('leaderboard.tooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <CardDescription>{t('leaderboard.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow p-0">

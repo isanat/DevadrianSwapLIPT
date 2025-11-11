@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pickaxe, Bolt, Clock, Zap } from 'lucide-react';
+import { Pickaxe, Bolt, Clock, Zap, HelpCircle } from 'lucide-react';
 import { useDashboard, MINING_PLANS } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const ActiveMiner = ({ miner }: { miner: any }) => {
   const [progress, setProgress] = useState(0);
@@ -98,10 +99,22 @@ export function MiningPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Pickaxe className="h-6 w-6 text-primary" />
-          {t('miningPool.title')}
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="flex items-center gap-2">
+            <Pickaxe className="h-6 w-6 text-primary" />
+            {t('miningPool.title')}
+          </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle size={18} className="text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{t('miningPool.tooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <CardDescription>{t('miningPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
@@ -140,7 +153,7 @@ export function MiningPool() {
                                 <Bolt size={14} /> 
                                 {plan.power} LIPT/{t('miningPool.hour')}
                               </div>
-                              <div className="text-xs text-muted-foreground">{t('miningPool.cost')}: {plan.cost.toLocaleString('en-US')} LIPT</div>
+                              <div className="text-xs text-muted-foreground">{t('miningPool.cost')}: {plan.cost.toLocaleString('en-US', {useGrouping:true})} LIPT</div>
                               <div className="text-xs text-muted-foreground">{plan.duration} {t('stakingPool.days')}</div>
                           </Label>
                       ))}
@@ -154,8 +167,7 @@ export function MiningPool() {
           </TabsContent>
           <TabsContent value="active" className="mt-4">
             <div className="space-y-3">
-              <Label>{t('miningPool.yourActiveMiners')}</Label>
-              {miners.length > 0 ? (
+              <Label>{t('miningPool.yourActiveMiners')}</Label>              {miners.length > 0 ? (
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                   {miners.map(miner => (
                     <ActiveMiner key={miner.id} miner={miner} />

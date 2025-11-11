@@ -38,6 +38,7 @@ const translations = {
     stakingPool: {
       title: 'LIPT Staking Pool',
       description: 'Stake your LIPT tokens to earn higher rewards with longer lock-in periods.',
+      tooltip: 'Here you "lock" your LIPT tokens for a set period to earn rewards. The longer you lock them, the higher the annual percentage yield (APY). Think of it like a fixed-term savings account, but with crypto!',
       totalStaked: 'Total Staked Balance',
       unclaimedRewards: 'Unclaimed Rewards',
       stakeTab: 'Stake',
@@ -89,6 +90,7 @@ const translations = {
     liquidityPool: {
       title: 'Liquidity Pool (LIPT/USDT)',
       description: 'Provide liquidity to earn trading fees from the LIPT/USDT pair.',
+      tooltip: 'Here you provide both LIPT and USDT tokens to facilitate trades on the platform. In return, you earn a share of the trading fees. Your earnings depend on how much of the pool you own.',
       yourPoolShare: 'Your Pool Share',
       yourLpTokens: 'Your LP Tokens',
       feesEarned: 'Fees Earned',
@@ -118,6 +120,7 @@ const translations = {
     tokenPurchase: {
       title: 'Buy LIPT Token',
       description: 'Purchase LIPT tokens using USDT.',
+      tooltip: 'This is the easiest way to get LIPT tokens. Simply enter the amount of USDT you want to spend, and we will calculate how many LIPT tokens you will receive at the current market price.',
       youPay: 'You pay (USDT)',
       youReceive: 'You receive (LIPT)',
       purchaseButton: 'Purchase LIPT',
@@ -135,6 +138,7 @@ const translations = {
     referralProgram: {
       title: 'Unilevel Referral Program',
       description: 'Invite friends and earn rewards from their activities across multiple levels.',
+      tooltip: 'Share your unique link with friends. When they join and participate in staking or mining, you earn a commission. The more people in your network, the more you can earn!',
       yourLink: 'Your Unique Referral Link',
       copied: 'Copied to clipboard!',
       copiedDesc: 'You can now share your referral link.',
@@ -157,6 +161,7 @@ const translations = {
     miningPool: {
       title: 'Mining Room',
       description: 'Activate miners to generate LIPT tokens over time.',
+      tooltip: 'Activate a "miner" by paying a one-time LIPT cost. The miner will then generate LIPT for you over a set period. Higher-tier miners cost more but generate rewards faster. It\'s like having a machine that prints money!',
       totalPower: 'Total Mining Power',
       unclaimedRewards: 'Mined Rewards',
       activateTab: 'Activate Miner',
@@ -188,6 +193,7 @@ const translations = {
     leaderboard: {
       title: 'Referral Champions',
       description: 'Top 10 users by referral commission earned.',
+      tooltip: 'See who is leading the pack! This leaderboard shows the top earners from the referral program. A little friendly competition to see who can build the biggest network.',
       rank: 'Rank',
       user: 'User',
       commission: 'Commission (LIPT)',
@@ -225,6 +231,7 @@ const translations = {
     stakingPool: {
       title: 'Pool de Staking LIPT',
       description: 'Faça stake de seus tokens LIPT para ganhar maiores recompensas com períodos de bloqueio mais longos.',
+      tooltip: 'Aqui você "trava" seus tokens LIPT por um período definido para ganhar recompensas. Quanto mais tempo você os trava, maior o rendimento percentual anual (APY). Pense nisso como uma poupança de prazo fixo, mas com cripto!',
       totalStaked: 'Saldo Total em Stake',
       unclaimedRewards: 'Recompensas Não Reivindicadas',
       stakeTab: 'Stake',
@@ -276,6 +283,7 @@ const translations = {
     liquidityPool: {
       title: 'Pool de Liquidez (LIPT/USDT)',
       description: 'Forneça liquidez para ganhar taxas de negociação do par LIPT/USDT.',
+      tooltip: 'Aqui você fornece tokens LIPT e USDT para facilitar as negociações na plataforma. Em troca, você ganha uma parte das taxas de negociação. Seus ganhos dependem de quanto da pool você possui.',
       yourPoolShare: 'Sua Participação na Pool',
       yourLpTokens: 'Seus Tokens LP',
       feesEarned: 'Taxas Ganhas',
@@ -305,6 +313,7 @@ const translations = {
     tokenPurchase: {
       title: 'Comprar Token LIPT',
       description: 'Compre tokens LIPT usando USDT.',
+      tooltip: 'Esta é a maneira mais fácil de obter tokens LIPT. Basta inserir a quantidade de USDT que deseja gastar, e nós calcularemos quantos tokens LIPT você receberá pelo preço de mercado atual.',
       youPay: 'Você paga (USDT)',
       youReceive: 'Você recebe (LIPT)',
       purchaseButton: 'Comprar LIPT',
@@ -322,6 +331,7 @@ const translations = {
     referralProgram: {
       title: 'Programa de Indicação Unilevel',
       description: 'Convide amigos e ganhe recompensas de suas atividades em múltiplos níveis.',
+      tooltip: 'Compartilhe seu link exclusivo com amigos. Quando eles entram e participam no staking ou na mineração, você ganha uma comissão. Quanto mais pessoas na sua rede, mais você pode ganhar!',
       yourLink: 'Seu Link de Indicação Único',
       copied: 'Copiado para a área de transferência!',
       copiedDesc: 'Você já pode compartilhar seu link de indicação.',
@@ -344,6 +354,7 @@ const translations = {
     miningPool: {
       title: 'Sala de Mineração',
       description: 'Ative mineradores para gerar tokens LIPT ao longo do tempo.',
+      tooltip: 'Ative um "minerador" pagando um custo único em LIPT. O minerador então gerará LIPT para você por um período determinado. Mineradores de nível superior custam mais, mas geram recompensas mais rápido. É como ter uma máquina que imprime dinheiro!',
       totalPower: 'Poder de Mineração Total',
       unclaimedRewards: 'Recompensas Mineradas',
       activateTab: 'Ativar Minerador',
@@ -375,6 +386,7 @@ const translations = {
     leaderboard: {
       title: 'Campeões de Indicação',
       description: 'Top 10 usuários por comissão de indicação ganha.',
+      tooltip: 'Veja quem está liderando o grupo! Este placar mostra os maiores ganhadores do programa de indicação. Uma competição amigável para ver quem consegue construir a maior rede.',
       rank: 'Pos.',
       user: 'Usuário',
       commission: 'Comissão (LIPT)',
@@ -412,6 +424,7 @@ const translations = {
     stakingPool: {
       title: 'Piscina de Staking LIPT',
       description: 'Haz stake con tus tokens LIPT para ganar mayores recompensas con períodos de bloqueo más largos.',
+      tooltip: 'Aquí "bloqueas" tus tokens LIPT por un período definido para ganar recompensas. Cuanto más tiempo los bloquees, mayor será el rendimiento porcentual anual (APY). ¡Piénsalo como una cuenta de ahorros a plazo fijo, pero con cripto!',
       totalStaked: 'Saldo Total en Stake',
       unclaimedRewards: 'Recompensas No Reclamadas',
       stakeTab: 'Hacer Stake',
@@ -463,6 +476,7 @@ const translations = {
     liquidityPool: {
       title: 'Piscina de Liquidez (LIPT/USDT)',
       description: 'Proporciona liquidez para ganar comisiones de trading del par LIPT/USDT.',
+      tooltip: 'Aquí proporcionas tokens LIPT y USDT para facilitar las operaciones en la plataforma. A cambio, ganas una parte de las comisiones de trading. Tus ganancias dependen de la parte de la piscina que poseas.',
       yourPoolShare: 'Tu Participación en la Piscina',
       yourLpTokens: 'Tus Tokens LP',
       feesEarned: 'Comisiones Ganadas',
@@ -492,6 +506,7 @@ const translations = {
     tokenPurchase: {
       title: 'Comprar Token LIPT',
       description: 'Compra tokens LIPT usando USDT.',
+      tooltip: 'Esta es la forma más fácil de obtener tokens LIPT. Simplemente ingresa la cantidad de USDT que deseas gastar y calcularemos cuántos tokens LIPT recibirás al precio de mercado actual.',
       youPay: 'Tú pagas (USDT)',
       youReceive: 'Tú recibes (LIPT)',
       purchaseButton: 'Comprar LIPT',
@@ -509,6 +524,7 @@ const translations = {
     referralProgram: {
       title: 'Programa de Referidos Uninivel',
       description: 'Invita a amigos y gana recompensas de sus actividades en múltiples niveles.',
+      tooltip: 'Comparte tu enlace único con amigos. Cuando se unen y participan en el staking o la minería, ganas una comisión. ¡Cuantas más personas en tu red, más puedes ganar!',
       yourLink: 'Tu Enlace de Referido Único',
       copied: '¡Copiado al portapapeles!',
       copiedDesc: 'Ahora puedes compartir tu enlace de referido.',
@@ -531,6 +547,7 @@ const translations = {
     miningPool: {
       title: 'Sala de Minería',
       description: 'Activa mineros para generar tokens LIPT con el tiempo.',
+      tooltip: 'Activa un "minero" pagando un costo único en LIPT. El minero generará LIPT para ti durante un período determinado. Los mineros de nivel superior cuestan más pero generan recompensas más rápido. ¡Es como tener una máquina que imprime dinero!',
       totalPower: 'Poder de Minería Total',
       unclaimedRewards: 'Recompensas Minadas',
       activateTab: 'Activar Minero',
@@ -562,6 +579,7 @@ const translations = {
     leaderboard: {
       title: 'Campeones de Referidos',
       description: 'Top 10 usuarios por comisión de referidos ganada.',
+      tooltip: '¡Mira quién lidera el grupo! Este marcador muestra a los que más ganan con el programa de referidos. Una pequeña competencia amistosa para ver quién puede construir la red más grande.',
       rank: 'Pos.',
       user: 'Usuario',
       commission: 'Comisión (LIPT)',
@@ -599,6 +617,7 @@ const translations = {
     stakingPool: {
       title: 'Pool di Staking LIPT',
       description: 'Metti in stake i tuoi token LIPT per guadagnare ricompense maggiori con periodi di blocco più lunghi.',
+      tooltip: 'Qui "blocchi" i tuoi token LIPT per un periodo definito per guadagnare ricompense. Più a lungo li blocchi, maggiore è il rendimento percentuale annuo (APY). Pensalo come un conto di risparmio a tempo determinato, ma con le criptovalute!',
       totalStaked: 'Saldo Totale in Stake',
       unclaimedRewards: 'Ricompense Non Riscattate',
       stakeTab: 'Stake',
@@ -650,6 +669,7 @@ const translations = {
     liquidityPool: {
       title: 'Pool di Liquidità (LIPT/USDT)',
       description: 'Fornisci liquidità per guadagnare commissioni di trading dalla coppia LIPT/USDT.',
+      tooltip: 'Qui fornisci sia token LIPT che USDT per facilitare gli scambi sulla piattaforma. In cambio, guadagni una quota delle commissioni di trading. I tuoi guadagni dipendono da quanto possiedi della pool.',
       yourPoolShare: 'La Tua Quota nella Pool',
       yourLpTokens: 'I Tuoi Token LP',
       feesEarned: 'Commissioni Guadagnate',
@@ -679,6 +699,7 @@ const translations = {
     tokenPurchase: {
       title: 'Acquista Token LIPT',
       description: 'Acquista token LIPT usando USDT.',
+      tooltip: 'Questo è il modo più semplice per ottenere token LIPT. Inserisci semplicemente l\'importo di USDT che desideri spendere e calcoleremo quanti token LIPT riceverai al prezzo di mercato attuale.',
       youPay: 'Paghi (USDT)',
       youReceive: 'Ricevi (LIPT)',
       purchaseButton: 'Acquista LIPT',
@@ -696,6 +717,7 @@ const translations = {
     referralProgram: {
       title: 'Programma di Referral Unilevel',
       description: 'Invita amici e guadagna ricompense dalle loro attività su più livelli.',
+      tooltip: 'Condividi il tuo link unico con gli amici. Quando si uniscono e partecipano allo staking o al mining, guadagni una commissione. Più persone nella tua rete, più puoi guadagnare!',
       yourLink: 'Il Tuo Link di Referral Unico',
       copied: 'Copiato negli appunti!',
       copiedDesc: 'Ora puoi condividere il tuo link di referral.',
@@ -718,6 +740,7 @@ const translations = {
     miningPool: {
       title: 'Sala di Estrazione',
       description: 'Attiva gli estrattori per generare token LIPT nel tempo.',
+      tooltip: 'Attiva un "estrattore" pagando un costo una tantum in LIPT. L\'estrattore genererà quindi LIPT per te per un periodo di tempo prestabilito. Gli estrattori di livello superiore costano di più ma generano ricompense più velocemente. È come avere una macchina che stampa soldi!',
       totalPower: 'Potenza di Estrazione Totale',
       unclaimedRewards: 'Ricompense Estratte',
       activateTab: 'Attiva Estrattore',
@@ -749,6 +772,7 @@ const translations = {
     leaderboard: {
       title: 'Campioni di Referral',
       description: 'Top 10 utenti per commissione di referral guadagnata.',
+      tooltip: 'Guarda chi è in testa! Questa classifica mostra i migliori guadagni del programma di referral. Una piccola competizione amichevole per vedere chi riesce a costruire la rete più grande.',
       rank: 'Pos.',
       user: 'Utente',
       commission: 'Commissione (LIPT)',

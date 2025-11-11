@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Archive, Download, Clock, AlertTriangle } from 'lucide-react';
+import { Archive, Download, Clock, AlertTriangle, HelpCircle } from 'lucide-react';
 import { useDashboard, STAKING_PLANS } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: string, penalty: number) => void; }) => {
   const { unstakeLipt } = useDashboard();
@@ -142,10 +143,22 @@ export function StakingPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Archive className="h-6 w-6 text-primary" />
-          {t('stakingPool.title')}
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="flex items-center gap-2">
+            <Archive className="h-6 w-6 text-primary" />
+            {t('stakingPool.title')}
+          </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle size={18} className="text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{t('stakingPool.tooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <CardDescription>{t('stakingPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">

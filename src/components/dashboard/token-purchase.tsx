@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Banknote, ArrowRightLeft } from 'lucide-react';
+import { Banknote, ArrowRightLeft, HelpCircle } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/context/i18n-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function TokenPurchase() {
   const { liptPrice, purchaseLipt, usdtBalance } = useDashboard();
@@ -54,10 +55,22 @@ export function TokenPurchase() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Banknote className="h-6 w-6 text-primary" />
-          {t('tokenPurchase.title')}
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="flex items-center gap-2">
+            <Banknote className="h-6 w-6 text-primary" />
+            {t('tokenPurchase.title')}
+          </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle size={18} className="text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{t('tokenPurchase.tooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <CardDescription>{t('tokenPurchase.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

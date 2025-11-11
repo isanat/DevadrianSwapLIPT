@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Copy, Gift, Users, Award, Star } from 'lucide-react';
+import { Copy, Gift, Users, Award, Star, HelpCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from '@/context/dashboard-context';
 import { useI18n } from '@/context/i18n-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mockReferrals = [
     { id: 1, level: 1, members: 5, commission: 120.50 },
@@ -37,10 +38,22 @@ export function ReferralDashboard() {
     <div className="space-y-8">
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gift className="h-6 w-6 text-primary" />
-            {t('referralProgram.title')}
-          </CardTitle>
+          <div className="flex justify-between items-start">
+            <CardTitle className="flex items-center gap-2">
+              <Gift className="h-6 w-6 text-primary" />
+              {t('referralProgram.title')}
+            </CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <HelpCircle size={18} className="text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>{t('referralProgram.tooltip')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <CardDescription>{t('referralProgram.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

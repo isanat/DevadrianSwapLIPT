@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplets, Plus } from 'lucide-react';
+import { Droplets, Plus, HelpCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useDashboard } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/context/i18n-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function LiquidityPool() {
   const { 
@@ -56,10 +57,22 @@ export function LiquidityPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Droplets className="h-6 w-6 text-primary" />
-          {t('liquidityPool.title')}
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="flex items-center gap-2">
+            <Droplets className="h-6 w-6 text-primary" />
+            {t('liquidityPool.title')}
+          </CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle size={18} className="text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{t('liquidityPool.tooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <CardDescription>{t('liquidityPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
