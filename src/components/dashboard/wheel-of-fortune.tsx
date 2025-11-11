@@ -12,26 +12,36 @@ import { cn } from '@/lib/utils';
 // 🎯 Segmentos com pesos e cores do tema DeFi
 const segments = [
   { value: 0,   label: '0x',   color: 'hsl(var(--destructive))',  weight: 28 }, // Vermelho
-  { value: 0.5, label: '0.5x', color: 'hsl(var(--muted))',      weight: 24 }, // Cinza Muted
-  { value: 1,   label: '1x',   color: 'hsl(var(--primary))',      weight: 26 }, // Azul Primário
-  { value: 1.3, label: '1.3x', color: 'hsl(var(--accent))',       weight: 12 }, // Verde Accent
-  { value: 2,   label: '2x',   color: 'hsl(var(--primary))',      weight: 7 },  // Azul Primário
-  { value: 3,   label: '3x',   color: 'hsl(var(--accent))',       weight: 3 },  // Verde Accent
+  { value: 0.5, label: '0.5x', color: 'hsl(var(--primary))',      weight: 24 }, // Cinza Muted
+  { value: 1,   label: '1x',   color: 'hsl(var(--accent))',      weight: 26 }, // Azul Primário
+  { value: 1.3, label: '1.3x', color: 'hsl(var(--primary))',       weight: 12 }, // Verde Accent
+  { value: 2,   label: '2x',   color: 'hsl(var(--accent))',      weight: 7 },  // Azul Primário
+  { value: 3,   label: '3x',   color: 'hsl(var(--primary))',       weight: 3 },  // Verde Accent
 ];
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
-// 🎨 Gera o gradiente conic proporcional
+// 🎨 Gera o gradiente conic com divisórias
 const getConicGradient = () => {
   let gradient = 'conic-gradient(';
-  let currentAngle = -90; // ponteiro no topo
+  let currentAngle = -90; // Começa no topo
+  const dividerWidth = 0.5; // Largura da divisória em graus
+
   segments.forEach((seg, i) => {
     const segmentAngle = (seg.weight / totalWeight) * 360;
     const nextAngle = currentAngle + segmentAngle;
-    gradient += `${seg.color} ${currentAngle}deg ${nextAngle}deg`;
-    if (i < segments.length - 1) gradient += ', ';
+    
+    // Cor do segmento
+    gradient += `${seg.color} ${currentAngle + dividerWidth / 2}deg ${nextAngle - dividerWidth / 2}deg`;
+    
+    // Cor da divisória
+    if (i < segments.length) {
+      gradient += `, #FFFFFF ${nextAngle - dividerWidth / 2}deg ${nextAngle + dividerWidth / 2}deg`;
+    }
+
     currentAngle = nextAngle;
   });
+
   gradient += ')';
   return gradient;
 };
@@ -47,41 +57,35 @@ const getWeightedRandomSegment = () => {
 };
 
 const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
+  const { t } = useI18n();
   const transitionStyle = isSpinning
-    ? { transition: 'transform 8s cubic-bezier(0.25, 1, 0.5, 1)' } // ease-out-cubic
+    ? { transition: 'transform 8s cubic-bezier(0.25, 1, 0.5, 1)' }
     : { transition: 'none' };
 
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto my-8">
+    <div className="relative w-72 h-72 md:w-80 md:h-80 mx-auto my-8">
       {/* Ponteiro */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 w-0 h-0 
-        border-l-[14px] border-l-transparent 
-        border-r-[14px] border-r-transparent 
-        border-t-[28px] border-t-primary z-20 drop-shadow-lg" 
-      />
+      <div className="absolute top-[-10px] left-1/2 z-20 h-0 w-0 -translate-x-1/2 border-l-[14px] border-r-[14px] border-t-[28px] border-l-transparent border-r-transparent border-t-primary drop-shadow-lg" />
 
       <div
-        className={cn('relative w-full h-full rounded-full flex items-center justify-center border-4 border-card/80 shadow-lg')}
+        className={cn('relative h-full w-full rounded-full flex items-center justify-center border-4 border-primary/30 shadow-lg')}
         style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
       >
         {/* Fundo da roda */}
         <div
-          className="absolute w-full h-full rounded-full"
+          className="absolute h-full w-full rounded-full"
           style={{ background: getConicGradient() }}
         />
 
         {/* Marcadores de texto */}
         {segments.map((seg, i) => {
-          const startAngle =
-            -90 +
-            (segments.slice(0, i).reduce((sum, s) => sum + (s.weight / totalWeight) * 360, 0) +
-              (seg.weight / totalWeight) * 180);
+          const startAngle = -90 + (segments.slice(0, i).reduce((sum, s) => sum + (s.weight / totalWeight) * 360, 0) + (seg.weight / totalWeight) * 180);
           return (
             <span
               key={i}
-              className="absolute left-1/2 top-1/2 text-white text-sm font-bold drop-shadow-md"
+              className="absolute left-1/2 top-1/2 text-sm font-bold text-white drop-shadow-md"
               style={{
-                transform: `rotate(${startAngle}deg) translateX(110px) rotate(${-startAngle}deg)`,
+                transform: `rotate(${startAngle}deg) translateX(90px) rotate(${-startAngle}deg)`,
               }}
             >
               {seg.label}
@@ -90,7 +94,11 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         })}
 
         {/* Círculo central */}
-        <div className="absolute w-16 h-16 rounded-full bg-background border-4 border-card z-10 shadow-inner" />
+        <div className="absolute z-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-primary bg-background shadow-inner">
+           <span className="text-xl font-bold uppercase text-primary">
+             {t('gameZone.wheelOfFortune.spinButton').split(' ')[0]}
+           </span>
+        </div>
       </div>
     </div>
   );
@@ -121,13 +129,14 @@ export function WheelOfFortune() {
     const winningSeg = getWeightedRandomSegment();
     const winningIndex = segments.indexOf(winningSeg);
 
-    // Cálculo do ângulo alvo proporcional
     let currentAngle = -90;
     for (let i = 0; i < winningIndex; i++) {
       currentAngle += (segments[i].weight / totalWeight) * 360;
     }
     const segAngle = (segments[winningIndex].weight / totalWeight) * 360;
-    const targetAngle = -(currentAngle + segAngle / 2);
+    // Adiciona uma pequena variação aleatória para não parar sempre no mesmo ponto exato
+    const randomOffset = (Math.random() - 0.5) * segAngle * 0.6;
+    const targetAngle = -(currentAngle + segAngle / 2 + randomOffset);
 
     const randomSpins = Math.floor(Math.random() * 3) + 6; // 6–8 voltas
     const finalRotation = randomSpins * 360 + targetAngle;
@@ -154,7 +163,8 @@ export function WheelOfFortune() {
 
       setIsSpinning(false);
       setBetAmount('');
-      setRotation(finalRotation % 360);
+      // Mantém a posição final sem resetar para que o prêmio fique visível
+      setRotation(finalRotation % 360); 
     }, 8000); // 8s animação
   };
 
