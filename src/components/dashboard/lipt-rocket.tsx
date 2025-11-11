@@ -10,39 +10,38 @@ import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 import * as PIXI from 'pixi.js';
 
-// --- PIXI.js Helper Functions ---
-
+// --- FOGUETE COM FUMAÇA ---
 const createRocket = (app: PIXI.Application) => {
-  const container = new PIXI.Container() as PIXI.Container & { smoke?: PIXI.Graphics[], flame?: PIXI.Graphics };
+  const container = new PIXI.Container() as PIXI.Container & { smoke: PIXI.Graphics[], flame: PIXI.Graphics };
   container.x = app.screen.width / 2;
   container.y = app.screen.height - 80;
   container.pivot.set(0, -10);
 
   // Corpo
   const body = new PIXI.Graphics();
-  body.beginFill(0x94a3b8); // slate-400
+  body.beginFill(0x94a3b8);
   body.drawRoundedRect(-12, -30, 24, 45, 5);
   body.endFill();
 
   // Ponta
   const tip = new PIXI.Graphics();
-  tip.beginFill(0xef4444); // red-500
+  tip.beginFill(0xef4444);
   tip.moveTo(0, -45);
   tip.lineTo(-12, -30);
   tip.lineTo(12, -30);
   tip.lineTo(0, -45);
   tip.endFill();
-  
+
   // Asas
   const leftWing = new PIXI.Graphics();
-  leftWing.beginFill(0xdc2626); // red-700
+  leftWing.beginFill(0xdc2626);
   leftWing.moveTo(-12, 15);
   leftWing.lineTo(-25, 25);
   leftWing.lineTo(-12, 5);
   leftWing.endFill();
 
   const rightWing = new PIXI.Graphics();
-  rightWing.beginFill(0xdc2626); // red-700
+  rightWing.beginFill(0xdc2626);
   rightWing.moveTo(12, 15);
   rightWing.lineTo(25, 25);
   rightWing.lineTo(12, 5);
@@ -50,13 +49,13 @@ const createRocket = (app: PIXI.Application) => {
 
   // Chama
   const flame = new PIXI.Graphics();
-  flame.beginFill(0xf97316, 0.9); // orange-500
+  flame.beginFill(0xf97316, 0.9);
   flame.drawEllipse(0, 30, 10, 20);
   flame.endFill();
   flame.visible = false;
   container.flame = flame;
 
-  // Fumaça (container de partículas)
+  // Fumaça
   container.smoke = [];
 
   container.addChild(leftWing, rightWing, body, tip, flame);
@@ -64,18 +63,45 @@ const createRocket = (app: PIXI.Application) => {
   return container;
 };
 
+// --- CRASH POINT ---
 const generateCrashPoint = (): number => {
   try {
     const e = 2 ** 32;
     const h = crypto.getRandomValues(new Uint32Array(1))[0];
     const r = h / e;
-    const crashPoint = Math.floor(100 / (1 - r)) / 100;
-    return Math.max(1.01, crashPoint);
+    return Math.max(1.01, Math.floor(100 / (1 - r)) / 100);
   } catch {
     return Math.max(1.01, 1 + Math.random() * 10);
   }
 };
 
+// --- EXPLOSÃO COM TICKER ---
+const createExplosion = (app: PIXI.Application, x: number, y: number) => {
+  for (let i = 0; i < 30; i++) {
+    const p = new PIXI.Graphics();
+    p.beginFill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a);
+    p.drawCircle(0, 0, Math.random() * 4 + 1);
+    p.endFill();
+    p.x = x;
+    p.y = y;
+    p.vx = (Math.random() - 0.5) * 12;
+    p.vy = (Math.random() - 0.5) * 12;
+    p.alpha = 1;
+    app.stage.addChild(p);
+
+    const ticker = () => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.03;
+      if (p.alpha <= 0) {
+        app.stage.removeChild(p);
+        p.destroy();
+        app.ticker.remove(ticker);
+      }
+    };
+    app.ticker.add(ticker);
+  }
+};
 
 export function LiptRocket() {
   const { t } = useI18n();
@@ -89,210 +115,166 @@ export function LiptRocket() {
   const [crashHistory, setCrashHistory] = useState<number[]>([]);
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const appRef = useRef<PIXI.Application>();
-  const rocketRef = useRef<PIXI.Container & { smoke?: PIXI.Graphics[], flame?: PIXI.Graphics }>();
-  const animationFrameId = useRef<number>();
+  const appRef = useRef<PIXI.Application | null>(null);
+  const rocketRef = useRef<PIXI.Container & { smoke: PIXI.Graphics[], flame: PIXI.Graphics } | null>(null);
+  const animationFrameId = useRef<number | null>(null);
   const crashPointRef = useRef(1.0);
   const audioRef = useRef<{ launch?: HTMLAudioElement; crash?: HTMLAudioElement; smokePlayed?: boolean }>({});
 
+  // --- INICIALIZA PIXI ---
   useEffect(() => {
-    // --- Setup Pixi ---
     const setupPixi = async () => {
       if (canvasRef.current && !appRef.current) {
         const app = new PIXI.Application();
-        
         await app.init({
-            width: canvasRef.current.clientWidth,
-            height: 320,
-            backgroundColor: 0x000000,
-            backgroundAlpha: 0,
-            antialias: true,
-            resizeTo: canvasRef.current,
+          width: canvasRef.current.clientWidth,
+          height: 320,
+          backgroundColor: 0x0f172a,
+          backgroundAlpha: 1,
+          antialias: true,
+          resizeTo: canvasRef.current,
         });
 
         if (canvasRef.current && !canvasRef.current.querySelector('canvas')) {
-            canvasRef.current.appendChild(app.view as HTMLCanvasElement);
+          canvasRef.current.appendChild(app.canvas);
         }
 
         appRef.current = app;
         rocketRef.current = createRocket(app);
 
-        // Load sounds
+        // Sons
         audioRef.current.launch = new Audio('/sounds/rocket-launch.mp3');
         audioRef.current.crash = new Audio('/sounds/explosion.mp3');
       }
     };
-    
+
     setupPixi();
 
     return () => {
-        if (animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current);
-        }
-        // Cleanup pixi app on component unmount
-        if (appRef.current) {
-            appRef.current.destroy(true, { children: true, texture: true, baseTexture: true });
-            appRef.current = undefined;
-        }
+      if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      if (appRef.current) {
+        appRef.current.destroy(true, { children: true, texture: true, baseTexture: true });
+        appRef.current = null;
+      }
     };
-  }, [canvasRef]);
+  }, []);
 
+  // --- INICIA JOGO ---
   const startGame = useCallback(() => {
     if (!appRef.current || !rocketRef.current) return;
-    
-    setGameStatus('in_progress');
-    setCashedOutMultiplier(null);
 
     const app = appRef.current;
     const rocket = rocketRef.current;
-    
-    // Reset visual elements
+
+    setGameStatus('in_progress');
+    setCashedOutMultiplier(null);
+
+    // Reset
     rocket.rotation = 0;
     rocket.x = app.screen.width / 2;
     rocket.y = app.screen.height - 80;
     rocket.alpha = 1;
-    if (rocket.flame) rocket.flame.visible = false;
-    
-    // Clear old smoke
-    if (rocket.smoke) {
-      rocket.smoke.forEach(p => {
-        app.stage.removeChild(p);
-        p.destroy();
-      });
-      rocket.smoke = [];
-    }
+    rocket.flame.visible = false;
+
+    // Limpa fumaça
+    rocket.smoke.forEach(p => {
+      app.stage.removeChild(p);
+      p.destroy();
+    });
+    rocket.smoke = [];
 
     const crashPoint = generateCrashPoint();
     crashPointRef.current = crashPoint;
     let current = 1.00;
-    let step = 0;
 
-    audioRef.current.launch?.play().catch(()=>{});
+    audioRef.current.launch?.play().catch(() => {});
     audioRef.current.smokePlayed = false;
 
     const animate = () => {
-        step++;
+      current += 0.001 + 0.0008 * current;
+      setMultiplier(current);
 
-        const baseGrowth = 0.001; 
-        const acceleration = 0.0008 * current;
-        current += baseGrowth + acceleration;
+      const progress = crashPoint > 1.01 ? Math.min(0.95, (current - 1) / (crashPoint - 1)) : 0;
+      const targetY = app.screen.height - 80 - progress * (app.screen.height - 100);
+      rocket.y = targetY;
 
-        setMultiplier(current);
+      if (rocket.flame) {
+        rocket.flame.scale.y = 1 + progress * 2.5;
+        rocket.flame.scale.x = 1 + progress * 0.5;
+        rocket.flame.visible = true;
+      }
 
-        if (rocket && app) {
-            const progress = crashPoint > 1.01 ? Math.min(0.95, (current - 1) / (crashPoint - 1)) : 0;
-            
-            const targetY = app.screen.height - 80 - progress * (app.screen.height - 100);
-            rocket.y = targetY; // Smooth Y movement
-            
-            if (rocket.flame) {
-              rocket.flame.scale.y = 1 + progress * 2.5;
-              rocket.flame.scale.x = 1 + progress * 0.5;
-              rocket.flame.visible = true;
-            }
+      // Som de fumaça
+      if (current > 1.5 && !audioRef.current.smokePlayed) {
+        new Audio('/sounds/smoke-whoosh.mp3').play().catch(() => {});
+        audioRef.current.smokePlayed = true;
+      }
 
-            if(current > 1.5 && !audioRef.current.smokePlayed){
-                new Audio('/sounds/smoke-whoosh.mp3').play().catch(()=>{});
-                audioRef.current.smokePlayed = true;
-            }
+      // --- FUMAÇA ---
+      const smoke = rocket.smoke;
+      const emitRate = current > 1.1 ? Math.min(3, Math.floor((current - 1) * 6)) : 0;
 
-            // --- FUMAÇA DINÂMICA ---
-            const smoke = rocket.smoke!;
-            const emitRate = current > 1.1 ? Math.min(3, Math.floor((current - 1) * 6)) : 0;
-
-            for (let i = 0; i < emitRate; i++) {
-                if (smoke.length > 60) {
-                    const old = smoke.shift()!;
-                    app.stage.removeChild(old);
-                    old.destroy();
-                }
-
-                const p = new PIXI.Graphics() as PIXI.Graphics & { vx: number, vy: number, life: number };
-                const size = Math.random() * 3 + 2;
-                p.beginFill(0xdddddd, 0.7 + Math.random() * 0.2);
-                p.drawCircle(0, 0, size);
-                p.endFill();
-
-                p.x = rocket.x + (Math.random() - 0.5) * 18;
-                p.y = rocket.y + 25 + Math.random() * 8;
-                p.vx = (Math.random() - 0.5) * 3 - 1.5;
-                p.vy = 1.5 + Math.random() * 2;
-                p.life = 50 + Math.random() * 50;
-                p.alpha = 0.9;
-
-                app.stage.addChild(p);
-                smoke.push(p);
-            }
-
-            smoke.forEach((p, i) => {
-                const particle = p as PIXI.Graphics & { vx: number, vy: number, life: number };
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                particle.vy += 0.06;
-                particle.alpha -= 0.018;
-                if (p.scale) {
-                  p.scale.set(particle.alpha * 1.3);
-                }
-                if (particle.alpha <= 0 || particle.life-- <= 0) {
-                    app.stage.removeChild(p);
-                    p.destroy();
-                    smoke.splice(i, 1);
-                }
-            });
+      for (let i = 0; i < emitRate; i++) {
+        if (smoke.length > 60) {
+          const old = smoke.shift()!;
+          app.stage.removeChild(old);
+          old.destroy();
         }
-        
-        if (current < crashPoint && step < 300) {
-            animationFrameId.current = requestAnimationFrame(animate);
-        } else {
-            // --- CRASH ---
-            if(gameStatus === 'in_progress') { // Ensure crash logic only runs once
-              setMultiplier(crashPoint);
-              setGameStatus('crashed');
-              setCrashHistory(prev => [crashPoint, ...prev].slice(0, 10));
-              audioRef.current.crash?.play().catch(()=>{});
 
-              // Explosion effect
-              if(rocket) {
-                  rocket.alpha = 0; // Hide rocket
-                  if (rocket.flame) rocket.flame.visible = false;
+        const p = new PIXI.Graphics() as any;
+        const size = Math.random() * 3 + 2;
+        p.beginFill(0xdddddd, 0.7 + Math.random() * 0.2);
+        p.drawCircle(0, 0, size);
+        p.endFill();
 
-                  for (let i = 0; i < 30; i++) {
-                      const explosion_p = new PIXI.Graphics() as PIXI.Graphics & { vx: number; vy: number };
-                      explosion_p.beginFill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a, 1);
-                      explosion_p.drawCircle(0, 0, Math.random() * 4 + 1);
-                      explosion_p.endFill();
-                      explosion_p.x = rocket.x;
-                      explosion_p.y = rocket.y;
-                      explosion_p.vx = (Math.random() - 0.5) * (Math.random() * 12);
-                      explosion_p.vy = (Math.random() - 0.5) * (Math.random() * 12);
-                      app.stage.addChild(explosion_p);
+        p.x = rocket.x + (Math.random() - 0.5) * 18;
+        p.y = rocket.y + 25 + Math.random() * 8;
+        p.vx = (Math.random() - 0.5) * 3 - 1.5;
+        p.vy = 1.5 + Math.random() * 2;
+        p.life = 50 + Math.random() * 50;
+        p.alpha = 0.9;
 
-                      const fadeAway = () => {
-                          explosion_p.x += explosion_p.vx;
-                          explosion_p.y += explosion_p.vy;
-                          explosion_p.alpha -= 0.03;
-                          if (explosion_p.alpha > 0) {
-                              requestAnimationFrame(fadeAway);
-                          } else {
-                              app.stage.removeChild(explosion_p);
-                              explosion_p.destroy();
-                          }
-                      };
-                      fadeAway();
-                  }
-              }
+        app.stage.addChild(p);
+        smoke.push(p);
+      }
 
-              toast({
-                  variant: "destructive",
-                  title: t('gameZone.rocket.toast.crashed.title'),
-                  description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
-              });
-            }
+      smoke.forEach((p: any, i: number) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.06;
+        p.alpha -= 0.018;
+        p.scale.set(p.alpha * 1.3);
+        if (p.alpha <= 0 || p.life-- <= 0) {
+          app.stage.removeChild(p);
+          p.destroy();
+          smoke.splice(i, 1);
         }
+      });
+
+      if (current < crashPoint) {
+        animationFrameId.current = requestAnimationFrame(animate);
+      } else {
+        // CRASH
+        setMultiplier(crashPoint);
+        setGameStatus('crashed');
+        setCrashHistory(prev => [crashPoint, ...prev].slice(0, 10));
+        audioRef.current.crash?.play().catch(() => {});
+
+        rocket.alpha = 0;
+        rocket.flame.visible = false;
+        createExplosion(app, rocket.x, rocket.y);
+
+        toast({
+          variant: "destructive",
+          title: t('gameZone.rocket.toast.crashed.title'),
+          description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
+        });
+      }
     };
 
+    if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
-  }, [t, toast, gameStatus]);
+  }, [t, toast]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -301,17 +283,13 @@ export function LiptRocket() {
     }
   }, [gameStatus, startGame]);
 
+  // --- HANDLERS ---
   const handleBet = () => {
     const bet = parseFloat(betAmount);
-    if (isNaN(bet) || bet <= 0) {
-      toast({ variant: 'destructive', title: t('gameZone.wheelOfFortune.toast.invalidBet.title') });
+    if (isNaN(bet) || bet <= 0 || bet > liptBalance) {
+      toast({ variant: 'destructive', title: 'Aposta inválida' });
       return;
     }
-    if (bet > liptBalance) {
-      toast({ variant: 'destructive', title: t('stakingPool.toast.invalidAmount.title') });
-      return;
-    }
-
     updateLiptBalance(-bet);
     setGameStatus('waiting');
     toast({
@@ -322,9 +300,9 @@ export function LiptRocket() {
 
   const handleCashOut = () => {
     if (gameStatus !== 'in_progress') return;
-
     if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = null;
     }
 
     const bet = parseFloat(betAmount);
@@ -332,6 +310,8 @@ export function LiptRocket() {
     updateLiptBalance(winnings);
     setCashedOutMultiplier(multiplier);
     setGameStatus('cashed_out');
+
+    if (rocketRef.current) rocketRef.current.flame.visible = false;
 
     toast({
       title: t('gameZone.rocket.toast.cashedOut.title'),
@@ -347,9 +327,9 @@ export function LiptRocket() {
     setGameStatus('idle');
     setCashedOutMultiplier(null);
     setBetAmount('');
-    if(rocketRef.current && appRef.current) {
-        rocketRef.current.alpha = 1;
-        rocketRef.current.y = appRef.current.screen.height - 80;
+    if (rocketRef.current && appRef.current) {
+      rocketRef.current.alpha = 1;
+      rocketRef.current.y = appRef.current.screen.height - 80;
     }
   };
 
@@ -375,7 +355,8 @@ export function LiptRocket() {
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4 p-4 rounded-lg bg-background/50 border">
-       {crashHistory.length > 0 && (
+      {/* HISTÓRICO */}
+      {crashHistory.length > 0 && (
         <div className="flex gap-1 flex-wrap justify-center">
           {crashHistory.map((m, i) => (
             <span
@@ -391,8 +372,8 @@ export function LiptRocket() {
         </div>
       )}
 
+      {/* CANVAS */}
       <div ref={canvasRef} className="w-full h-72 md:h-80 bg-gradient-to-b from-gray-900 via-indigo-900/80 to-blue-900/50 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
-        {/* PIXI Canvas will be mounted here */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
           {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
             <div className='flex flex-col items-center'>
@@ -411,6 +392,7 @@ export function LiptRocket() {
         </div>
       </div>
 
+      {/* INPUT */}
       <div className="w-full max-w-xs space-y-2">
         <Label htmlFor="bet-amount-rocket">{t('gameZone.wheelOfFortune.betAmount')}</Label>
         <Input
@@ -427,6 +409,7 @@ export function LiptRocket() {
         </p>
       </div>
 
+      {/* BOTÃO */}
       <div className="w-full max-w-xs">
         {getButton()}
       </div>
