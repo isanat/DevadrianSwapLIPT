@@ -9,21 +9,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 
-// Cores e valores baseados na imagem de referência.
 // Pesos ajustados para que a soma seja 100 e a vantagem seja da casa.
 const segments = [
+    { value: 1.5, label: '1.5x', color: '#6366f1', weight: 8 },  // Indigo
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 25 }, // Red
     { value: 1,   label: '1x',   color: '#22c55e', weight: 10 }, // Green
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 10 }, // Red
-    { value: 10, label: '10x', color: '#6366f1', weight: 10 },  // Indigo
-    { value: 0.5, label: '0.5x', color: '#f97316', weight: 10 }, // Orange
-    { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 },  // Blue
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 10 }, // Red
-    { value: 1,   label: '1x',   color: '#22c55e', weight: 10 }, //  Green
-    { value: 0.5, label: '0.5x', color: '#f97316', weight: 10 }, // Orange
-    { value: 5,   label: '5x',   color: '#8b5cf6', weight: 10 },  // Purple
-    { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 },  // Blue
+    { value: 3,   label: '3x',   color: '#8b5cf6', weight: 2 },  // Purple
+    { value: 0.5, label: '0.5x', color: '#f97316', weight: 20 }, // Orange
+    { value: 2,   label: '2x',   color: '#3b82f6', weight: 5 },  // Blue
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
+    { value: 1,   label: '1x',   color: '#16a34a', weight: 10 }, // Darker Green
 ];
-
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
@@ -124,7 +120,12 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
 };
 
 
-export function WheelOfFortune() {
+type WheelOfFortuneProps = {
+  onSpinResult: (result: any) => void;
+};
+
+
+export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { liptBalance, updateLiptBalance } = useDashboard();
@@ -181,6 +182,15 @@ export function WheelOfFortune() {
 
     setTimeout(() => {
       const winnings = parseFloat((bet * winningSeg.value).toFixed(2));
+      const net = winnings - bet;
+      
+      onSpinResult({
+        id: Date.now(),
+        bet,
+        multiplier: winningSeg.label,
+        winnings,
+        net,
+      });
 
       if (winnings > 0) {
         updateLiptBalance(winnings);

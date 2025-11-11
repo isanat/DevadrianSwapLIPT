@@ -202,6 +202,7 @@ const translations = {
       title: 'Game Zone',
       description: 'Play games to win LIPT prizes!',
       tooltip: 'Feeling lucky? Place your bets and play exciting games to multiply your LIPT. Remember to play responsibly!',
+      spin: 'Spin',
       wheelOfFortune: {
         title: 'Wheel of Fortune',
         betAmount: 'Bet Amount',
@@ -438,6 +439,7 @@ const translations = {
       title: 'Área de Jogos',
       description: 'Jogue para ganhar prêmios em LIPT!',
       tooltip: 'Está com sorte? Faça suas apostas e jogue jogos emocionantes para multiplicar seus LIPT. Lembre-se de jogar com responsabilidade!',
+      spin: 'Girar',
       wheelOfFortune: {
         title: 'Roda da Fortuna',
         betAmount: 'Valor da Aposta',
@@ -674,6 +676,7 @@ const translations = {
       title: 'Zona de Juegos',
       description: '¡Juega para ganar premios en LIPT!',
       tooltip: '¿Te sientes con suerte? Haz tus apuestas y juega a emocionantes juegos para multiplicar tus LIPT. ¡Recuerda jugar de forma responsable!',
+      spin: 'Girar',
       wheelOfFortune: {
         title: 'Rueda de la Fortuna',
         betAmount: 'Cantidad de la Apuesta',
@@ -910,6 +913,7 @@ const translations = {
       title: 'Area Giochi',
       description: 'Gioca per vincere premi in LIPT!',
       tooltip: 'Ti senti fortunato? Fai le tue scommesse e gioca a giochi entusiasmanti per moltiplicare i tuoi LIPT. Ricorda di giocare responsabilmente!',
+      spin: 'Gira',
       wheelOfFortune: {
         title: 'Ruota della Fortuna',
         betAmount: 'Importo Scommessa',
