@@ -70,7 +70,7 @@ const SortableItem = ({ id, children, className }: { id: string, children: React
 
   return (
     <div ref={setNodeRef} style={style} className={cn("relative group", className)}>
-      <div {...attributes} {...listeners} className="absolute top-3 right-3 z-10 p-2 cursor-grab bg-background/50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity md:block hidden">
+      <div {...attributes} {...listeners} className="absolute top-3 right-3 z-10 p-2 cursor-grab bg-card/80 rounded-md opacity-0 group-hover:opacity-100 transition-opacity md:block hidden">
         <GripVertical size={16} />
       </div>
       {children}

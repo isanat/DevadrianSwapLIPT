@@ -143,7 +143,7 @@ export function StakingPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex justify-between items-start mb-1">
+        <div className="flex justify-between items-center mb-1">
           <CardTitle className="flex items-center gap-2">
             <Archive className="h-6 w-6 text-primary" />
             {t('stakingPool.title')}
