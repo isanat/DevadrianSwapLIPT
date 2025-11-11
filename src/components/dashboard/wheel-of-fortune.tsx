@@ -22,7 +22,6 @@ const segments = [
     { value: 1,   label: '1x',   color: '#16a34a', weight: 15 }, // Darker Green
 ];
 
-
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
 // 🎨 Gera o gradiente conic proporcional
@@ -101,7 +100,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
               key={i}
               className="absolute left-1/2 top-1/2 text-white text-xl font-bold drop-shadow-md"
               style={{
-                transform: `rotate(${textAngle}deg) translate(95px) rotate(${-textAngle}deg)`,
+                transform: `rotate(${textAngle}deg) translate(80px) rotate(${-textAngle}deg)`,
                 transformOrigin: 'center',
               }}
             >
@@ -147,17 +146,16 @@ export function WheelOfFortune() {
     // Encontra a posição do segmento vencedor
     let cumulativeWeight = 0;
     let winningSegmentIndex = -1;
-    for(let i = 0; i < segments.length; i++) {
-        if (segments[i] === winningSeg && Math.random() > 0.5) { // Add randomness for same segments
-            winningSegmentIndex = i;
-            break;
+    
+    // Encontra um índice aleatório para o segmento vencedor se houver duplicados
+    const matchingIndices = segments.reduce((acc, segment, index) => {
+        if (segment.label === winningSeg.label && segment.color === winningSeg.color) {
+            acc.push(index);
         }
-    }
-     if (winningSegmentIndex === -1) {
-        // Fallback to the first occurrence if not found randomly
-        winningSegmentIndex = segments.findIndex(s => s.label === winningSeg.label && s.color === winningSeg.color);
-     }
+        return acc;
+    }, [] as number[]);
 
+    winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
 
     for(let i = 0; i < winningSegmentIndex; i++) {
         cumulativeWeight += segments[i].weight;
@@ -172,7 +170,7 @@ export function WheelOfFortune() {
 
     // A rotação final deve apontar o ponteiro para o targetAngle
     const randomSpins = Math.floor(Math.random() * 4) + 8; // 8 a 11 voltas
-    const finalRotation = (randomSpins * 360) - targetAngle + 90; // +90 to adjust for top pointer
+    const finalRotation = (randomSpins * 360) - targetAngle + 90; // +90 para ajustar para o ponteiro de cima
     
     setRotation(finalRotation);
 
