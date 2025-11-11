@@ -113,14 +113,12 @@ export function WheelOfFortune() {
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
     
     // The pointer is at the top (0 degrees).
-    // To make a segment `i` land at the pointer, we need to rotate the wheel
-    // by -(i * segmentAngle) degrees. We also want to land in the middle of the segment.
-    const baseStopAngle = -(winningSegmentIndex * segmentAngle);
-    const middleOfSegmentAngle = baseStopAngle - (segmentAngle / 2);
+    // To make segment `i` land at the pointer, we need to rotate the wheel by `-(i * segmentAngle)`.
+    const targetAngle = -(winningSegmentIndex * segmentAngle);
 
-    // Get the current rotation from the ref to handle consecutive spins
-    const currentRevolutions = Math.floor(currentRotationRef.current / 360);
-    const finalRotation = (currentRevolutions + randomSpins) * 360 + middleOfSegmentAngle;
+    // Get the current rotation from the ref to handle consecutive spins without reset
+    const currentFullSpins = Math.floor(currentRotationRef.current / 360);
+    const finalRotation = (currentFullSpins + randomSpins) * 360 + targetAngle;
     
     currentRotationRef.current = finalRotation;
     setRotation(finalRotation);
