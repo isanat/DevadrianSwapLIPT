@@ -37,7 +37,7 @@ const getConicGradient = () => {
 };
 
 const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean }) => {
-  const duration = isSpinning ? 'duration-[5000ms]' : 'duration-0';
+  const duration = isSpinning ? 'duration-[8000ms]' : 'duration-0';
 
   return (
     <div className="relative w-64 h-64 md:w-72 md:h-72 mx-auto my-8">
@@ -105,7 +105,7 @@ export function WheelOfFortune() {
     // Start spinning
     setIsSpinning(true);
 
-    const randomSpins = Math.floor(Math.random() * 5) + 5; // 5 to 9 full spins
+    const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
     const stopAngle = winningSegmentIndex * segmentAngle + (segmentAngle / 2);
 
@@ -144,7 +144,7 @@ export function WheelOfFortune() {
       const normalizedRotation = (rotation + (360 * randomSpins) - stopAngle) % 360;
       setRotation(normalizedRotation);
 
-    }, 5000); // Sync with animation duration
+    }, 8000); // Sync with animation duration
   };
 
 
