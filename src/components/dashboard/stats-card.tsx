@@ -1,5 +1,8 @@
+
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 
 type StatsCardProps = {
   title: string;
@@ -9,6 +12,17 @@ type StatsCardProps = {
 };
 
 export function StatsCard({ title, value, icon, description }: StatsCardProps) {
+  const [displayValue, setDisplayValue] = useState<string | number>(value);
+
+  useEffect(() => {
+    if (typeof value === 'number') {
+      // 'en-US' locale is used to ensure consistency between server and client
+      setDisplayValue(value.toLocaleString('en-US'));
+    } else {
+      setDisplayValue(value);
+    }
+  }, [value]);
+
   return (
     <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -16,7 +30,7 @@ export function StatsCard({ title, value, icon, description }: StatsCardProps) {
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{typeof value === 'number' ? value.toLocaleString() : value}</div>
+        <div className="text-2xl font-bold">{displayValue}</div>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}

@@ -1,3 +1,4 @@
+
 'use client';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { TrendingUp, Banknote, Coins, Users } from 'lucide-react';
@@ -16,13 +17,13 @@ export function StatsGroup() {
         />
         <StatsCard
             title="Total Value Locked"
-            value={`$${totalValueLocked.toLocaleString()}`}
+            value={`$${totalValueLocked.toLocaleString('en-US')}`}
             icon={<Banknote className="h-5 w-5 text-primary" />}
             description="Across all pools"
         />
         <StatsCard
             title="Your LIPT Balance"
-            value={`${liptBalance.toLocaleString()} LIPT`}
+            value={`${liptBalance.toLocaleString('en-US')} LIPT`}
             icon={<Coins className="h-5 w-5 text-primary" />}
             description="In your wallet"
         />
