@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Globe, Check } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useRouter, usePathname } from 'next/navigation';
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,20 +21,24 @@ const languages = [
 ]
 
 export function LanguageSwitcher() {
-  const [selectedLanguage, setSelectedLanguage] = React.useState("pt-BR")
+  const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast()
 
-  const handleLanguageChange = (langCode: string) => {
-    const language = languages.find(l => l.code === langCode);
+  const handleLanguageChange = (locale: string) => {
+    const newPath = `/${locale}${pathname.startsWith('/') ? pathname : `/${pathname}`}`.replace(`/${(router as any).locale}`, '');
+    router.push(newPath);
+
+    const language = languages.find(l => l.code === locale);
     if (language) {
-      setSelectedLanguage(langCode);
       toast({
-        title: `Idioma alterado para ${language.name}!`,
-        description: `${language.flag} A página será traduzida. (simulação)`,
+        title: `Language changed to ${language.name}!`,
+        description: `${language.flag} The page will now be displayed in the selected language.`,
       });
-      // In a real app, you would trigger the i18n library here.
     }
   };
+  
+  const currentLocale = (router as any).locale || 'pt-BR';
 
   return (
     <DropdownMenu>
@@ -51,7 +56,7 @@ export function LanguageSwitcher() {
           >
             <span className="mr-2">{lang.flag}</span>
             {lang.name}
-            {selectedLanguage === lang.code && <Check className="ml-auto h-4 w-4" />}
+            {currentLocale === lang.code && <Check className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
