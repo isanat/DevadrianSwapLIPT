@@ -37,7 +37,9 @@ const getConicGradient = () => {
 };
 
 const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean }) => {
-  const duration = isSpinning ? 'duration-[15000ms]' : 'duration-0';
+  const transitionStyle = isSpinning 
+    ? { transition: 'transform 15s cubic-bezier(0.25, 0.1, 0.25, 1)' }
+    : { transition: 'none' };
 
   return (
     <div className="relative w-64 h-64 md:w-72 md:h-72 mx-auto my-8">
@@ -45,8 +47,11 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-accent z-20" />
       
       <div 
-        className={cn("relative w-full h-full rounded-full transition-transform ease-out flex items-center justify-center", duration)}
-        style={{ transform: `rotate(${rotation}deg)` }}
+        className={cn("relative w-full h-full rounded-full flex items-center justify-center")}
+        style={{ 
+          transform: `rotate(${rotation}deg)`,
+          ...transitionStyle
+        }}
       >
         <div 
           className="absolute w-full h-full rounded-full border-4 border-primary/50"
@@ -87,6 +92,7 @@ export function WheelOfFortune() {
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const currentRotationRef = useRef(0);
 
   const handleSpin = () => {
     const bet = parseFloat(betAmount);
@@ -107,16 +113,16 @@ export function WheelOfFortune() {
 
     const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
-    const stopAngle = winningSegmentIndex * segmentAngle + (segmentAngle / 2);
-
-    // Add a small delay to ensure the `isSpinning` state is applied and the transition starts
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            const finalRotation = rotation + (360 * randomSpins) - stopAngle;
-            setRotation(finalRotation);
-        }, 10);
+    const stopAngle = winningSegmentIndex * segmentAngle;
+    const finalRotation = (360 * randomSpins) + stopAngle - (segmentAngle / 2) + (Math.random() * (segmentAngle*0.8) - (segmentAngle*0.4));
+    
+    // Use the functional form of setRotation to ensure we're starting from the most recent angle
+    setRotation(prevRotation => {
+      const currentAngle = prevRotation % 360;
+      const newRotation = prevRotation - currentAngle + finalRotation;
+      currentRotationRef.current = newRotation;
+      return newRotation;
     });
-
 
     setTimeout(() => {
       const result = segments[winningSegmentIndex];
@@ -138,11 +144,6 @@ export function WheelOfFortune() {
       
       setIsSpinning(false);
       setBetAmount('');
-      
-      // To allow for consecutive spins, we don't reset the rotation to 0, 
-      // but we need to normalize it to avoid infinitely large numbers.
-      const normalizedRotation = (rotation + (360 * randomSpins) - stopAngle) % 360;
-      setRotation(normalizedRotation);
 
     }, 15000); // Sync with animation duration
   };
