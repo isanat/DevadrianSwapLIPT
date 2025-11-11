@@ -38,14 +38,11 @@ export function ReferralDashboard() {
     <div className="space-y-8">
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Gift className="h-6 w-6 text-primary" />
-                {t('referralProgram.title')}
-              </CardTitle>
-              <CardDescription>{t('referralProgram.description')}</CardDescription>
-            </div>
+          <div className="flex justify-between items-center mb-1">
+            <CardTitle className="flex items-center gap-2">
+              <Gift className="h-6 w-6 text-primary" />
+              {t('referralProgram.title')}
+            </CardTitle>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -59,6 +56,7 @@ export function ReferralDashboard() {
               </Tooltip>
             </TooltipProvider>
           </div>
+          <CardDescription>{t('referralProgram.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">

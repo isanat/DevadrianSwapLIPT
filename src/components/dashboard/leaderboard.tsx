@@ -35,14 +35,11 @@ export function Leaderboard() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Crown className="h-6 w-6 text-primary" />
-              {t('leaderboard.title')}
-            </CardTitle>
-            <CardDescription>{t('leaderboard.description')}</CardDescription>
-          </div>
+        <div className="flex justify-between items-center mb-1">
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-6 w-6 text-primary" />
+            {t('leaderboard.title')}
+          </CardTitle>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -56,6 +53,7 @@ export function Leaderboard() {
             </Tooltip>
           </TooltipProvider>
         </div>
+        <CardDescription>{t('leaderboard.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow p-0">
         <Table>

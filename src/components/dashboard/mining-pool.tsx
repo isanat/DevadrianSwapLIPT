@@ -99,14 +99,11 @@ export function MiningPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Pickaxe className="h-6 w-6 text-primary" />
-              {t('miningPool.title')}
-            </CardTitle>
-            <CardDescription>{t('miningPool.description')}</CardDescription>
-          </div>
+        <div className="flex justify-between items-center mb-1">
+          <CardTitle className="flex items-center gap-2">
+            <Pickaxe className="h-6 w-6 text-primary" />
+            {t('miningPool.title')}
+          </CardTitle>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -120,6 +117,7 @@ export function MiningPool() {
             </Tooltip>
           </TooltipProvider>
         </div>
+        <CardDescription>{t('miningPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
@@ -165,7 +163,7 @@ export function MiningPool() {
               </div>
               <div className="space-y-2">
                 <Button className="w-full" variant="default" onClick={handleActivateMiner}>{t('miningPool.activateButton')} '{selectedPlan.name}'</Button>
-                <p className="text-xs text-muted-foreground text-center">{t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('en-US')} LIPT</p>
+                <p className="text-xs text-muted-foreground text-center">{t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
               </div>
             </div>
           </TabsContent>

@@ -57,14 +57,11 @@ export function LiquidityPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Droplets className="h-6 w-6 text-primary" />
-              {t('liquidityPool.title')}
-            </CardTitle>
-            <CardDescription>{t('liquidityPool.description')}</CardDescription>
-          </div>
+        <div className="flex justify-between items-center mb-1">
+          <CardTitle className="flex items-center gap-2">
+            <Droplets className="h-6 w-6 text-primary" />
+            {t('liquidityPool.title')}
+          </CardTitle>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -78,6 +75,7 @@ export function LiquidityPool() {
             </Tooltip>
           </TooltipProvider>
         </div>
+        <CardDescription>{t('liquidityPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center">
