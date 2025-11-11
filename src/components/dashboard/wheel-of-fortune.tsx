@@ -13,12 +13,12 @@ import { cn } from '@/lib/utils';
 // Cores e valores baseados na imagem de referência.
 const segments = [
     { value: 1.5, label: '1.5x', color: '#6366f1', weight: 5 },  // Indigo - Very Low
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 35 }, // Red - Super High
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 40 }, // Red - Super High
     { value: 1,   label: '1x',   color: '#22c55e', weight: 10 }, // Green - Low
     { value: 3,   label: '3x',   color: '#8b5cf6', weight: 1 },  // Purple - Extremely Rare
-    { value: 0.5, label: '0.5x', color: '#f97316', weight: 40 }, // Orange - High
+    { value: 0.5, label: '0.5x', color: '#f97316', weight: 35 }, // Orange - High
     { value: 2,   label: '2x',   color: '#3b82f6', weight: 3 },  // Blue - Very Low
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 35 }, // Red - Super High
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 40 }, // Red - Super High
     { value: 1,   label: '1x',   color: '#16a34a', weight: 10 }, // Darker Green - Low
 ];
 
