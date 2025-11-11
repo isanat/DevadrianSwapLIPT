@@ -10,59 +10,68 @@ import { cn } from '@/lib/utils';
 import { useDashboard } from '@/context/dashboard-context';
 
 const segments = [
-  { value: 2, label: '2x', color: '#FFC107' },   // Gold
-  { value: 0, label: '0x', color: '#F44336' },   // Red
-  { value: 1.5, label: '1.5x', color: '#4CAF50' }, // Green
-  { value: 0.5, label: '0.5x', color: '#FF9800' }, // Orange
-  { value: 5, label: '5x', color: '#9C27B0' },   // Purple
-  { value: 0, label: '0x', color: '#F44336' },   // Red
-  { value: 1.5, label: '1.5x', color: '#4CAF50' }, // Green
-  { value: 0.5, label: '0.5x', color: '#FF9800' }, // Orange
+  { value: 2, label: '2x', color: 'hsl(45 95% 55%)' },   // Gold
+  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },   // Red
+  { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' }, // Green
+  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)' }, // Orange
+  { value: 5, label: '5x', color: 'hsl(275 80% 60%)' },   // Purple
+  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },   // Red
+  { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' }, // Green
+  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)' }, // Orange
 ];
 const segmentCount = segments.length;
 const segmentAngle = 360 / segmentCount;
 
+const getConicGradient = () => {
+    let gradient = 'conic-gradient(';
+    let currentAngle = 0;
+    for (let i = 0; i < segments.length; i++) {
+        gradient += `${segments[i].color} ${currentAngle}deg ${currentAngle + segmentAngle}deg`;
+        currentAngle += segmentAngle;
+        if (i < segments.length - 1) {
+            gradient += ', ';
+        }
+    }
+    gradient += ')';
+    return gradient;
+};
+
 const Wheel = ({ rotation }: { rotation: number }) => {
   return (
-    <div className="relative w-64 h-64 mx-auto my-8">
+    <div className="relative w-64 h-64 md:w-72 md:h-72 mx-auto my-8">
+      {/* Pointer */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-accent z-20" />
+      
       <div 
-        className="absolute w-full h-full rounded-full border-4 border-primary/50 transition-transform duration-[4000ms] ease-out"
+        className="relative w-full h-full rounded-full transition-transform duration-[4000ms] ease-out flex items-center justify-center"
         style={{ transform: `rotate(${rotation}deg)` }}
       >
+        <div 
+          className="absolute w-full h-full rounded-full border-4 border-primary/50"
+          style={{ background: getConicGradient() }}
+        />
+        
         {segments.map((segment, index) => (
-          <div
-            key={index}
-            className="absolute w-full h-full"
-            style={{ transform: `rotate(${index * segmentAngle}deg)` }}
-          >
-            <div
-              className="absolute w-1/2 h-1/2"
-              style={{
-                clipPath: `polygon(100% 0, 0 50%, 100% 100%)`,
-                transformOrigin: '0 50%',
-                transform: `rotate(${segmentAngle / 2}deg) skewY(-${90 - segmentAngle}deg) `,
-                backgroundColor: segment.color,
-                opacity: 0.8
-              }}
-            />
-            <span
-              className="absolute w-1/2 h-1/2 flex items-center justify-center font-bold text-white text-lg"
-              style={{
-                transform: `translate(50%, -50%) rotate(${segmentAngle / 2}deg)`,
-                top: '50%',
-                left: '0',
-              }}
-            >
-              {segment.label}
-            </span>
-          </div>
+            <React.Fragment key={index}>
+                {/* Segment lines */}
+                <div 
+                    className="absolute h-full w-px bg-black/30"
+                    style={{ transform: `rotate(${index * segmentAngle}deg)`}}
+                />
+                {/* Segment labels */}
+                <div
+                    className="absolute h-full w-full flex items-center justify-start"
+                    style={{transform: `rotate(${index * segmentAngle + segmentAngle / 2}deg)`}}
+                >
+                    <span className="pl-4 font-bold text-white text-lg drop-shadow-md">
+                        {segment.label}
+                    </span>
+                </div>
+            </React.Fragment>
         ))}
-      </div>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-2" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }}>
-        <div className="h-6 w-6 bg-accent rounded-b-full"/>
-      </div>
-       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-card border-2 border-primary" />
+
+        {/* Center circle */}
+        <div className="absolute w-12 h-12 rounded-full bg-card border-4 border-primary z-10" />
       </div>
     </div>
   );
@@ -96,8 +105,11 @@ export function WheelOfFortune() {
 
     const randomSpins = Math.floor(Math.random() * 5) + 5; // 5 to 9 full spins
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
-    const stopAngle = winningSegmentIndex * segmentAngle;
-    const finalRotation = rotation + (360 * randomSpins) - stopAngle + (segmentAngle / 2);
+    // Calculate stop angle to center the pointer on the middle of the segment
+    const stopAngle = winningSegmentIndex * segmentAngle + (segmentAngle / 2);
+
+    // The rotation needs to land on the opposite side of the wheel, so we adjust
+    const finalRotation = rotation + (360 * randomSpins) - stopAngle;
 
     setRotation(finalRotation);
 
@@ -129,7 +141,7 @@ export function WheelOfFortune() {
     <div className="flex flex-col items-center justify-center space-y-4">
       <Wheel rotation={rotation} />
 
-      <div className="w-full space-y-2">
+      <div className="w-full max-w-xs space-y-2">
         <Label htmlFor="bet-amount">{t('gameZone.wheelOfFortune.betAmount')}</Label>
         <Input
           id="bet-amount"
@@ -143,7 +155,7 @@ export function WheelOfFortune() {
       </div>
 
       <Button 
-        className="w-full font-bold text-lg py-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+        className="w-full max-w-xs font-bold text-lg py-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
         onClick={handleSpin} 
         disabled={isSpinning}
       >
