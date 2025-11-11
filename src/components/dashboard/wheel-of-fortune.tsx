@@ -12,13 +12,13 @@ import { cn } from '@/lib/utils';
 // 🎯 Segmentos com pesos (probabilidades) — casa com vantagem
 // Cores e valores baseados na imagem de referência.
 const segments = [
+    { value: 1.3, label: '1.3x', color: '#6366f1', weight: 10 }, // Indigo
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
     { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
     { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5  }, // Purple
     { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
     { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 }, // Blue
     { value: 0.5, label: '0.5x', color: '#f97316', weight: 25 }, // Orange
-    { value: 1.3, label: '1.3x', color: '#6366f1', weight: 10 }, // Indigo
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
     { value: 1,   label: '1x',   color: '#16a34a', weight: 15 }, // Darker Green
 ];
 
@@ -98,9 +98,9 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
           return (
             <span
               key={i}
-              className="absolute left-1/2 top-1/2 text-white text-xl font-bold drop-shadow-md"
+              className="absolute left-1/2 top-1/2 text-white text-lg font-bold drop-shadow-md"
               style={{
-                transform: `rotate(${textAngle}deg) translate(80px) rotate(${-textAngle}deg)`,
+                transform: `rotate(${textAngle}deg) translate(85px) rotate(${-textAngle}deg)`,
                 transformOrigin: 'center',
               }}
             >
@@ -111,7 +111,9 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
 
         {/* Centro */}
         <div className="absolute w-20 h-20 rounded-full bg-gray-800 border-4 border-yellow-400 z-10 shadow-lg flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-blue-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)]" />
+            <div className="w-12 h-12 rounded-full bg-blue-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)] flex items-center justify-center text-white font-bold">
+              GIRAR
+            </div>
         </div>
       </div>
     </div>
