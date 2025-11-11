@@ -49,29 +49,19 @@ const StarField = ({ count = 50 }: { count?: number }) => {
   );
 };
 
-const ShootingStar = ({ id }: { id: number }) => {
-  const [visible, setVisible] = useState(false);
+const ShootingStar = ({ id, onComplete }: { id: number, onComplete: (id: number) => void }) => {
+  const duration = useMemo(() => Math.random() * 2 + 3, []); // 3 a 5 segundos
 
   useEffect(() => {
-    const show = () => {
-      setVisible(true);
-      const hideTimeout = setTimeout(() => setVisible(false), 3000);
-      return hideTimeout;
-    };
+    const timer = setTimeout(() => {
+      onComplete(id);
+    }, duration * 1000); 
 
-    const interval = setInterval(() => {
-      const hideTimeout = show();
-      return () => clearTimeout(hideTimeout);
-    }, Math.random() * 10000 + 5000);
+    return () => clearTimeout(timer);
+  }, [id, duration, onComplete]);
 
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!visible) return null;
-
-  const top = -10;
-  const left = Math.random() * 100;
-  const duration = Math.random() * 1.5 + 2;
+  const top = useMemo(() => Math.random() * 80 - 10, []);
+  const left = useMemo(() => Math.random() * 80 - 10, []);
 
   return (
     <div
@@ -83,10 +73,11 @@ const ShootingStar = ({ id }: { id: number }) => {
         animationDuration: `${duration}s`,
       }}
     >
-      <Star className="w-4 h-4 text-yellow-300/60 fill-yellow-300/40" />
+      <Star className="w-3 h-3 text-yellow-300/50 fill-yellow-300/30" />
     </div>
   );
 };
+
 
 const generateCrashPoint = (): number => {
   try {
@@ -111,9 +102,24 @@ export function LiptRocket() {
   const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
   const [rocketPosition, setRocketPosition] = useState(0);
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
+  const [shootingStars, setShootingStars] = useState<number[]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isCashingOut = useRef(false);
+
+  const addShootingStar = useCallback(() => {
+    setShootingStars(stars => [...stars, Date.now()]);
+  }, []);
+
+  const removeShootingStar = useCallback((id: number) => {
+    setShootingStars(stars => stars.filter(starId => starId !== id));
+  }, []);
+
+  useEffect(() => {
+    const starInterval = setInterval(addShootingStar, 2000);
+    return () => clearInterval(starInterval);
+  }, [addShootingStar]);
+
 
   const startGame = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -128,7 +134,8 @@ export function LiptRocket() {
     isCashingOut.current = false;
 
     intervalRef.current = setInterval(() => {
-      if (gameStatus !== 'in_progress') {
+      // Este estado é verificado dentro do loop para permitir o cash out imediato
+      if (isCashingOut.current) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         return;
       }
@@ -154,7 +161,7 @@ export function LiptRocket() {
         });
       }
     }, 80);
-  }, [gameStatus, t, toast]);
+  }, [t, toast]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -191,14 +198,13 @@ export function LiptRocket() {
   const handleCashOut = () => {
     if (gameStatus !== 'in_progress' || isCashingOut.current) return;
     isCashingOut.current = true;
+    if (intervalRef.current) clearInterval(intervalRef.current);
 
     const bet = parseFloat(betAmount);
     const winnings = bet * multiplier;
     updateLiptBalance(winnings);
     setCashedOutMultiplier(multiplier);
     setGameStatus('cashed_out');
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
 
     toast({
       title: t('gameZone.rocket.toast.cashedOut.title'),
@@ -242,7 +248,7 @@ export function LiptRocket() {
     <div className="flex flex-col items-center justify-center space-y-4 p-4 rounded-lg bg-background/50 border">
       <div className="w-full h-72 md:h-80 bg-gradient-to-b from-gray-900 via-indigo-900/80 to-blue-900/50 rounded-lg overflow-hidden relative flex items-end justify-center border-b-2 border-primary/20">
         <StarField />
-        {[1, 2, 3].map(i => <ShootingStar key={i} id={i} />)}
+        {shootingStars.map(id => <ShootingStar key={id} id={id} onComplete={removeShootingStar} />)}
 
         <div
           className="absolute bottom-4 transition-transform duration-100 ease-linear"

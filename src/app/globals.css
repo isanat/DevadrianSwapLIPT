@@ -71,15 +71,18 @@
 @layer utilities {
   @keyframes shooting-star {
     0% {
-      transform: translate3d(0, 0, 0) rotate(45deg);
+      transform: translateX(0) translateY(0) rotate(-45deg);
+      opacity: 0;
+    }
+    20% {
       opacity: 1;
     }
     100% {
-      transform: translate3d(-150vw, 150vh, 0) rotate(45deg);
+      transform: translateX(300vw) translateY(300vh) rotate(-45deg);
       opacity: 0;
     }
   }
   .animate-shooting-star {
-    animation: shooting-star linear infinite;
+    animation: shooting-star linear forwards;
   }
 }
