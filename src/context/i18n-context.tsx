@@ -142,7 +142,7 @@ const translations = {
       networkDescription: 'View the members and commissions earned from each level of your network.',
       level: 'Level',
       members: 'Members',
-      commission: 'Commission (LIPT)',
+      commission: 'Commission',
     },
     wallet: {
       connect: 'Connect Wallet',
@@ -288,7 +288,7 @@ const translations = {
       networkDescription: 'Veja os membros e comissões ganhas de cada nível da sua rede.',
       level: 'Nível',
       members: 'Membros',
-      commission: 'Comissão (LIPT)',
+      commission: 'Comissão',
     },
     wallet: {
       connect: 'Conectar Carteira',
@@ -434,7 +434,7 @@ const translations = {
       networkDescription: 'Ve los miembros y comisiones ganadas de cada nivel de tu red.',
       level: 'Nivel',
       members: 'Miembros',
-      commission: 'Comisión (LIPT)',
+      commission: 'Comisión',
     },
     wallet: {
       connect: 'Conectar Billetera',
@@ -580,7 +580,7 @@ const translations = {
       networkDescription: 'Visualizza i membri e le commissioni guadagnate da ogni livello della tua rete.',
       level: 'Livello',
       members: 'Membri',
-      commission: 'Commissione (LIPT)',
+      commission: 'Commissione',
     },
     wallet: {
       connect: 'Connetti Portafoglio',

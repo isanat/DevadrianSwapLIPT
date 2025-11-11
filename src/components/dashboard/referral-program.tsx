@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Copy, Gift, Users, Award } from 'lucide-react';
+import { Copy, Gift, Users, Award, Star } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from '@/context/dashboard-context';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useI18n } from '@/context/i18n-context';
 
 const mockReferrals = [
@@ -77,24 +76,26 @@ export function ReferralDashboard() {
             <CardDescription>{t('referralProgram.networkDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>{t('referralProgram.level')}</TableHead>
-                        <TableHead className="text-center">{t('referralProgram.members')}</TableHead>
-                        <TableHead className="text-right">{t('referralProgram.commission')}</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockReferrals.map((referral) => (
-                        <TableRow key={referral.id}>
-                            <TableCell className="font-medium">{t('referralProgram.level')} {referral.level}</TableCell>
-                            <TableCell className="text-center">{referral.members}</TableCell>
-                            <TableCell className="text-right">{referral.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {mockReferrals.map((referral) => (
+                    <div key={referral.id} className="p-4 bg-background/50 rounded-lg flex flex-col items-center justify-center text-center space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Star className="h-5 w-5 text-yellow-400" />
+                            <h3 className="text-lg font-semibold">{t('referralProgram.level')} {referral.level}</h3>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">{t('referralProgram.members')}</span>
+                                <span className="text-xl font-bold">{referral.members}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">{t('referralProgram.commission')}</span>
+                                <span className="text-xl font-bold text-primary">{referral.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </CardContent>
       </Card>
     </div>
