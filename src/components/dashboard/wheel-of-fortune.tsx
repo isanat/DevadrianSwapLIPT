@@ -88,7 +88,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean
 export function WheelOfFortune() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { liptBalance, purchaseLipt } = useDashboard(); // Assuming purchaseLipt can be used to deduct balance for now
+  const { liptBalance, updateLiptBalance } = useDashboard();
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -106,7 +106,7 @@ export function WheelOfFortune() {
     }
     
     // Deduct bet amount immediately
-    purchaseLipt(-bet); // Using purchaseLipt to represent spending tokens
+    updateLiptBalance(-bet);
     
     // Start spinning
     setIsSpinning(true);
@@ -114,22 +114,22 @@ export function WheelOfFortune() {
     const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
     const stopAngle = winningSegmentIndex * segmentAngle;
-    const finalRotation = (360 * randomSpins) + stopAngle - (segmentAngle / 2) + (Math.random() * (segmentAngle*0.8) - (segmentAngle*0.4));
     
-    // Use the functional form of setRotation to ensure we're starting from the most recent angle
-    setRotation(prevRotation => {
-      const currentAngle = prevRotation % 360;
-      const newRotation = prevRotation - currentAngle + finalRotation;
-      currentRotationRef.current = newRotation;
-      return newRotation;
-    });
+    // Calculate final rotation angle
+    // Subtract current angle to reset, then add new full spins and the final stop angle.
+    // Add a small random offset to make it land not perfectly in the middle of the segment.
+    const currentAngle = currentRotationRef.current % 360;
+    const finalRotation = (currentRotationRef.current - currentAngle) + (360 * randomSpins) + stopAngle + (segmentAngle / 2) + (Math.random() * (segmentAngle * 0.8) - (segmentAngle * 0.4));
+    
+    currentRotationRef.current = finalRotation;
+    setRotation(finalRotation);
 
     setTimeout(() => {
       const result = segments[winningSegmentIndex];
       const winnings = bet * result.value;
 
       if (winnings > 0) {
-        purchaseLipt(winnings);
+        updateLiptBalance(winnings);
         toast({
           title: t('gameZone.wheelOfFortune.toast.win.title'),
           description: t('gameZone.wheelOfFortune.toast.win.description', { amount: winnings.toFixed(2) }),

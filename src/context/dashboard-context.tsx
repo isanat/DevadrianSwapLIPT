@@ -78,6 +78,7 @@ interface DashboardContextData {
 
   // Actions
   purchaseLipt: (amount: number) => void;
+  updateLiptBalance: (amount: number) => void;
   stakeLipt: (amount: number, plan: { duration: number; apy: number }) => void;
   unstakeLipt: (stakeId: string) => { penalty: number };
   claimRewards: () => void;
@@ -205,6 +206,10 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     }
   };
   
+  const updateLiptBalance = (amount: number) => {
+    setLiptBalance(prev => prev + amount);
+  };
+
   const stakeLipt = (amount: number, plan: { duration: number; apy: number }) => {
     if (liptBalance >= amount) {
       const newStake: Stake = {
@@ -322,6 +327,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     miningPower,
     minedRewards,
     purchaseLipt,
+    updateLiptBalance,
     stakeLipt,
     unstakeLipt,
     claimRewards,
