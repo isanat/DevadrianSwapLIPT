@@ -10,14 +10,14 @@ import { cn } from '@/lib/utils';
 import { useDashboard } from '@/context/dashboard-context';
 
 const segments = [
-  { value: 2, label: '2x', color: 'hsl(45 95% 55%)' },   // Gold
-  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },   // Red
-  { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' }, // Green
-  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)' }, // Orange
-  { value: 5, label: '5x', color: 'hsl(275 80% 60%)' },   // Purple
-  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },   // Red
-  { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' }, // Green
-  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)' }, // Orange
+  { value: 5, label: '5x', color: 'hsl(122 80% 55%)' },    // Green
+  { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },     // Orange
+  { value: 1.5, label: '1.5x', color: 'hsl(36 95% 55%)' }, // Orange
+  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },       // Red
+  { value: 2, label: '2x', color: 'hsl(122 80% 55%)' },    // Green
+  { value: 0.5, label: '0.5x', color: 'hsl(4 90% 58%)' },    // Red
+  { value: 1.5, label: '1.5x', color: 'hsl(275 80% 60%)' },  // Purple
+  { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },     // Orange
 ];
 const segmentCount = segments.length;
 const segmentAngle = 360 / segmentCount;
@@ -114,11 +114,10 @@ export function WheelOfFortune() {
 
     const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
     
-    // The pointer is at the top (0 degrees).
+    // The pointer is at the top (0 degrees or 360 degrees).
     // To make segment `i` land at the pointer, we need to rotate the wheel by `-(i * segmentAngle)`.
-    // We add a small random offset within the segment to make it look more natural.
-    const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
-    const targetAngle = -(winningSegmentIndex * segmentAngle) - randomOffset;
+    // We add an offset to center the pointer in the middle of the segment.
+    const targetAngle = -(winningSegmentIndex * segmentAngle);
 
     const finalRotation = (randomSpins * 360) + targetAngle;
     
