@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { DashboardProvider } from '@/context/dashboard-context';
 
 export const metadata: Metadata = {
-  title: 'LiptonSwap',
-  description: 'The premier DeFi platform for LIPT token staking and liquidity.',
+  title: 'DevAdrian Swap',
+  description: 'The premier DeFi platform for token staking and liquidity.',
 };
 
 export default function RootLayout({

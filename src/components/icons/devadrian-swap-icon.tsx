@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-export function LiptonSwapIcon(props: SVGProps<SVGSVGElement>) {
+export function DevAdrianSwapIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

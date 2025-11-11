@@ -20,7 +20,7 @@ const mockReferrals = [
 export function ReferralDashboard() {
   const { toast } = useToast();
   const { referrals, referralRewards } = useDashboard();
-  const referralLink = "https://liptonswap.com/invite?ref=user123";
+  const referralLink = "https://devadrianswap.com/invite?ref=user123";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
