@@ -2,6 +2,24 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
+export const STAKING_PLANS = [
+  { duration: 20, apy: 12.5 },
+  { duration: 30, apy: 15.0 },
+  { duration: 60, apy: 20.0 },
+  { duration: 90, apy: 25.0 },
+];
+const EARLY_UNSTAKE_PENALTY_PERCENTAGE = 10; // 10% penalty
+
+export interface Stake {
+  id: string;
+  amount: number;
+  startDate: number; // store as timestamp
+  plan: {
+    duration: number;
+    apy: number;
+  };
+}
+
 // Define the shape of the context data
 interface DashboardContextData {
   // Balances
@@ -16,9 +34,9 @@ interface DashboardContextData {
   totalValueLocked: number;
   
   // Staking
+  stakes: Stake[];
   stakedBalance: number;
   unclaimedRewards: number;
-  stakingApy: number;
   totalStakers: number;
   
   // Liquidity Pool
@@ -32,8 +50,8 @@ interface DashboardContextData {
 
   // Actions
   purchaseLipt: (amount: number) => void;
-  stakeLipt: (amount: number) => void;
-  unstakeLipt: (amount: number) => void;
+  stakeLipt: (amount: number, plan: { duration: number; apy: number }) => void;
+  unstakeLipt: (stakeId: string) => void;
   claimRewards: () => void;
   addLiquidity: (liptAmount: number, usdtAmount: number) => void;
   removeLiquidity: (lpAmount: number) => void;
@@ -55,9 +73,11 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [liptPrice, setLiptPrice] = useState(1.25);
   const [priceChange, setPriceChange] = useState(2.1);
   const [totalValueLocked, setTotalValueLocked] = useState(1234567);
-  const [stakedBalance, setStakedBalance] = useState(5000);
-  const [unclaimedRewards, setUnclaimedRewards] = useState(125.7);
-  const [stakingApy] = useState(12.5);
+  
+  const [stakes, setStakes] = useState<Stake[]>([]);
+  const [stakedBalance, setStakedBalance] = useState(0);
+  const [unclaimedRewards, setUnclaimedRewards] = useState(0);
+
   const [totalStakers, setTotalStakers] = useState(2345);
   const [poolShare, setPoolShare] = useState(0.12);
   const [lpTokens, setLpTokens] = useState(45.8);
@@ -65,16 +85,28 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [referrals, setReferrals] = useState(15);
   const [referralRewards, setReferralRewards] = useState(350);
 
+  // Update stakedBalance whenever stakes change
+  useEffect(() => {
+    const totalStaked = stakes.reduce((sum, stake) => sum + stake.amount, 0);
+    setStakedBalance(totalStaked);
+  }, [stakes]);
+
+
   // Simulate reward accumulation
   useEffect(() => {
     const interval = setInterval(() => {
-        if (stakedBalance > 0) {
-            const newRewards = (stakedBalance * (stakingApy / 100)) / (365 * 24 * 60 * 60 / 5); // APY accrual every 5 secs
+        if (stakes.length > 0) {
+            let newRewards = 0;
+            stakes.forEach(stake => {
+                const secondsInYear = 365 * 24 * 60 * 60;
+                const rewardPerSecond = (stake.amount * (stake.plan.apy / 100)) / secondsInYear;
+                newRewards += rewardPerSecond * 5; // new rewards for 5 seconds
+            });
             setUnclaimedRewards(prev => prev + newRewards);
         }
     }, 5000); // run every 5 seconds
     return () => clearInterval(interval);
-  }, [stakedBalance, stakingApy]);
+  }, [stakes]);
 
   // ======== ACTIONS ========
   const purchaseLipt = (amount: number) => {
@@ -85,20 +117,40 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     }
   };
   
-  const stakeLipt = (amount: number) => {
+  const stakeLipt = (amount: number, plan: { duration: number; apy: number }) => {
     if (liptBalance >= amount) {
+      const newStake: Stake = {
+        id: `stake_${Date.now()}_${Math.random()}`,
+        amount,
+        plan,
+        startDate: Date.now(),
+      };
       setLiptBalance(prev => prev - amount);
-      setStakedBalance(prev => prev + amount);
+      setStakes(prev => [...prev, newStake]);
       setTotalValueLocked(prev => prev + (amount * liptPrice));
     }
   };
   
-  const unstakeLipt = (amount: number) => {
-    if (stakedBalance >= amount) {
-      setStakedBalance(prev => prev - amount);
-      setLiptBalance(prev => prev + amount);
-      setTotalValueLocked(prev => prev - (amount * liptPrice));
+  const unstakeLipt = (stakeId: string) => {
+    const stake = stakes.find(s => s.id === stakeId);
+    if (!stake) return;
+
+    const now = Date.now();
+    const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
+    
+    let amountToReturn = stake.amount;
+    let penalty = 0;
+
+    if (stakeAgeInDays < stake.plan.duration) {
+      penalty = (stake.amount * EARLY_UNSTAKE_PENALTY_PERCENTAGE) / 100;
+      amountToReturn = stake.amount - penalty;
     }
+
+    setStakes(prev => prev.filter(s => s.id !== stakeId));
+    setLiptBalance(prev => prev + amountToReturn);
+    setTotalValueLocked(prev => prev - (stake.amount * liptPrice));
+    
+    return { penalty };
   };
   
   const claimRewards = () => {
@@ -123,8 +175,9 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const removeLiquidity = (lpAmount: number) => {
       if(lpTokens >= lpAmount) {
           // Mock calculation of returned assets
-          const removedLipt = (lpAmount / lpTokens) * stakedBalance * 0.5; 
-          const removedUsdt = (lpAmount / lpTokens) * stakedBalance * 0.5 * liptPrice;
+          const poolLipt = stakes.reduce((acc, s) => acc + s.amount, 0) * 0.5;
+          const removedLipt = (lpAmount / lpTokens) * poolLipt; 
+          const removedUsdt = (lpAmount / lpTokens) * poolLipt * liptPrice;
           
           setLpTokens(prev => prev - lpAmount);
           setLiptBalance(prev => prev + removedLipt);
@@ -142,9 +195,9 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     liptPrice,
     priceChange,
     totalValueLocked,
+    stakes,
     stakedBalance,
     unclaimedRewards,
-    stakingApy,
     totalStakers,
     poolShare,
     lpTokens,
