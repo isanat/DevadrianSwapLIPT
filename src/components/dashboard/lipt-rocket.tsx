@@ -21,7 +21,7 @@ export function LiptRocket() {
 
   const [betAmount, setBetAmount] = useState('');
   const [multiplier, setMultiplier] = useState(1.00);
-  const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'betting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
+  const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
   const [rocketPosition, setRocketPosition] = useState(0); // 0 to 100
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
 
@@ -41,6 +41,11 @@ export function LiptRocket() {
   
     const interval = setInterval(() => {
       currentMultiplier += 0.01 + (currentMultiplier > 3 ? 0.05 : 0); // Accelerate at higher multipliers
+      
+      if (gameStatus === 'cashed_out') {
+        clearInterval(interval);
+        return;
+      }
       
       if (currentMultiplier >= crashPoint) {
         clearInterval(interval);
@@ -87,11 +92,13 @@ export function LiptRocket() {
     }
 
     updateLiptBalance(-bet);
-    setGameStatus('betting');
+    setGameStatus('waiting');
     toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
   };
 
   const handleCashOut = () => {
+    if (gameStatus !== 'in_progress') return;
+
     const bet = parseFloat(betAmount);
     const winnings = bet * multiplier;
     updateLiptBalance(winnings);
@@ -115,7 +122,7 @@ export function LiptRocket() {
     switch (gameStatus) {
       case 'idle':
         return <Button onClick={handleBet} className="w-full py-6 text-lg">{t('gameZone.rocket.placeBet')}</Button>;
-      case 'betting':
+      case 'waiting':
          return <Button onClick={handleBet} disabled className="w-full py-6 text-lg">{t('gameZone.rocket.waitingForNextRound')}</Button>;
       case 'in_progress':
         return <Button onClick={handleCashOut} className="w-full py-6 text-lg bg-green-500 hover:bg-green-600">{t('gameZone.rocket.cashOut')} @ {multiplier.toFixed(2)}x</Button>;
@@ -152,7 +159,7 @@ export function LiptRocket() {
                 </div>
             ) : (
                 <h2 className="text-5xl md:text-7xl font-bold text-white drop-shadow-lg">
-                    {multiplier.toFixed(2)}x
+                    {gameStatus === 'waiting' ? t('gameZone.rocket.waitingForNextRound') : `${multiplier.toFixed(2)}x`}
                 </h2>
             )}
         </div>
