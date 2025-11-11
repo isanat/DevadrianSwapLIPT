@@ -198,6 +198,37 @@ const translations = {
       user: 'User',
       commission: 'Commission (LIPT)',
     },
+    gameZone: {
+      title: 'Game Zone',
+      description: 'Play games to win LIPT prizes!',
+      tooltip: 'Feeling lucky? Place your bets and play exciting games to multiply your LIPT. Remember to play responsibly!',
+      wheelOfFortune: {
+        title: 'Wheel of Fortune',
+        betAmount: 'Bet Amount',
+        spinButton: 'Spin the Wheel!',
+        spinning: 'Spinning...',
+        toast: {
+          win: {
+            title: 'You Won!',
+            description: 'You won {amount} LIPT!',
+          },
+          lose: {
+            title: 'You Lost',
+            description: 'Better luck next time!',
+          },
+          invalidBet: {
+            title: 'Invalid Bet',
+            description: 'Please check your balance and bet amount.',
+          },
+        },
+      },
+      rocket: {
+        title: 'LIPT Rocket',
+      },
+      lottery: {
+        title: 'Daily Lottery',
+      }
+    },
   },
   'pt-BR': {
     toggleLanguage: 'Trocar idioma',
@@ -390,6 +421,37 @@ const translations = {
       rank: 'Pos.',
       user: 'Usuário',
       commission: 'Comissão (LIPT)',
+    },
+    gameZone: {
+      title: 'Área de Jogos',
+      description: 'Jogue para ganhar prêmios em LIPT!',
+      tooltip: 'Está com sorte? Faça suas apostas e jogue jogos emocionantes para multiplicar seus LIPT. Lembre-se de jogar com responsabilidade!',
+      wheelOfFortune: {
+        title: 'Roda da Fortuna',
+        betAmount: 'Valor da Aposta',
+        spinButton: 'Girar a Roda!',
+        spinning: 'Girando...',
+        toast: {
+          win: {
+            title: 'Você Ganhou!',
+            description: 'Você ganhou {amount} LIPT!',
+          },
+          lose: {
+            title: 'Você Perdeu',
+            description: 'Mais sorte da próxima vez!',
+          },
+          invalidBet: {
+            title: 'Aposta Inválida',
+            description: 'Por favor, verifique seu saldo e o valor da aposta.',
+          },
+        },
+      },
+      rocket: {
+        title: 'Foguete LIPT',
+      },
+      lottery: {
+        title: 'Loteria Diária',
+      }
     },
   },
   es: {
@@ -584,6 +646,37 @@ const translations = {
       user: 'Usuario',
       commission: 'Comisión (LIPT)',
     },
+    gameZone: {
+      title: 'Zona de Juegos',
+      description: '¡Juega para ganar premios en LIPT!',
+      tooltip: '¿Te sientes con suerte? Haz tus apuestas y juega a emocionantes juegos para multiplicar tus LIPT. ¡Recuerda jugar de forma responsable!',
+      wheelOfFortune: {
+        title: 'Rueda de la Fortuna',
+        betAmount: 'Cantidad de la Apuesta',
+        spinButton: '¡Girar la Rueda!',
+        spinning: 'Girando...',
+        toast: {
+          win: {
+            title: '¡Has Ganado!',
+            description: '¡Has ganado {amount} LIPT!',
+          },
+          lose: {
+            title: 'Has Perdido',
+            description: '¡Mejor suerte la próxima vez!',
+          },
+          invalidBet: {
+            title: 'Apuesta Inválida',
+            description: 'Por favor, revisa tu saldo y la cantidad de la apuesta.',
+          },
+        },
+      },
+      rocket: {
+        title: 'Cohete LIPT',
+      },
+      lottery: {
+        title: 'Lotería Diaria',
+      },
+    },
   },
   it: {
     toggleLanguage: 'Cambia lingua',
@@ -776,6 +869,37 @@ const translations = {
       rank: 'Pos.',
       user: 'Utente',
       commission: 'Commissione (LIPT)',
+    },
+    gameZone: {
+      title: 'Area Giochi',
+      description: 'Gioca per vincere premi in LIPT!',
+      tooltip: 'Ti senti fortunato? Fai le tue scommesse e gioca a giochi entusiasmanti per moltiplicare i tuoi LIPT. Ricorda di giocare responsabilmente!',
+      wheelOfFortune: {
+        title: 'Ruota della Fortuna',
+        betAmount: 'Importo Scommessa',
+        spinButton: 'Gira la Ruota!',
+        spinning: 'Girando...',
+        toast: {
+          win: {
+            title: 'Hai Vinto!',
+            description: 'Hai vinto {amount} LIPT!',
+          },
+          lose: {
+            title: 'Hai Perso',
+            description: 'Meglio fortuna la prossima volta!',
+          },
+          invalidBet: {
+            title: 'Scommessa non valida',
+            description: 'Controlla il tuo saldo e l\'importo della scommessa.',
+          },
+        },
+      },
+      rocket: {
+        title: 'Razzo LIPT',
+      },
+      lottery: {
+        title: 'Lotteria Giornaliera',
+      },
     },
   },
 };

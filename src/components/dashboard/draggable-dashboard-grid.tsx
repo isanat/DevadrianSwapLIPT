@@ -29,6 +29,7 @@ import { TokenPurchase } from '@/components/dashboard/token-purchase';
 import { ReferralDashboard } from '@/components/dashboard/referral-program';
 import { MiningPool } from '@/components/dashboard/mining-pool';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
+import { GameZone } from '@/components/dashboard/game-zone';
 
 
 const componentMap: { [key: string]: React.FC } = {
@@ -39,6 +40,7 @@ const componentMap: { [key: string]: React.FC } = {
   purchase: TokenPurchase,
   referral: ReferralDashboard,
   leaderboard: Leaderboard,
+  gamezone: GameZone,
 };
 
 const initialItems = [
@@ -47,6 +49,7 @@ const initialItems = [
   { id: 'mining', className: 'lg:col-span-1' },
   { id: 'liquidity', className: 'lg:col-span-1' },
   { id: 'purchase', className: 'lg:col-span-1' },
+  { id: 'gamezone', className: 'lg:col-span-1' },
   { id: 'referral', className: 'lg:col-span-2' },
   { id: 'leaderboard', className: 'lg:col-span-1' },
 ];
@@ -69,7 +72,7 @@ const SortableItem = ({ id, children, className }: { id: string, children: React
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={cn("relative group", className)}>
+    <div ref={setNodeRef} style={style} className={cn("relative group h-full", className)}>
       <div {...attributes} {...listeners} className="absolute top-3 right-3 z-10 p-2 cursor-grab bg-card/80 rounded-md opacity-0 group-hover:opacity-100 transition-opacity md:block hidden">
         <GripVertical size={16} />
       </div>
