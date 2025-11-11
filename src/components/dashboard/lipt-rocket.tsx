@@ -49,19 +49,29 @@ const StarField = ({ count = 50 }: { count?: number }) => {
   );
 };
 
-const ShootingStar = ({ id, onComplete }: { id: number, onComplete: (id: number) => void }) => {
-  const duration = useMemo(() => Math.random() * 2 + 3, []); // 3 a 5 segundos
+const ShootingStar = ({ id }: { id: number }) => {
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete(id);
-    }, duration * 1000); 
+    const show = () => {
+      setVisible(true);
+      const hideTimeout = setTimeout(() => setVisible(false), 3000);
+      return hideTimeout;
+    };
 
-    return () => clearTimeout(timer);
-  }, [id, duration, onComplete]);
+    const interval = setInterval(() => {
+      const hideTimeout = show();
+      return () => clearTimeout(hideTimeout);
+    }, Math.random() * 10000 + 5000);
 
-  const top = useMemo(() => Math.random() * 80 - 10, []);
-  const left = useMemo(() => Math.random() * 80 - 10, []);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!visible) return null;
+
+  const top = -10;
+  const left = Math.random() * 100;
+  const duration = Math.random() * 1.5 + 2;
 
   return (
     <div
@@ -73,22 +83,20 @@ const ShootingStar = ({ id, onComplete }: { id: number, onComplete: (id: number)
         animationDuration: `${duration}s`,
       }}
     >
-      <Star className="w-3 h-3 text-yellow-300/50 fill-yellow-300/30" />
+      <Star className="w-4 h-4 text-yellow-300/60 fill-yellow-300/40" />
     </div>
   );
 };
-
 
 const generateCrashPoint = (): number => {
   try {
     const e = 2 ** 32;
     const h = crypto.getRandomValues(new Uint32Array(1))[0];
     const r = h / e;
-    const crash = Math.floor(100 / (1 - r)) / 100;
-    return Math.max(1.01, crash);
+    const crashPoint = Math.floor(100 / (1 - r)) / 100;
+    return Math.max(1.01, crashPoint);
   } catch {
-    // Fallback seguro
-    return Math.max(1.01, Math.random() * 10 + 1.01);
+    return Math.max(1.01, 1 + Math.random() * 10);
   }
 };
 
@@ -102,66 +110,57 @@ export function LiptRocket() {
   const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
   const [rocketPosition, setRocketPosition] = useState(0);
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
-  const [shootingStars, setShootingStars] = useState<number[]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isCashingOut = useRef(false);
-
-  const addShootingStar = useCallback(() => {
-    setShootingStars(stars => [...stars, Date.now()]);
-  }, []);
-
-  const removeShootingStar = useCallback((id: number) => {
-    setShootingStars(stars => stars.filter(starId => starId !== id));
-  }, []);
-
-  useEffect(() => {
-    const starInterval = setInterval(addShootingStar, 2000);
-    return () => clearInterval(starInterval);
-  }, [addShootingStar]);
-
+  const crashPointRef = useRef(1.0);
 
   const startGame = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
     const crashPoint = generateCrashPoint();
+    crashPointRef.current = crashPoint;
     let current = 1.0;
+    let step = 0;
+    const maxSteps = 200;
 
     setGameStatus('in_progress');
     setMultiplier(1.0);
     setRocketPosition(0);
     setCashedOutMultiplier(null);
-    isCashingOut.current = false;
 
-    intervalRef.current = setInterval(() => {
-      // Este estado é verificado dentro do loop para permitir o cash out imediato
-      if (isCashingOut.current) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        return;
-      }
-
-      current += 0.01 + current * 0.015;
-      setMultiplier(current);
-
-      // Progresso logarítmico suave
-      const progress = crashPoint > 1.01
-        ? (Math.log10(current) / Math.log10(crashPoint)) * 90
-        : 0;
-      setRocketPosition(Math.min(90, progress));
-
-      if (current >= crashPoint) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+    const tick = () => {
+      step++;
+      if (step > maxSteps && gameStatus !== 'cashed_out') {
+        if(intervalRef.current) clearInterval(intervalRef.current);
         setGameStatus('crashed');
         setMultiplier(crashPoint);
+        return;
+      }
+      
+      if (current >= crashPoint) {
+        if(intervalRef.current) clearInterval(intervalRef.current);
         setRocketPosition(100);
+        setMultiplier(crashPoint);
+        setGameStatus('crashed');
         toast({
           variant: "destructive",
           title: t('gameZone.rocket.toast.crashed.title'),
           description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
         });
+        return;
       }
-    }, 80);
-  }, [t, toast]);
+
+      current *= 1.08;
+      
+      setMultiplier(current);
+
+      const progress = Math.min(95, ((current - 1) / (crashPoint - 1)) * 95);
+      setRocketPosition(progress);
+    };
+
+    intervalRef.current = setInterval(tick, 50);
+  }, [t, toast, gameStatus]);
+
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -196,10 +195,10 @@ export function LiptRocket() {
   };
 
   const handleCashOut = () => {
-    if (gameStatus !== 'in_progress' || isCashingOut.current) return;
-    isCashingOut.current = true;
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (gameStatus !== 'in_progress') return;
 
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    
     const bet = parseFloat(betAmount);
     const winnings = bet * multiplier;
     updateLiptBalance(winnings);
@@ -243,16 +242,20 @@ export function LiptRocket() {
         return null;
     }
   };
+  
+  const debugMultiplier = gameStatus === 'crashed' ? crashPointRef.current.toFixed(2) : '...';
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4 p-4 rounded-lg bg-background/50 border">
       <div className="w-full h-72 md:h-80 bg-gradient-to-b from-gray-900 via-indigo-900/80 to-blue-900/50 rounded-lg overflow-hidden relative flex items-end justify-center border-b-2 border-primary/20">
         <StarField />
-        {shootingStars.map(id => <ShootingStar key={id} id={id} onComplete={removeShootingStar} />)}
+        {[1, 2, 3].map(i => <ShootingStar key={i} id={i} />)}
 
         <div
-          className="absolute bottom-4 transition-transform duration-100 ease-linear"
-          style={{ transform: `translateY(-${rocketPosition * 2.5}px)` }}
+          className="absolute bottom-4 transition-all duration-75 ease-out"
+          style={{ 
+            transform: `translateY(-${rocketPosition * 3}px) scale(${1 + rocketPosition / 1000})`
+          }}
         >
           <RocketIcon crashed={gameStatus === 'crashed'} />
         </div>
@@ -272,6 +275,7 @@ export function LiptRocket() {
               {gameStatus === 'waiting' ? '...' : `${multiplier.toFixed(2)}x`}
             </h2>
           )}
+           {/* <div className="text-xs text-yellow-300 mt-12">Próximo crash: {debugMultiplier}x</div> */}
         </div>
       </div>
 
