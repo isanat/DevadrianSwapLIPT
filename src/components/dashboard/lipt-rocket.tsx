@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,18 +56,18 @@ const ShootingStar = () => {
     useEffect(() => {
         const showInterval = setInterval(() => {
             setVisible(true);
-            const hideTimeout = setTimeout(() => setVisible(false), 3000); // Slower animation, visible for 3s
+            const hideTimeout = setTimeout(() => setVisible(false), 3000);
             return () => clearTimeout(hideTimeout);
-        }, Math.random() * 10000 + 5000); // every 5-15 seconds
+        }, Math.random() * 10000 + 5000); 
         
         return () => clearInterval(showInterval);
     }, []);
 
     if (!visible) return null;
 
-    const top = -10; // Start above the screen
-    const left = Math.random() * 100; // Start at a random horizontal position
-    const animationDuration = Math.random() * 2 + 2.5; // 2.5s to 4.5s travel time (slower)
+    const top = -10;
+    const left = Math.random() * 100;
+    const animationDuration = Math.random() * 2 + 2.5; 
 
     return (
       <div 
@@ -96,27 +96,35 @@ export function LiptRocket() {
     const r = Math.random();
     // This formula creates a distribution where crashes at low multipliers are more common.
     // 99 / (100 - r * 100) -> A number between 0.99 and infinity.
-    // We cap it at a reasonable max, e.g., 200, and ensure it's at least 1.01.
+    // We cap it at a reasonable max and ensure it's at least 1.01.
     const crashPoint = 99 / (100 - r * 100);
     return Math.max(1.01, crashPoint);
   };
+  
+  // Use a ref to get the latest gameStatus inside setInterval/requestAnimationFrame
+  const gameStatusRef = useRef(gameStatus);
+  useEffect(() => {
+    gameStatusRef.current = gameStatus;
+  }, [gameStatus]);
 
   const runGame = useCallback(() => {
     setGameStatus('in_progress');
     const crashPoint = calculateCrashPoint();
     let currentMultiplier = 1.00;
-  
-    const interval = setInterval(() => {
-      // 20x faster: Increase the multiplier factor significantly
-      currentMultiplier += (currentMultiplier * 0.35); // Was 0.015, now much faster
-      
+    let startTime = Date.now();
+    let animationFrameId: number;
+
+    const gameLoop = () => {
+      const elapsedTime = (Date.now() - startTime) / 1000; // time in seconds
+      // Exponential growth, but slower and controlled
+      currentMultiplier = Math.pow(1.05, elapsedTime * 4) + 0.01 * elapsedTime;
+
       if (gameStatusRef.current === 'cashed_out' || gameStatusRef.current === 'crashed') {
-        clearInterval(interval);
+        cancelAnimationFrame(animationFrameId);
         return;
       }
       
       if (currentMultiplier >= crashPoint) {
-        clearInterval(interval);
         setGameStatus('crashed');
         setMultiplier(crashPoint);
         setRocketPosition(100);
@@ -129,21 +137,18 @@ export function LiptRocket() {
         }
       } else {
         setMultiplier(currentMultiplier);
-        // The progress is now logarithmic, so it rises fast at the beginning and slows down visually as it gets higher
-        // This gives a better sense of acceleration.
-        const progress = Math.min(90, (Math.log10(currentMultiplier) / Math.log10(crashPoint)) * 100);
+        // The visual progress is now smoother and logarithmic, giving a sense of acceleration
+        const progress = Math.min(90, (Math.log10(currentMultiplier) / 2) * 100);
         setRocketPosition(progress);
+        animationFrameId = requestAnimationFrame(gameLoop);
       }
-    }, 50); // Game loop runs even faster (every 50ms)
+    };
+
+    animationFrameId = requestAnimationFrame(gameLoop);
   
-    return () => clearInterval(interval);
+    return () => cancelAnimationFrame(animationFrameId);
   }, [t, toast]);
   
-  // Use a ref to get the latest gameStatus inside setInterval
-  const gameStatusRef = React.useRef(gameStatus);
-  useEffect(() => {
-    gameStatusRef.current = gameStatus;
-  }, [gameStatus]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -216,7 +221,7 @@ export function LiptRocket() {
 
         <div 
           className="absolute bottom-4 transition-transform duration-100 ease-linear"
-          style={{ transform: `translateY(-${rocketPosition * 0.8}%)` }}
+          style={{ transform: `translateY(-${rocketPosition * 2.5}px)` }} // Adjust multiplier for visual height
         >
           <RocketIcon crashed={gameStatus === 'crashed'} />
         </div>
