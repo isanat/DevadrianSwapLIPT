@@ -182,6 +182,13 @@ const translations = {
         },
       },
     },
+    leaderboard: {
+      title: 'Referral Champions',
+      description: 'Top 10 users by referral commission earned.',
+      rank: 'Rank',
+      user: 'User',
+      commission: 'Commission (LIPT)',
+    },
   },
   'pt-BR': {
     toggleLanguage: 'Trocar idioma',
@@ -358,6 +365,13 @@ const translations = {
           description: 'Você reivindicou {amount} LIPT da mineração.',
         },
       },
+    },
+    leaderboard: {
+      title: 'Campeões de Indicação',
+      description: 'Top 10 usuários por comissão de indicação ganha.',
+      rank: 'Pos.',
+      user: 'Usuário',
+      commission: 'Comissão (LIPT)',
     },
   },
   es: {
@@ -536,6 +550,13 @@ const translations = {
         },
       },
     },
+    leaderboard: {
+      title: 'Campeones de Referidos',
+      description: 'Top 10 usuarios por comisión de referidos ganada.',
+      rank: 'Pos.',
+      user: 'Usuario',
+      commission: 'Comisión (LIPT)',
+    },
   },
   it: {
     toggleLanguage: 'Cambia lingua',
@@ -712,6 +733,13 @@ const translations = {
           description: 'Hai riscattato {amount} LIPT dall\'estrazione.',
         },
       },
+    },
+    leaderboard: {
+      title: 'Campioni di Referral',
+      description: 'Top 10 utenti per commissione di referral guadagnata.',
+      rank: 'Pos.',
+      user: 'Utente',
+      commission: 'Commissione (LIPT)',
     },
   },
 };

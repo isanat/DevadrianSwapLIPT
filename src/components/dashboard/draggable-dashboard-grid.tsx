@@ -28,6 +28,7 @@ import { StatsGroup } from '@/components/dashboard/stats-group';
 import { TokenPurchase } from '@/components/dashboard/token-purchase';
 import { ReferralDashboard } from '@/components/dashboard/referral-program';
 import { MiningPool } from '@/components/dashboard/mining-pool';
+import { Leaderboard } from '@/components/dashboard/leaderboard';
 
 
 const componentMap: { [key: string]: React.FC } = {
@@ -37,6 +38,7 @@ const componentMap: { [key: string]: React.FC } = {
   liquidity: LiquidityPool,
   purchase: TokenPurchase,
   referral: ReferralDashboard,
+  leaderboard: Leaderboard,
 };
 
 const initialItems = [
@@ -45,7 +47,8 @@ const initialItems = [
   { id: 'mining', className: 'lg:col-span-1' },
   { id: 'liquidity', className: 'lg:col-span-1' },
   { id: 'purchase', className: 'lg:col-span-1' },
-  { id: 'referral', className: 'lg:col-span-3' },
+  { id: 'referral', className: 'lg:col-span-2' },
+  { id: 'leaderboard', className: 'lg:col-span-1' },
 ];
 
 const SortableItem = ({ id, children, className }: { id: string, children: React.ReactNode, className: string }) => {
