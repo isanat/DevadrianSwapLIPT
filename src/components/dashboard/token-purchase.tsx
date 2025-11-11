@@ -7,23 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Banknote, ArrowRightLeft } from 'lucide-react';
 
-const LIPT_PRICE_IN_ETH = 0.0005;
+const LIPT_PRICE_IN_USDT = 1.25;
 
 export function TokenPurchase() {
-  const [ethAmount, setEthAmount] = useState('');
+  const [usdtAmount, setUsdtAmount] = useState('');
   const [liptAmount, setLiptAmount] = useState('');
 
-  const handleEthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUsdtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const amount = e.target.value;
     if (amount === '' || parseFloat(amount) < 0) {
-      setEthAmount('');
+      setUsdtAmount('');
       setLiptAmount('');
       return;
     }
     const numAmount = parseFloat(amount);
     if (!isNaN(numAmount)) {
-      setEthAmount(amount);
-      setLiptAmount((numAmount / LIPT_PRICE_IN_ETH).toFixed(4));
+      setUsdtAmount(amount);
+      setLiptAmount((numAmount / LIPT_PRICE_IN_USDT).toFixed(4));
     }
   };
 
@@ -34,17 +34,17 @@ export function TokenPurchase() {
           <Banknote className="h-6 w-6 text-primary" />
           Buy LIPT Token
         </CardTitle>
-        <CardDescription>Purchase LIPT tokens using ETH.</CardDescription>
+        <CardDescription>Purchase LIPT tokens using USDT.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="eth-amount">You pay (ETH)</Label>
+          <Label htmlFor="usdt-amount">You pay (USDT)</Label>
           <Input
-            id="eth-amount"
+            id="usdt-amount"
             type="number"
             placeholder="0.0"
-            value={ethAmount}
-            onChange={handleEthChange}
+            value={usdtAmount}
+            onChange={handleUsdtChange}
           />
         </div>
         <div className="flex justify-center my-2">

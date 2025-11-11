@@ -14,9 +14,9 @@ export function LiquidityPool() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Droplets className="h-6 w-6 text-primary" />
-          Liquidity Pool (LIPT/ETH)
+          Liquidity Pool (LIPT/USDT)
         </CardTitle>
-        <CardDescription>Provide liquidity to earn trading fees from the LIPT/ETH pair.</CardDescription>
+        <CardDescription>Provide liquidity to earn trading fees from the LIPT/USDT pair.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center">
@@ -30,7 +30,7 @@ export function LiquidityPool() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Fees Earned</p>
-            <p className="text-2xl font-bold">0.05 ETH</p>
+            <p className="text-2xl font-bold">55.75 USDT</p>
           </div>
         </div>
         <Separator className="my-4" />
@@ -50,9 +50,9 @@ export function LiquidityPool() {
                 <Plus className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="add-eth-amount">ETH Amount</Label>
-                <Input id="add-eth-amount" type="number" placeholder="0.0" />
-                <p className="text-xs text-muted-foreground">Balance: 2.5 ETH</p>
+                <Label htmlFor="add-usdt-amount">USDT Amount</Label>
+                <Input id="add-usdt-amount" type="number" placeholder="0.0" />
+                <p className="text-xs text-muted-foreground">Balance: 5,000 USDT</p>
               </div>
               <Button className="w-full mt-4" variant="default">Add Liquidity</Button>
             </div>
