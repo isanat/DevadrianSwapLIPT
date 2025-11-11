@@ -9,8 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 
-// 🎯 Segmentos com pesos (probabilidades) — casa com vantagem
-// Cores e valores baseados na imagem de referência.
+// 🎨 Segmentos com pesos (probabilidades) e cores vibrantes
 const segments = [
     { value: 1.3, label: '1.3x', color: '#6366f1', weight: 10 }, // Indigo
     { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
@@ -18,16 +17,16 @@ const segments = [
     { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5  }, // Purple
     { value: 0.5, label: '0.5x', color: '#f97316', weight: 25 }, // Orange
     { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 }, // Blue
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red (Duplicate for house edge)
+    { value: 0,   label: '0x',   color: '#dc2626', weight: 20 }, // Darker Red
     { value: 1,   label: '1x',   color: '#16a34a', weight: 15 }, // Darker Green
 ];
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
-// 🎨 Gera o gradiente conic proporcional
+// 🎨 Gera o gradiente cónico proporcional
 const getConicGradient = () => {
   let gradient = 'conic-gradient(';
-  let currentAngle = 0; 
+  let currentAngle = 0;
   segments.forEach((seg, i) => {
     const segmentAngle = (seg.weight / totalWeight) * 360;
     const nextAngle = currentAngle + segmentAngle;
@@ -49,9 +48,7 @@ const getWeightedRandomSegment = () => {
   return segments[segments.length - 1];
 };
 
-
 const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
-  const { t } = useI18n();
   const transitionStyle = isSpinning
     ? { transition: 'transform 8s cubic-bezier(0.2, 0.8, 0.2, 1)' }
     : { transition: 'none' };
@@ -93,7 +90,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         {segments.map((seg, i) => {
           const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
           const segmentAngle = (seg.weight / totalWeight) * 360;
-          const textAngle = -90 + 100 + (cumulativeWeight / totalWeight) * 360 + segmentAngle / 2;
+          const textAngle = (cumulativeWeight / totalWeight) * 360 + (segmentAngle / 2) - 90;
 
           return (
             <span
@@ -112,7 +109,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         {/* Centro */}
         <div className="absolute w-20 h-20 rounded-full bg-gray-800 border-4 border-yellow-400 z-10 shadow-lg flex items-center justify-center">
             <div className="w-12 h-12 rounded-full bg-blue-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)] flex items-center justify-center text-white font-bold">
-              {t('gameZone.wheelOfFortune.spinButton').split(' ')[0].toUpperCase()}
+              GIRAR
             </div>
         </div>
       </div>
@@ -147,7 +144,6 @@ export function WheelOfFortune() {
     
     // Encontra a posição do segmento vencedor
     let cumulativeWeight = 0;
-    let winningSegmentIndex = -1;
     
     // Encontra um índice aleatório para o segmento vencedor se houver duplicados
     const matchingIndices = segments.reduce((acc, segment, index) => {
@@ -157,7 +153,7 @@ export function WheelOfFortune() {
         return acc;
     }, [] as number[]);
 
-    winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
+    const winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
 
     for(let i = 0; i < winningSegmentIndex; i++) {
         cumulativeWeight += segments[i].weight;
