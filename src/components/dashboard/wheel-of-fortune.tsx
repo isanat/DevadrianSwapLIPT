@@ -16,7 +16,7 @@ const segments = [
     { value: 0, label: '0.5x', color: 'hsl(4 90% 58%)' },        // Red
     { value: 3, label: '3x', color: 'hsl(122 80% 55%)' },     // Green
     { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },        // Red
-    { value: 5, label: '5x', color: 'hsl(275 80% 60%)' }, // Purple
+    { value: 4, label: '4x', color: 'hsl(275 80% 60%)' }, // Purple
     { value: 1.5, label: '1.5x', color: 'hsl(36 95% 55%)' },    // Orange
 ];
 
