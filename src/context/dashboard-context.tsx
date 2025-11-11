@@ -48,10 +48,14 @@ interface DashboardContextData {
   referrals: number;
   referralRewards: number;
 
+  // Investor focused stats
+  totalInvested: number;
+  totalReturns: number;
+
   // Actions
   purchaseLipt: (amount: number) => void;
   stakeLipt: (amount: number, plan: { duration: number; apy: number }) => void;
-  unstakeLipt: (stakeId: string) => void;
+  unstakeLipt: (stakeId: string) => { penalty: number };
   claimRewards: () => void;
   addLiquidity: (liptAmount: number, usdtAmount: number) => void;
   removeLiquidity: (lpAmount: number) => void;
@@ -85,11 +89,25 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [referrals, setReferrals] = useState(15);
   const [referralRewards, setReferralRewards] = useState(350);
 
-  // Update stakedBalance whenever stakes change
+  // Investor focused stats
+  const [totalInvested, setTotalInvested] = useState(0);
+  const [totalReturns, setTotalReturns] = useState(0);
+
+
+  // Update derived states
   useEffect(() => {
     const totalStaked = stakes.reduce((sum, stake) => sum + stake.amount, 0);
     setStakedBalance(totalStaked);
-  }, [stakes]);
+
+    const totalStakedValue = totalStaked * liptPrice;
+    // Assuming LP tokens value is somewhat represented by fees earned for simplicity
+    const totalLPValue = (lpTokens / (poolShare / 100)) * (feesEarned / poolShare) || 0;
+    setTotalInvested(totalStakedValue + totalLPValue);
+
+    const rewardsValue = unclaimedRewards * liptPrice;
+    setTotalReturns(rewardsValue + feesEarned);
+
+  }, [stakes, liptPrice, lpTokens, poolShare, feesEarned, unclaimedRewards]);
 
 
   // Simulate reward accumulation
@@ -104,9 +122,10 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
             });
             setUnclaimedRewards(prev => prev + newRewards);
         }
+        setFeesEarned(prev => prev + 0.05 * lpTokens); // Simulate LP fee earnings
     }, 5000); // run every 5 seconds
     return () => clearInterval(interval);
-  }, [stakes]);
+  }, [stakes, lpTokens]);
 
   // ======== ACTIONS ========
   const purchaseLipt = (amount: number) => {
@@ -128,12 +147,13 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
       setLiptBalance(prev => prev - amount);
       setStakes(prev => [...prev, newStake]);
       setTotalValueLocked(prev => prev + (amount * liptPrice));
+      setTotalStakers(prev => prev + 1);
     }
   };
   
   const unstakeLipt = (stakeId: string) => {
     const stake = stakes.find(s => s.id === stakeId);
-    if (!stake) return;
+    if (!stake) return { penalty: 0 };
 
     const now = Date.now();
     const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
@@ -149,6 +169,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     setStakes(prev => prev.filter(s => s.id !== stakeId));
     setLiptBalance(prev => prev + amountToReturn);
     setTotalValueLocked(prev => prev - (stake.amount * liptPrice));
+    setTotalStakers(prev => prev - 1);
     
     return { penalty };
   };
@@ -175,9 +196,11 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const removeLiquidity = (lpAmount: number) => {
       if(lpTokens >= lpAmount) {
           // Mock calculation of returned assets
-          const poolLipt = stakes.reduce((acc, s) => acc + s.amount, 0) * 0.5;
-          const removedLipt = (lpAmount / lpTokens) * poolLipt; 
-          const removedUsdt = (lpAmount / lpTokens) * poolLipt * liptPrice;
+          const totalLPLiquidity = (totalValueLocked * 0.2); // Assume 20% of TVL is this LP
+          const userShareValue = (lpAmount / lpTokens) * totalLPLiquidity;
+
+          const removedLipt = (userShareValue / 2) / liptPrice;
+          const removedUsdt = userShareValue / 2;
           
           setLpTokens(prev => prev - lpAmount);
           setLiptBalance(prev => prev + removedLipt);
@@ -185,7 +208,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
           
           const removedValue = (removedLipt * liptPrice) + removedUsdt;
           setTotalValueLocked(prev => prev - removedValue);
-          setPoolShare(prev => Math.max(0, prev - 0.01));
+          setPoolShare(prev => Math.max(0, prev - 0.01 * (lpAmount/lpTokens)));
       }
   };
 
@@ -204,6 +227,8 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     feesEarned,
     referrals,
     referralRewards,
+    totalInvested,
+    totalReturns,
     purchaseLipt,
     stakeLipt,
     unstakeLipt,

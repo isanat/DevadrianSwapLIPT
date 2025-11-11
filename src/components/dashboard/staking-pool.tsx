@@ -24,7 +24,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
   const now = Date.now();
   const endDate = stake.startDate + stake.plan.duration * 24 * 60 * 60 * 1000;
   const isMature = now >= endDate;
-  const timeLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+  const timeLeft = isMature ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
 
   return (
     <div className="flex justify-between items-center p-3 rounded-lg border bg-background/50">
@@ -43,7 +43,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
         
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm" className="mt-1">Unstake</Button>
+            <Button variant={isMature ? "outline" : "destructive"} size="sm" className="mt-1">Unstake</Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -59,7 +59,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleUnstake} className="bg-destructive hover:bg-destructive/90">
+              <AlertDialogAction onClick={handleUnstake} className={!isMature ? "bg-destructive hover:bg-destructive/90" : ""}>
                 Yes, Unstake
               </AlertDialogAction>
             </AlertDialogFooter>
