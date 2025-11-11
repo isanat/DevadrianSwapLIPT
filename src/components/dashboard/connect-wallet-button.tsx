@@ -4,32 +4,32 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useI18n } from '@/context/i18n-context';
 
 export function ConnectWalletButton() {
   const [isConnected, setIsConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleConnect = () => {
-    // This is a mock connection handler.
-    // In a real app, you would integrate a library like ethers.js or wagmi.
     if (typeof window.ethereum !== 'undefined') {
       if (isConnected) {
         setIsConnected(false);
         setWalletAddress('');
-        toast({ title: 'Wallet Disconnected' });
+        toast({ title: t('wallet.disconnect') });
       } else {
         const mockAddress = '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
         const displayAddress = `${mockAddress.substring(0, 6)}...${mockAddress.substring(mockAddress.length - 4)}`;
         setWalletAddress(displayAddress);
         setIsConnected(true);
-        toast({ title: 'Wallet Connected Successfully!' });
+        toast({ title: t('wallet.connected') });
       }
     } else {
       toast({
         variant: 'destructive',
-        title: 'MetaMask Not Found',
-        description: 'Please install the MetaMask browser extension.',
+        title: t('wallet.metaMaskNotFound'),
+        description: t('wallet.installMetaMask'),
       });
     }
   };
@@ -42,7 +42,7 @@ export function ConnectWalletButton() {
   return (
     <Button onClick={handleConnect} variant="outline" className="gap-2 bg-background/50 hover:bg-accent hover:text-accent-foreground transition-all duration-300">
       <Wallet className="h-4 w-4" />
-      {isConnected ? `${walletAddress}` : 'Connect Wallet'}
+      {isConnected ? `${walletAddress}` : t('wallet.connect')}
     </Button>
   );
 }

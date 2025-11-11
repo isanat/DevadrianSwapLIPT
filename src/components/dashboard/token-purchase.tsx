@@ -8,13 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Banknote, ArrowRightLeft } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
-
+import { useI18n } from '@/context/i18n-context';
 
 export function TokenPurchase() {
   const { liptPrice, purchaseLipt, usdtBalance } = useDashboard();
   const [usdtAmount, setUsdtAmount] = useState('');
   const [liptAmount, setLiptAmount] = useState('');
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleUsdtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const amount = e.target.value;
@@ -36,16 +37,16 @@ export function TokenPurchase() {
     if (amountToBuy > 0 && usdtBalance >= cost) {
         purchaseLipt(amountToBuy);
         toast({
-            title: "Purchase Successful!",
-            description: `You have purchased ${amountToBuy.toFixed(2)} LIPT.`,
+            title: t('tokenPurchase.toast.success.title'),
+            description: t('tokenPurchase.toast.success.description', { amount: amountToBuy.toFixed(2) }),
         });
         setLiptAmount('');
         setUsdtAmount('');
     } else {
         toast({
             variant: "destructive",
-            title: "Invalid Amount",
-            description: "Please check your USDT balance and try again.",
+            title: t('tokenPurchase.toast.invalid.title'),
+            description: t('tokenPurchase.toast.invalid.description'),
         });
     }
   }
@@ -55,13 +56,13 @@ export function TokenPurchase() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Banknote className="h-6 w-6 text-primary" />
-          Buy LIPT Token
+          {t('tokenPurchase.title')}
         </CardTitle>
-        <CardDescription>Purchase LIPT tokens using USDT.</CardDescription>
+        <CardDescription>{t('tokenPurchase.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="usdt-amount">You pay (USDT)</Label>
+          <Label htmlFor="usdt-amount">{t('tokenPurchase.youPay')}</Label>
           <Input
             id="usdt-amount"
             type="number"
@@ -69,19 +70,19 @@ export function TokenPurchase() {
             value={usdtAmount}
             onChange={handleUsdtChange}
           />
-           <p className="text-xs text-muted-foreground">Balance: {usdtBalance.toLocaleString('en-US')} USDT</p>
+           <p className="text-xs text-muted-foreground">{t('liquidityPool.balance')}: {usdtBalance.toLocaleString('en-US')} USDT</p>
         </div>
         <div className="flex justify-center my-2">
             <ArrowRightLeft className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lipt-amount">You receive (LIPT)</Label>
+          <Label htmlFor="lipt-amount">{t('tokenPurchase.youReceive')}</Label>
           <Input id="lipt-amount" type="text" placeholder="0.0" value={liptAmount} readOnly className="bg-background/50"/>
         </div>
       </CardContent>
       <CardFooter>
         <Button className="w-full" variant="default" onClick={handlePurchase}>
-          Purchase LIPT
+          {t('tokenPurchase.purchaseButton')}
         </Button>
       </CardFooter>
     </Card>

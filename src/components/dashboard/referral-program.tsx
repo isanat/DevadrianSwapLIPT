@@ -8,6 +8,7 @@ import { Copy, Gift, Users, Award } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useDashboard } from '@/context/dashboard-context';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useI18n } from '@/context/i18n-context';
 
 const mockReferrals = [
     { id: 1, level: 1, members: 5, commission: 120.50 },
@@ -20,13 +21,14 @@ const mockReferrals = [
 export function ReferralDashboard() {
   const { toast } = useToast();
   const { referrals, referralRewards } = useDashboard();
+  const { t } = useI18n();
   const referralLink = "https://devadrianswap.com/invite?ref=user123";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
     toast({
-      title: "Copied to clipboard!",
-      description: "You can now share your referral link.",
+      title: t('referralProgram.copied'),
+      description: t('referralProgram.copiedDesc'),
     });
   };
 
@@ -38,13 +40,13 @@ export function ReferralDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Gift className="h-6 w-6 text-primary" />
-            Unilevel Referral Program
+            {t('referralProgram.title')}
           </CardTitle>
-          <CardDescription>Invite friends and earn rewards from their activities across multiple levels.</CardDescription>
+          <CardDescription>{t('referralProgram.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-              <Label htmlFor="referral-link">Your Unique Referral Link</Label>
+              <Label htmlFor="referral-link">{t('referralProgram.yourLink')}</Label>
               <div className="flex items-center space-x-2">
                   <Input id="referral-link" value={referralLink} readOnly className="bg-background/50" />
                   <Button variant="outline" size="icon" onClick={copyToClipboard}>
@@ -54,15 +56,15 @@ export function ReferralDashboard() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pt-4">
               <div className="p-4 bg-background/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> Total Referrals</p>
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> {t('referralProgram.totalReferrals')}</p>
                   <p className="text-2xl font-bold">{referrals}</p>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Award size={16}/> Total Referral Rewards</p>
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Award size={16}/> {t('referralProgram.totalRewards')}</p>
                   <p className="text-2xl font-bold">{referralRewards.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</p>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> Total Team Members</p>
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> {t('referralProgram.totalTeam')}</p>
                   <p className="text-2xl font-bold">{totalTeamMembers}</p>
               </div>
           </div>
@@ -71,22 +73,22 @@ export function ReferralDashboard() {
 
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-            <CardTitle>Your Unilevel Network</CardTitle>
-            <CardDescription>View the members and commissions earned from each level of your network.</CardDescription>
+            <CardTitle>{t('referralProgram.networkTitle')}</CardTitle>
+            <CardDescription>{t('referralProgram.networkDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Level</TableHead>
-                        <TableHead className="text-center">Members</TableHead>
-                        <TableHead className="text-right">Commission (LIPT)</TableHead>
+                        <TableHead>{t('referralProgram.level')}</TableHead>
+                        <TableHead className="text-center">{t('referralProgram.members')}</TableHead>
+                        <TableHead className="text-right">{t('referralProgram.commission')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {mockReferrals.map((referral) => (
                         <TableRow key={referral.id}>
-                            <TableCell className="font-medium">Level {referral.level}</TableCell>
+                            <TableCell className="font-medium">{t('referralProgram.level')} {referral.level}</TableCell>
                             <TableCell className="text-center">{referral.members}</TableCell>
                             <TableCell className="text-right">{referral.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })}</TableCell>
                         </TableRow>
