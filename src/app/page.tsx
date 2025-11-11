@@ -13,11 +13,13 @@ export default function Home() {
          <div className="space-y-8">
             <StatsGroup />
             <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 grid gap-4 md:gap-8 lg:grid-cols-2">
+              <div className="lg:col-span-2 grid gap-4 md:gap-8 auto-rows-fr">
                 <StakingPool />
-                <LiquidityPool />
               </div>
-              <TokenPurchase />
+              <div className="grid gap-4 md:gap-8 auto-rows-fr">
+                <LiquidityPool />
+                <TokenPurchase />
+              </div>
             </div>
             <ReferralDashboard />
         </div>

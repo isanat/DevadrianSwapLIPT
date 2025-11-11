@@ -25,6 +25,14 @@ const translations = {
         title: 'Your USDT Balance',
         description: 'In your wallet',
       },
+      totalInvested: {
+        title: 'Total Invested',
+        description: 'Your total capital on the platform',
+      },
+      totalReturns: {
+        title: 'Total Returns',
+        description: 'Total value returned from investments',
+      }
     },
     stakingPool: {
       title: 'LIPT Staking Pool',
@@ -165,6 +173,14 @@ const translations = {
         title: 'Seu Saldo USDT',
         description: 'Na sua carteira',
       },
+      totalInvested: {
+        title: 'Total Investido',
+        description: 'Seu capital total na plataforma',
+      },
+      totalReturns: {
+        title: 'Retorno Total',
+        description: 'Valor total retornado dos investimentos',
+      }
     },
     stakingPool: {
       title: 'Pool de Staking LIPT',
@@ -305,6 +321,14 @@ const translations = {
         title: 'Tu Saldo USDT',
         description: 'En tu billetera',
       },
+      totalInvested: {
+        title: 'Total Invertido',
+        description: 'Tu capital total en la plataforma',
+      },
+      totalReturns: {
+        title: 'Retorno Total',
+        description: 'Valor total devuelto de las inversiones',
+      }
     },
     stakingPool: {
       title: 'Piscina de Staking LIPT',
@@ -444,6 +468,14 @@ const translations = {
       usdtBalance: {
         title: 'Il Tuo Saldo USDT',
         description: 'Nel tuo portafoglio',
+      },
+      totalInvested: {
+        title: 'Totale Investito',
+        description: 'Il tuo capitale totale sulla piattaforma',
+      },
+      totalReturns: {
+        title: 'Ritorno Totale',
+        description: 'Valore totale restituito dagli investimenti',
       },
     },
     stakingPool: {

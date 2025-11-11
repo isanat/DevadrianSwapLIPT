@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { type ReactNode, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Area, AreaChart } from 'recharts';
 
 type StatsCardProps = {
   title: string;
@@ -21,7 +21,7 @@ const chartConfig = {
     label: 'Price',
     color: 'hsl(var(--primary))',
   },
-} satisfies ChartConfig;
+};
 
 export function StatsCard({ title, value, icon, description, className, chartData, chartKey }: StatsCardProps) {
   const [displayValue, setDisplayValue] = useState<string | number>(value);
