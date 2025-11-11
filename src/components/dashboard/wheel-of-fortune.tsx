@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 // Cores e valores baseados na imagem de referência.
 // Pesos ajustados para que a soma seja 100 e a vantagem seja da casa.
 const segments = [
-    { value: 1.5, label: '1.5x', color: '#6319f1', weight: 10 },  // Indigo
+    { value: 1.5, label: '1.5x', color: '#1319f1', weight: 10 },  // Indigo
     { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
     { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
     { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5 },  // Purple
