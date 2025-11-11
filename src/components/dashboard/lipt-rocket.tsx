@@ -130,13 +130,6 @@ export function LiptRocket() {
 
     const tick = () => {
       step++;
-      if (step > maxSteps && gameStatus !== 'cashed_out') {
-        if(intervalRef.current) clearInterval(intervalRef.current);
-        setGameStatus('crashed');
-        setMultiplier(crashPoint);
-        return;
-      }
-      
       if (current >= crashPoint) {
         if(intervalRef.current) clearInterval(intervalRef.current);
         setRocketPosition(100);
@@ -147,6 +140,13 @@ export function LiptRocket() {
           title: t('gameZone.rocket.toast.crashed.title'),
           description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
         });
+        return;
+      }
+      
+      if (step > maxSteps && gameStatus !== 'cashed_out') {
+        if(intervalRef.current) clearInterval(intervalRef.current);
+        setGameStatus('crashed');
+        setMultiplier(crashPoint);
         return;
       }
 
