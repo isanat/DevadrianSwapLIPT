@@ -133,7 +133,7 @@ export function WheelOfFortune() {
         });
       }
       setBetAmount('');
-    }, 4500); // 4000ms for spin + 500ms buffer
+    }, 4000); // Sync with animation duration
   };
 
 
