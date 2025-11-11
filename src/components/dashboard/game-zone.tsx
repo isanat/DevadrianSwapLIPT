@@ -3,13 +3,20 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Gamepad2, Rocket, Ticket } from 'lucide-react';
+import { Gamepad2, Rocket, Ticket, History } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import { WheelOfFortune } from './wheel-of-fortune';
+import { GameReport } from './game-report';
 
 export function GameZone() {
   const { t } = useI18n();
+  const [spinHistory, setSpinHistory] = React.useState<any[]>([]);
+
+  const handleSpinResult = (result: any) => {
+    setSpinHistory(prev => [result, ...prev]);
+  };
+
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
@@ -30,8 +37,12 @@ export function GameZone() {
       </CardHeader>
       <CardContent className="flex-grow">
         <Tabs defaultValue="wheel" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="wheel">{t('gameZone.wheelOfFortune.title')}</TabsTrigger>
+             <TabsTrigger value="report">
+                <History className="h-4 w-4 mr-2"/>
+                {t('gameZone.report.title')}
+            </TabsTrigger>
             <TabsTrigger value="rocket" disabled>
                 <Rocket className="h-4 w-4 mr-2"/>
                 {t('gameZone.rocket.title')}
@@ -42,7 +53,10 @@ export function GameZone() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="wheel" className="mt-4">
-            <WheelOfFortune />
+            <WheelOfFortune onSpinResult={handleSpinResult} />
+          </TabsContent>
+          <TabsContent value="report" className="mt-4">
+            <GameReport history={spinHistory} />
           </TabsContent>
           <TabsContent value="rocket">
             {/* Rocket Game Component will go here */}
