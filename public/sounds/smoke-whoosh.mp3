@@ -1,0 +1,5 @@
+// Fake binary content for smoke-whoosh.mp3
+// This file will be replaced by a real audio file during generation.
+// Content-Type: audio/mpeg
+// Size: 15KB
+SOUND_FILE_WHOOSH

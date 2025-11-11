@@ -1,0 +1,5 @@
+// Fake binary content for rocket-launch.mp3
+// This file will be replaced by a real audio file during generation.
+// Content-Type: audio/mpeg
+// Size: 25KB
+SOUND_FILE_LAUNCH
