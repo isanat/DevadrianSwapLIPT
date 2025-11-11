@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,8 +27,9 @@ export function StatsCard({ title, value, icon, description, className, chartDat
   const [displayValue, setDisplayValue] = useState<string | number>(value);
 
   useEffect(() => {
+    // This effect runs only on the client-side after hydration.
+    // It's a safe place to format values that might differ between server and client.
     if (typeof value === 'number') {
-      // 'en-US' locale is used to ensure consistency between server and client
       setDisplayValue(value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else {
       setDisplayValue(value);
