@@ -1,25 +1,39 @@
-'use client';
+"use client"
 
-import * as React from 'react';
-import { Globe, Check } from 'lucide-react';
+import * as React from "react"
+import { Globe, Check } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu"
 
 const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'pt-BR', name: 'Português (BR)', flag: '🇧🇷' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-];
+  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "pt-BR", name: "Português (BR)", flag: "🇧🇷" },
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "it", name: "Italiano", flag: "🇮🇹" },
+]
 
 export function LanguageSwitcher() {
-  const [selectedLanguage, setSelectedLanguage] = React.useState('pt-BR');
+  const [selectedLanguage, setSelectedLanguage] = React.useState("pt-BR")
+  const { toast } = useToast()
+
+  const handleLanguageChange = (langCode: string) => {
+    const language = languages.find(l => l.code === langCode);
+    if (language) {
+      setSelectedLanguage(langCode);
+      toast({
+        title: `Idioma alterado para ${language.name}!`,
+        description: `${language.flag} A página será traduzida. (simulação)`,
+      });
+      // In a real app, you would trigger the i18n library here.
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -33,7 +47,7 @@ export function LanguageSwitcher() {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onSelect={() => setSelectedLanguage(lang.code)}
+            onSelect={() => handleLanguageChange(lang.code)}
           >
             <span className="mr-2">{lang.flag}</span>
             {lang.name}
@@ -42,5 +56,5 @@ export function LanguageSwitcher() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
