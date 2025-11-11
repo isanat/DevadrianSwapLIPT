@@ -18,8 +18,8 @@ const segments = [
     { value: 0.5, label: '0.5x', color: '#f97316', weight: 20 }, // Orange
     { value: 2,   label: '2x',   color: '#3b82f6', weight: 6 },  // Blue
     { value: 0,   label: '0x',   color: '#ef4444', weight: 24 }, // Red
-    { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5 },  // Purple
     { value: 1,   label: '1x',   color: '#16a34a', weight: 9 }, // Darker Green
+    { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5 },  // Purple
 ];
 
 
