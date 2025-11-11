@@ -9,100 +9,85 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 
-// 🎯 Segmentos com pesos e cores do tema DeFi
+// 🎯 Segmentos com pesos e os valores dos prêmios
 const segments = [
-  { value: 0,   label: '0x',   color: 'hsl(var(--destructive))',  weight: 28 }, // Vermelho
-  { value: 0.5, label: '0.5x', color: 'hsl(var(--primary))',      weight: 24 }, // Cinza Muted
-  { value: 1,   label: '1x',   color: 'hsl(var(--accent))',      weight: 26 }, // Azul Primário
-  { value: 1.3, label: '1.3x', color: 'hsl(var(--primary))',       weight: 12 }, // Verde Accent
-  { value: 2,   label: '2x',   color: 'hsl(var(--accent))',      weight: 7 },  // Azul Primário
-  { value: 3,   label: '3x',   color: 'hsl(var(--primary))',       weight: 3 },  // Verde Accent
+  { value: 3,   label: '3x' },
+  { value: 2,   label: '2x' },
+  { value: 1.3, label: '1.3x' },
+  { value: 1,   label: '1x' },
+  { value: 0.5, label: '0.5x' },
+  { value: 0,   label: '0x' },
 ];
 
-const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
+const totalSegments = segments.length;
+const segmentAngle = 360 / totalSegments;
 
-// 🎨 Gera o gradiente conic com divisórias
-const getConicGradient = () => {
-  let gradient = 'conic-gradient(';
-  let currentAngle = -90; // Começa no topo
-  const dividerWidth = 0.5; // Largura da divisória em graus
+// Para dar vantagem à casa, podemos criar um array de pesos
+// A ordem DEVE corresponder à ordem dos segmentos acima
+const weights = [3, 6, 12, 25, 24, 30]; // Pesos: 3x é mais raro, 0x é mais comum
+const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
-  segments.forEach((seg, i) => {
-    const segmentAngle = (seg.weight / totalWeight) * 360;
-    const nextAngle = currentAngle + segmentAngle;
-    
-    // Cor do segmento
-    gradient += `${seg.color} ${currentAngle + dividerWidth / 2}deg ${nextAngle - dividerWidth / 2}deg`;
-    
-    // Cor da divisória
-    if (i < segments.length) {
-      gradient += `, #FFFFFF ${nextAngle - dividerWidth / 2}deg ${nextAngle + dividerWidth / 2}deg`;
-    }
-
-    currentAngle = nextAngle;
-  });
-
-  gradient += ')';
-  return gradient;
-};
-
-// 📊 Sorteio ponderado por peso
 const getWeightedRandomSegment = () => {
   let r = Math.random() * totalWeight;
-  for (const seg of segments) {
-    if (r < seg.weight) return seg;
-    r -= seg.weight;
+  for (let i = 0; i < segments.length; i++) {
+    if (r < weights[i]) return { segment: segments[i], index: i };
+    r -= weights[i];
   }
-  return segments[segments.length - 1];
+  // Fallback (não deve acontecer com lógica correta)
+  return { segment: segments[segments.length - 1], index: segments.length - 1 };
 };
 
 const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
-  const { t } = useI18n();
   const transitionStyle = isSpinning
     ? { transition: 'transform 8s cubic-bezier(0.25, 1, 0.5, 1)' }
     : { transition: 'none' };
 
   return (
-    <div className="relative w-72 h-72 md:w-80 md:h-80 mx-auto my-8">
-      {/* Ponteiro */}
-      <div className="absolute top-[-10px] left-1/2 z-20 h-0 w-0 -translate-x-1/2 border-l-[14px] border-r-[14px] border-t-[28px] border-l-transparent border-r-transparent border-t-primary drop-shadow-lg" />
-
+    <div className="relative w-64 h-64 md:w-72 md:h-72 mx-auto my-8 flex items-center justify-center">
+      {/* Círculo externo e interno que giram */}
       <div
-        className={cn('relative h-full w-full rounded-full flex items-center justify-center border-4 border-primary/30 shadow-lg')}
+        className="absolute w-full h-full"
         style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
       >
-        {/* Fundo da roda */}
-        <div
-          className="absolute h-full w-full rounded-full"
-          style={{ background: getConicGradient() }}
-        />
+        {/* Círculo externo */}
+        <div className="w-full h-full rounded-full border-2 border-primary/30" />
+        
+        {/* Círculo interno */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full border-2 border-primary/30" />
 
-        {/* Marcadores de texto */}
+        {/* Labels dos prêmios */}
         {segments.map((seg, i) => {
-          const startAngle = -90 + (segments.slice(0, i).reduce((sum, s) => sum + (s.weight / totalWeight) * 360, 0) + (seg.weight / totalWeight) * 180);
+          const angle = segmentAngle * i + segmentAngle / 2;
+          const radius = 105; // Distância do centro
+          const x = Math.cos((angle - 90) * (Math.PI / 180)) * radius;
+          const y = Math.sin((angle - 90) * (Math.PI / 180)) * radius;
           return (
             <span
               key={i}
-              className="absolute left-1/2 top-1/2 text-sm font-bold text-white drop-shadow-md"
+              className="absolute left-1/2 top-1/2 text-lg font-semibold text-foreground/80"
               style={{
-                transform: `rotate(${startAngle}deg) translateX(90px) rotate(${-startAngle}deg)`,
+                transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
               }}
             >
               {seg.label}
             </span>
           );
         })}
+      </div>
 
-        {/* Círculo central */}
-        <div className="absolute z-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-primary bg-background shadow-inner">
-           <span className="text-xl font-bold uppercase text-primary">
-             {t('gameZone.wheelOfFortune.spinButton').split(' ')[0]}
-           </span>
-        </div>
+      {/* Ponteiro fixo no topo */}
+      <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-primary z-20" />
+
+      {/* Círculo central fixo */}
+      <div className="absolute w-[40%] h-[40%] rounded-full border-2 border-primary flex items-center justify-center">
+        <span className="text-xl font-bold text-primary tracking-widest">
+          GIRAR
+        </span>
       </div>
     </div>
   );
 };
+
 
 export function WheelOfFortune() {
   const { t } = useI18n();
@@ -126,20 +111,17 @@ export function WheelOfFortune() {
     setIsSpinning(true);
     updateLiptBalance(-bet);
 
-    const winningSeg = getWeightedRandomSegment();
-    const winningIndex = segments.indexOf(winningSeg);
+    const { segment: winningSeg, index: winningIndex } = getWeightedRandomSegment();
 
-    let currentAngle = -90;
-    for (let i = 0; i < winningIndex; i++) {
-      currentAngle += (segments[i].weight / totalWeight) * 360;
-    }
-    const segAngle = (segments[winningIndex].weight / totalWeight) * 360;
-    // Adiciona uma pequena variação aleatória para não parar sempre no mesmo ponto exato
-    const randomOffset = (Math.random() - 0.5) * segAngle * 0.6;
-    const targetAngle = -(currentAngle + segAngle / 2 + randomOffset);
+    // Ângulo alvo precisa apontar para o meio do segmento vencedor
+    const targetBaseAngle = -(segmentAngle * winningIndex + segmentAngle / 2);
+    
+    // Adiciona uma pequena variação para não parar sempre no mesmo ponto exato
+    const randomOffset = (Math.random() - 0.5) * segmentAngle * 0.8;
+    const targetAngle = targetBaseAngle + randomOffset;
 
     const randomSpins = Math.floor(Math.random() * 3) + 6; // 6–8 voltas
-    const finalRotation = randomSpins * 360 + targetAngle;
+    const finalRotation = (rotation - (rotation % 360)) + (randomSpins * 360) + targetAngle;
     setRotation(finalRotation);
 
     setTimeout(() => {
@@ -163,7 +145,7 @@ export function WheelOfFortune() {
 
       setIsSpinning(false);
       setBetAmount('');
-      // Mantém a posição final sem resetar para que o prêmio fique visível
+      // Não reseta a rotação para manter a posição, mas normaliza para a próxima rodada
       setRotation(finalRotation % 360); 
     }, 8000); // 8s animação
   };
@@ -188,7 +170,7 @@ export function WheelOfFortune() {
       </div>
 
       <Button
-        className="w-full max-w-xs font-bold text-lg py-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+        className="w-full max-w-xs font-bold text-lg py-6 bg-primary hover:bg-primary/90"
         onClick={handleSpin}
         disabled={isSpinning}
       >
@@ -199,7 +181,7 @@ export function WheelOfFortune() {
 
       {isSpinning && (
         <p className="text-sm text-muted-foreground animate-pulse">
-          {t('gameZone.wheelOfFortune.spinning')}
+          {t('gameZone.wheelOfFortune.spinning')}...
         </p>
       )}
     </div>
