@@ -1,50 +1,65 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Archive, Download, Clock, Percent, AlertTriangle } from 'lucide-react';
+import { Archive, Download, Clock, AlertTriangle } from 'lucide-react';
 import { useDashboard, STAKING_PLANS } from '@/context/dashboard-context';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: string, penalty: number) => void; }) => {
   const { unstakeLipt } = useDashboard();
+  const [progress, setProgress] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const handleUnstake = () => {
     const { penalty } = unstakeLipt(stake.id);
     onUnstake(stake.id, penalty);
   };
   
-  const now = Date.now();
-  const endDate = stake.startDate + stake.plan.duration * 24 * 60 * 60 * 1000;
-  const isMature = now >= endDate;
-  const timeLeft = isMature ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+  const isMature = progress >= 100;
+
+  useEffect(() => {
+    const calculateProgress = () => {
+      const now = Date.now();
+      const endDate = stake.startDate + stake.plan.duration * 24 * 60 * 60 * 1000;
+      const totalDuration = endDate - stake.startDate;
+      const elapsedTime = now - stake.startDate;
+      
+      const currentProgress = Math.min(100, (elapsedTime / totalDuration) * 100);
+      setProgress(currentProgress);
+
+      const newTimeLeft = currentProgress >= 100 ? 0 : Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+      setTimeLeft(newTimeLeft);
+    };
+
+    calculateProgress();
+    const interval = setInterval(calculateProgress, 1000 * 60); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [stake.startDate, stake.plan.duration]);
+
 
   return (
-    <div className="flex justify-between items-center p-3 rounded-lg border bg-background/50">
-      <div>
-        <p className="font-semibold">{stake.amount.toLocaleString('en-US')} LIPT</p>
-        <p className="text-xs text-muted-foreground">
-          {stake.plan.duration} days @ {stake.plan.apy}% APY
-        </p>
-      </div>
-      <div className="text-right">
-        {isMature ? (
-          <Badge variant="secondary" className="text-green-400 border-green-400">Mature</Badge>
-        ) : (
-          <p className="text-xs text-muted-foreground">Matures in {timeLeft}d</p>
-        )}
-        
+    <div className="flex flex-col gap-3 p-3 rounded-lg border bg-background/50">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="font-semibold">{stake.amount.toLocaleString('en-US')} LIPT</p>
+          <p className="text-xs text-muted-foreground">
+            {stake.plan.duration} days @ {stake.plan.apy}% APY
+          </p>
+        </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant={isMature ? "outline" : "destructive"} size="sm" className="mt-1">Unstake</Button>
+            <Button variant={isMature ? "outline" : "destructive"} size="sm">Unstake</Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -66,6 +81,17 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      </div>
+      <div>
+        <Progress value={progress} className="h-2" />
+        <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-muted-foreground">{progress.toFixed(1)}% complete</p>
+            {isMature ? (
+              <Badge variant="secondary" className="text-green-400 border-green-400 text-xs">Mature</Badge>
+            ) : (
+              <p className="text-xs text-muted-foreground">{timeLeft}d remaining</p>
+            )}
+        </div>
       </div>
     </div>
   );
@@ -155,7 +181,7 @@ export function StakingPool() {
                                 <Clock size={14} /> 
                                 {plan.duration} Days
                               </div>
-                              <div className="text-xl font-bold text-primary">{plan.apy.toFixed(1)}%</div>
+                              <div className="text-lg font-bold text-primary">{plan.apy.toFixed(1)}%</div>
                               <div className="text-xs text-muted-foreground">APY</div>
                           </Label>
                       ))}
