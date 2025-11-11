@@ -109,21 +109,6 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
             </span>
           );
         })}
-         {/* Linhas divisórias dos segmentos */}
-        {segments.map((seg, i) => {
-            const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
-            const angle = (cumulativeWeight / totalWeight) * 360;
-            return (
-                 <div
-                    key={`line-${i}`}
-                    className="absolute w-px h-full bg-black/30"
-                    style={{
-                        transform: `rotate(${angle}deg)`,
-                        transformOrigin: 'center center',
-                    }}
-                />
-            );
-        })}
 
         {/* Centro */}
         <div className="absolute w-20 h-20 rounded-full bg-gray-800 border-4 border-yellow-400 z-10 shadow-lg flex items-center justify-center">
@@ -163,14 +148,13 @@ export function WheelOfFortune() {
     let cumulativeWeight = 0;
     let winningSegmentIndex = -1;
     for(let i = 0; i < segments.length; i++) {
-        // Encontra o segmento vencedor no array para calcular o ângulo
-        if (segments[i] === winningSeg) {
+        if (segments[i] === winningSeg && Math.random() > 0.5) { // Add randomness for same segments
             winningSegmentIndex = i;
             break;
         }
     }
      if (winningSegmentIndex === -1) {
-        // Fallback para o primeiro que encontrar
+        // Fallback to the first occurrence if not found randomly
         winningSegmentIndex = segments.findIndex(s => s.label === winningSeg.label && s.color === winningSeg.color);
      }
 
