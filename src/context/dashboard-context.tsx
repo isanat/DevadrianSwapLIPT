@@ -127,6 +127,19 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     return () => clearInterval(interval);
   }, [stakes, lpTokens]);
 
+  // Simulate real-time LIPT price change
+  useEffect(() => {
+    const priceInterval = setInterval(() => {
+      setLiptPrice(prevPrice => {
+        const change = (Math.random() - 0.5) * 0.1; // small random change
+        const newPrice = prevPrice + change;
+        return newPrice > 0 ? newPrice : 0.01; // ensure price doesn't go below zero
+      });
+    }, 3000); // update every 3 seconds
+
+    return () => clearInterval(priceInterval);
+  }, []);
+
   // ======== ACTIONS ========
   const purchaseLipt = (amount: number) => {
     const cost = amount * liptPrice;
