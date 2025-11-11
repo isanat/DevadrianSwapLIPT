@@ -171,7 +171,10 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
               return { ...miner, minedAmount: miner.minedAmount + rewardPerSecond * 5 };
             }
             return miner;
-          }).filter(miner => !isExpired);
+          }).filter(miner => {
+            const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
+            return !isExpired;
+          });
           setMinedRewards(prev => prev + newMined);
           // setMiners(updatedMiners); // This can cause issues if not handled carefully, better to just let rewards accumulate
         }
