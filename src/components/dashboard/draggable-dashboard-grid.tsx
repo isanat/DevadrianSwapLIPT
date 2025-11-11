@@ -6,6 +6,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -61,12 +62,12 @@ const SortableItem = ({ id, children, className }: { id: string, children: React
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 'auto',
-    opacity: isDragging ? 0.7 : 1,
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
     <div ref={setNodeRef} style={style} className={cn("relative group", className)}>
-      <div {...attributes} {...listeners} className="absolute top-3 right-3 z-10 p-2 cursor-grab bg-background/50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+      <div {...attributes} {...listeners} className="absolute top-3 right-3 z-10 p-2 cursor-grab bg-background/50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity md:block hidden">
         <GripVertical size={16} />
       </div>
       {children}
@@ -87,10 +88,14 @@ export const DraggableDashboardGrid = () => {
             const parsedLayout = JSON.parse(savedLayout);
             const validLayout = parsedLayout.every((item: any) => typeof item.id === 'string' && initialItems.some(initItem => initItem.id === item.id));
             if (validLayout) {
-                setItems(parsedLayout);
+                // Ensure all initial items are present, even if not in saved layout
+                const savedIds = new Set(parsedLayout.map((i: any) => i.id));
+                const newItems = initialItems.filter(initItem => !savedIds.has(initItem.id));
+                setItems([...parsedLayout, ...newItems]);
             }
         } catch (e) {
             // malformed JSON, ignore
+            localStorage.removeItem('dashboardLayout');
         }
     }
   }, []);
@@ -99,6 +104,13 @@ export const DraggableDashboardGrid = () => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
+    }),
+    useSensor(TouchSensor, {
+      // Press delay of 250ms, with a tolerance of 5px of movement
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
     })
   );
 
@@ -116,15 +128,13 @@ export const DraggableDashboardGrid = () => {
   };
 
   if (!isClient) {
-    // Render a static layout on the server to avoid hydration mismatch
+    // Render a static layout on the server to avoid hydration mismatch and layout shifts
     return (
         <div className="grid gap-4 md:gap-8 lg:grid-cols-3 auto-rows-fr">
-            <div className="lg:col-span-3"><StatsGroup/></div>
-            <div className="lg:col-span-2"><StakingPool/></div>
-            <div className="lg:col-span-1"><MiningPool/></div>
-            <div className="lg:col-span-1"><LiquidityPool/></div>
-            <div className="lg:col-span-1"><TokenPurchase/></div>
-            <div className="lg:col-span-3"><ReferralDashboard/></div>
+          {initialItems.map(({ id, className }) => {
+            const Component = componentMap[id];
+            return <div key={id} className={className}><Component /></div>
+          })}
         </div>
     );
   }
@@ -135,8 +145,13 @@ export const DraggableDashboardGrid = () => {
         <div className="grid gap-4 md:gap-8 lg:grid-cols-3 auto-rows-fr">
           {items.map(({ id, className }) => {
             const Component = componentMap[id];
+            if (!Component) return null; // Gracefully handle if a component is removed
+            
+            // Find the original className from initialItems, as the one in state might be outdated
+            const originalItem = initialItems.find(item => item.id === id);
+
             return (
-              <SortableItem key={id} id={id} className={className}>
+              <SortableItem key={id} id={id} className={originalItem?.className || ''}>
                 <Component />
               </SortableItem>
             );
