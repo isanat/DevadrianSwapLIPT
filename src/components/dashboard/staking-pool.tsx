@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
 const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: string, penalty: number) => void; }) => {
   const { unstakeLipt } = useDashboard();
@@ -76,6 +77,11 @@ export function StakingPool() {
   const [stakeAmount, setStakeAmount] = useState('');
   const [selectedPlan, setSelectedPlan] = useState(STAKING_PLANS[0]);
   const { toast } = useToast();
+  const [displayLiptBalance, setDisplayLiptBalance] = React.useState('0');
+
+  React.useEffect(() => {
+    setDisplayLiptBalance(liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+  }, [liptBalance]);
 
   const handleStake = () => {
     const amount = parseFloat(stakeAmount);
@@ -136,10 +142,21 @@ export function StakingPool() {
                   <Label>Select Staking Plan</Label>
                   <RadioGroup defaultValue={String(selectedPlan.duration)} onValueChange={(val) => setSelectedPlan(STAKING_PLANS.find(p => p.duration === parseInt(val))!)} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
                       {STAKING_PLANS.map(plan => (
-                          <Label key={plan.duration} htmlFor={`plan-${plan.duration}`} className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                          <Label 
+                            key={plan.duration} 
+                            htmlFor={`plan-${plan.duration}`} 
+                            className={cn(
+                              "flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all cursor-pointer",
+                              "hover:border-primary/50 hover:bg-accent/50",
+                              selectedPlan.duration === plan.duration ? "border-primary bg-accent/20" : "border-muted bg-background/50"
+                            )}>
                               <RadioGroupItem value={String(plan.duration)} id={`plan-${plan.duration}`} className="sr-only" />
-                              <div className="flex items-center gap-1 text-sm"><Clock size={16} /> {plan.duration} Days</div>
-                              <div className="font-bold text-lg flex items-center gap-1"><Percent size={18}/> {plan.apy.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">APY</span></div>
+                              <div className="flex items-center gap-2 font-semibold">
+                                <Clock size={16} /> 
+                                {plan.duration} Days
+                              </div>
+                              <div className="text-2xl font-bold text-primary">{plan.apy.toFixed(1)}%</div>
+                              <div className="text-xs text-muted-foreground">APY</div>
                           </Label>
                       ))}
                   </RadioGroup>
@@ -150,7 +167,7 @@ export function StakingPool() {
                   <Input id="stake-amount" type="number" placeholder="0.0" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} />
                   <Button variant="default" onClick={handleStake}>Stake</Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Your wallet balance: {liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
+                <p className="text-xs text-muted-foreground">Your wallet balance: {displayLiptBalance} LIPT</p>
               </div>
             </div>
           </TabsContent>
