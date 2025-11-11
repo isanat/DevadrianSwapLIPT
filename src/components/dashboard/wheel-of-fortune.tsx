@@ -8,21 +8,27 @@ import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
-
-// 🎯 Segmentos com pesos (probabilidades) — casa com vantagem
+// 🎯 Segmentos com pesos (probabilidades) ajustados para vantagem da casa
 const segments = [
-  { value: 0,   label: '0x',   color: 'hsl(4 90% 58%)',    weight: 10 }, // Vermelho
-  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)',   weight: 8 },  // Laranja
-  { value: 1,   label: '1x',   color: 'hsl(200 95% 55%)',  weight: 9 },  // Azul
-  { value: 1,   label: '1x',   color: 'hsl(122 80% 55%)',  weight: 9 },  // Verde
-  { value: 0,   label: '0x',   color: 'hsl(25 50% 40%)',   weight: 9 },  // Marrom escuro
-  { value: 0.5, label: '0.5x', color: 'hsl(15 85% 55%)',   weight: 8 },  // Coral
-  { value: 1.3, label: '1.3x', color: 'hsl(285 70% 60%)',  weight: 12 }, // Lilás
-  { value: 0,   label: '0x',   color: 'hsl(0 0% 10%)',     weight: 9 },  // Preto
-  { value: 0.5, label: '0.5x', color: 'hsl(48 95% 55%)',   weight: 8 },  // Amarelo
-  { value: 1,   label: '1x',   color: 'hsl(0 0% 95%)',     weight: 8 },  // Branco
-  { value: 2,   label: '2x',   color: 'hsl(275 80% 60%)',  weight: 7 },  // Roxo
-  { value: 3,   label: '3x',   color: 'hsl(320 80% 65%)',  weight: 3 },  // Rosa
+  // --- Vitória da Casa (Baixo Retorno/Perda) ---
+  { value: 0,   label: '0x',   color: 'hsl(0 60% 30%)',    weight: 12 }, // Vermelho Escuro (Perda Total)
+  { value: 0.5, label: '0.5x', color: 'hsl(25 80% 45%)',   weight: 10 }, // Laranja Escuro (Perda Parcial)
+  { value: 0,   label: '0x',   color: 'hsl(0 0% 15%)',     weight: 12 }, // Preto Fosco (Perda Total)
+  { value: 0.5, label: '0.5x', color: 'hsl(40 80% 45%)',   weight: 10 }, // Ouro Escuro (Perda Parcial)
+
+  // --- Neutro (1x) ---
+  { value: 1,   label: '1x',   color: 'hsl(200 60% 50%)',  weight: 8 },  // Azul Médio
+  { value: 1,   label: '1x',   color: 'hsl(120 40% 50%)',  weight: 8 },  // Verde Floresta
+
+  // --- Vitória do Jogador (Alto Retorno) ---
+  { value: 1.3, label: '1.3x', color: 'hsl(280 60% 60%)',  weight: 10 }, // Lilás Forte
+  { value: 2,   label: '2x',   color: 'hsl(270 80% 65%)',  weight: 6 },  // Roxo Vibrante
+  { value: 3,   label: '3x',   color: 'hsl(320 80% 70%)',  weight: 4 },  // Rosa Neon
+  
+  // --- Outros Neutros/Perdas ---
+  { value: 0,   label: '0x',   color: 'hsl(15 50% 35%)',   weight: 12 }, // Marrom (Perda Total)
+  { value: 0.5, label: '0.5x', color: 'hsl(50 50% 50%)',   weight: 10 }, // Amarelo (Perda Parcial)
+  { value: 1,   label: '1x',   color: 'hsl(0 0% 80%)',     weight: 8 },  // Cinza Claro
 ];
 
 
