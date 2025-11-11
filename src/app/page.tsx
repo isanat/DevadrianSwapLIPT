@@ -1,14 +1,21 @@
-import { Header } from '@/components/layout/header';
+import { AppShell } from '@/components/layout/app-shell';
 import { StakingPool } from '@/components/dashboard/staking-pool';
 import { LiquidityPool } from '@/components/dashboard/liquidity-pool';
-import { AppShell } from '@/components/layout/app-shell';
+import { StatsGroup } from '@/components/dashboard/stats-group';
+import { TokenPurchase } from '@/components/dashboard/token-purchase';
 
 export default function Home() {
   return (
     <AppShell>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
-        <StakingPool />
-        <LiquidityPool />
+      <div className="space-y-8">
+        <StatsGroup />
+        <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 grid gap-4 md:gap-8 lg:grid-cols-2">
+            <StakingPool />
+            <LiquidityPool />
+          </div>
+          <TokenPurchase />
+        </div>
       </div>
     </AppShell>
   );
