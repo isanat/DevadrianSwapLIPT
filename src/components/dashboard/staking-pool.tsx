@@ -151,11 +151,11 @@ export function StakingPool() {
                               selectedPlan.duration === plan.duration ? "border-primary bg-accent/20" : "border-muted bg-background/50"
                             )}>
                               <RadioGroupItem value={String(plan.duration)} id={`plan-${plan.duration}`} className="sr-only" />
-                              <div className="flex items-center gap-2 font-semibold">
-                                <Clock size={16} /> 
+                              <div className="flex items-center gap-2 font-semibold text-sm">
+                                <Clock size={14} /> 
                                 {plan.duration} Days
                               </div>
-                              <div className="text-2xl font-bold text-primary">{plan.apy.toFixed(1)}%</div>
+                              <div className="text-xl font-bold text-primary">{plan.apy.toFixed(1)}%</div>
                               <div className="text-xs text-muted-foreground">APY</div>
                           </Label>
                       ))}
