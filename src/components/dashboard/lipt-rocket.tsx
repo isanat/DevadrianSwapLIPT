@@ -93,9 +93,11 @@ export function LiptRocket() {
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
 
   const calculateCrashPoint = () => {
-    const r = Math.random();
-    const crashPoint = 99 / (100 - r * 100);
-    return Math.max(1.01, crashPoint);
+    const e = 2 ** 32;
+    const h = crypto.getRandomValues(new Uint32Array(1))[0];
+    const r = h / e;
+    const crashPoint = Math.floor(100 / (1-r));
+    return Math.max(1.01, crashPoint/100);
   };
   
   const gameStatusRef = useRef(gameStatus);
@@ -107,38 +109,33 @@ export function LiptRocket() {
     setGameStatus('in_progress');
     const crashPoint = calculateCrashPoint();
     let currentMultiplier = 1.00;
-    let startTime = Date.now();
-    let animationFrameId: number;
+    
+    const interval = setInterval(() => {
+        if (gameStatusRef.current !== 'in_progress') {
+            clearInterval(interval);
+            return;
+        }
 
-    const gameLoop = () => {
-      if (gameStatusRef.current !== 'in_progress') {
-        cancelAnimationFrame(animationFrameId);
-        return;
-      }
-      
-      const elapsedTime = (Date.now() - startTime) / 1000;
-      currentMultiplier = 1 + 0.1 * Math.pow(elapsedTime, 1.5);
+        currentMultiplier += 0.01 + (currentMultiplier * 0.015);
 
-      if (currentMultiplier >= crashPoint) {
-        setGameStatus('crashed');
-        setMultiplier(crashPoint);
-        setRocketPosition(100);
-        toast({
-          variant: "destructive",
-          title: t('gameZone.rocket.toast.crashed.title'),
-          description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
-        });
-      } else {
-        setMultiplier(currentMultiplier);
-        const progress = Math.min(90, (Math.log(currentMultiplier) / Math.log(crashPoint)) * 100);
-        setRocketPosition(progress);
-        animationFrameId = requestAnimationFrame(gameLoop);
-      }
-    };
+        if (currentMultiplier >= crashPoint) {
+            clearInterval(interval);
+            setGameStatus('crashed');
+            setMultiplier(crashPoint);
+            setRocketPosition(100);
+            toast({
+              variant: "destructive",
+              title: t('gameZone.rocket.toast.crashed.title'),
+              description: t('gameZone.rocket.toast.crashed.description', { multiplier: crashPoint.toFixed(2) })
+            });
+        } else {
+            setMultiplier(currentMultiplier);
+            const progress = Math.min(90, (Math.log(currentMultiplier) / Math.log(crashPoint)) * 100);
+            setRocketPosition(progress);
+        }
+    }, 80);
 
-    animationFrameId = requestAnimationFrame(gameLoop);
-  
-    return () => cancelAnimationFrame(animationFrameId);
+    return () => clearInterval(interval);
   }, [t, toast]);
   
 
