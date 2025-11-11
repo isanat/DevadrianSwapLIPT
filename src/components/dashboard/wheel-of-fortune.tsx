@@ -13,11 +13,12 @@ import { cn } from '@/lib/utils';
 // Pesos ajustados para que a soma seja 100 e a vantagem seja da casa.
 const segments = [
     { value: 1.5, label: '1.5x', color: '#6366f1', weight: 10 },  // Indigo
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 40 }, // Red
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
     { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
     { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5 },  // Purple
     { value: 0.5, label: '0.5x', color: '#f97316', weight: 25 }, // Orange
     { value: 2,   label: '2x',   color: '#3b82f6', weight: 5 },  // Blue
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
 ];
 
 
