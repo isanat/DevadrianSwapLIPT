@@ -24,7 +24,7 @@ const segmentAngle = 360 / segmentCount;
 
 const getConicGradient = () => {
     let gradient = 'conic-gradient(';
-    let currentAngle = 0;
+    let currentAngle = -segmentAngle / 2;
     for (let i = 0; i < segments.length; i++) {
         gradient += `${segments[i].color} ${currentAngle}deg ${currentAngle + segmentAngle}deg`;
         currentAngle += segmentAngle;
@@ -63,12 +63,12 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean
                 {/* Segment lines */}
                 <div 
                     className="absolute h-full w-px bg-black/30"
-                    style={{ transform: `rotate(${index * segmentAngle}deg)`}}
+                    style={{ transform: `rotate(${index * segmentAngle - segmentAngle / 2}deg)`}}
                 />
                 {/* Segment labels */}
                 <div
                     className="absolute h-full w-full flex items-center justify-start"
-                    style={{transform: `rotate(${index * segmentAngle + segmentAngle / 2}deg)`}}
+                    style={{transform: `rotate(${index * segmentAngle}deg)`}}
                 >
                     <span className="pl-4 font-bold text-white text-lg drop-shadow-md">
                         {segment.label}
@@ -105,21 +105,21 @@ export function WheelOfFortune() {
       return;
     }
     
-    // Deduct bet amount immediately
     updateLiptBalance(-bet);
     
-    // Start spinning
     setIsSpinning(true);
 
-    const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
+    const randomSpins = Math.floor(Math.random() * 5) + 8;
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
-    const stopAngle = winningSegmentIndex * segmentAngle;
     
-    // Calculate final rotation angle
-    // Subtract current angle to reset, then add new full spins and the final stop angle.
-    // Add a small random offset to make it land not perfectly in the middle of the segment.
-    const currentAngle = currentRotationRef.current % 360;
-    const finalRotation = (currentRotationRef.current - currentAngle) + (360 * randomSpins) + stopAngle + (segmentAngle / 2) + (Math.random() * (segmentAngle * 0.8) - (segmentAngle * 0.4));
+    // The angle needs to point the pointer to the middle of the winning segment.
+    // The pointer is at the top (0 degrees).
+    // A rotation of `X` degrees moves the wheel counter-clockwise.
+    // To make segment `i` land at the top, we need to rotate it by `- (i * segmentAngle)`.
+    const stopAngle = -(winningSegmentIndex * segmentAngle);
+
+    const currentRevolutions = Math.floor(currentRotationRef.current / 360);
+    const finalRotation = (currentRevolutions + randomSpins) * 360 + stopAngle;
     
     currentRotationRef.current = finalRotation;
     setRotation(finalRotation);
