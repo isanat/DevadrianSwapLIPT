@@ -9,21 +9,23 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 
-// Segments configuration with better color and value distribution
+// 🎯 Segmentos com pesos (probabilidades) — casa com vantagem
+// Cores e valores baseados na imagem de referência.
 const segments = [
     { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
+    { value: 3,   label: '3x',   color: '#8b5cf6', weight: 5  }, // Purple
     { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
+    { value: 2,   label: '2x',   color: '#3b82f6', weight: 10 }, // Blue
+    { value: 0.5, label: '0.5x', color: '#f97316', weight: 25 }, // Orange
     { value: 1.3, label: '1.3x', color: '#6366f1', weight: 10 }, // Indigo
-    { value: 0.5, label: '0.5x', color: '#f97316', weight: 22 }, // Orange
-    { value: 2,   label: '2x',   color: '#3b82f6', weight: 10  }, // Blue
     { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
-    { value: 3,   label: '3x',   color: '#8b5cf6', weight: 3  }, // Purple
-    { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
+    { value: 1,   label: '1x',   color: '#16a34a', weight: 15 }, // Darker Green
 ];
 
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
+// 🎨 Gera o gradiente conic proporcional
 const getConicGradient = () => {
   let gradient = 'conic-gradient(';
   let currentAngle = 0; 
@@ -38,6 +40,7 @@ const getConicGradient = () => {
   return gradient;
 };
 
+// 📊 Sorteio ponderado por peso
 const getWeightedRandomSegment = () => {
   let r = Math.random() * totalWeight;
   for (const seg of segments) {
@@ -55,10 +58,10 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
 
   return (
     <div className="relative w-72 h-72 md:w-80 md:h-80 mx-auto my-8 flex items-center justify-center">
-      {/* Holographic Outer Ring */}
-      <div className="absolute w-full h-full rounded-full bg-transparent border-4 border-cyan-400/50 shadow-[0_0_20px_theme(colors.cyan.400),inset_0_0_20px_theme(colors.cyan.500)] animate-pulse" />
+      {/* Anel externo holográfico */}
+      <div className="absolute w-full h-full rounded-full bg-transparent border-4 border-cyan-400/50 shadow-[0_0_20px_theme(colors.cyan.400),inset_0_0_20px_theme(colors.cyan.500)]" />
       
-      {/* Tick marks on the outer ring */}
+      {/* Marcadores de divisão */}
       {Array.from({ length: 60 }).map((_, i) => (
         <div 
           key={`tick-${i}`}
@@ -70,23 +73,23 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         />
       ))}
 
-      {/* Pointer */}
+      {/* Ponteiro */}
       <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-yellow-400 z-30 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" />
 
-      {/* The Wheel itself */}
+      {/* A Roda */}
       <div
         className={cn('relative w-[90%] h-[90%] rounded-full flex items-center justify-center overflow-hidden shadow-2xl')}
         style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
       >
-        {/* Wheel background with colors */}
+        {/* Fundo da roda com cores */}
         <div
           className="absolute w-full h-full rounded-full"
           style={{ background: getConicGradient() }}
         />
-        {/* Inner shadow for 3D effect */}
+        {/* Sombra interna para efeito 3D */}
         <div className="absolute w-full h-full rounded-full shadow-[inset_0_0_25px_rgba(0,0,0,0.5)]" />
 
-        {/* Segment Labels */}
+        {/* Labels dos Segmentos */}
         {segments.map((seg, i) => {
           const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
           const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
@@ -106,7 +109,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
             </span>
           );
         })}
-         {/* Segment divider lines */}
+         {/* Linhas divisórias dos segmentos */}
         {segments.map((seg, i) => {
             const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
             const angle = (cumulativeWeight / totalWeight) * 360;
@@ -122,7 +125,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
             );
         })}
 
-        {/* Center Hub */}
+        {/* Centro */}
         <div className="absolute w-20 h-20 rounded-full bg-gray-800 border-4 border-yellow-400 z-10 shadow-lg flex items-center justify-center">
             <div className="w-12 h-12 rounded-full bg-blue-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)]" />
         </div>
@@ -156,20 +159,20 @@ export function WheelOfFortune() {
 
     const winningSeg = getWeightedRandomSegment();
     
-    // Find the position of the winning segment
+    // Encontra a posição do segmento vencedor
     let cumulativeWeight = 0;
     let winningSegmentIndex = -1;
     for(let i = 0; i < segments.length; i++) {
-        if (segments[i] === winningSeg && Math.random() < 0.5) { // Randomly pick one of the same-value segments
+        // Encontra o segmento vencedor no array para calcular o ângulo
+        if (segments[i].label === winningSeg.label && segments[i].color === winningSeg.color && Math.random() < 1 / segments.filter(s => s.label === winningSeg.label && s.color === winningSeg.color).length) {
             winningSegmentIndex = i;
             break;
         }
-        if (i === segments.length - 1 && winningSegmentIndex === -1) {
-            // fallback to first match if random pick fails
-            winningSegmentIndex = segments.indexOf(winningSeg);
-        }
     }
-     if (winningSegmentIndex === -1) winningSegmentIndex = segments.indexOf(winningSeg);
+     if (winningSegmentIndex === -1) {
+        // Fallback para o primeiro que encontrar
+        winningSegmentIndex = segments.findIndex(s => s.label === winningSeg.label && s.color === winningSeg.color);
+     }
 
 
     for(let i = 0; i < winningSegmentIndex; i++) {
@@ -178,15 +181,16 @@ export function WheelOfFortune() {
     
     const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
     const segmentAngle = (winningSeg.weight / totalWeight) * 360;
+    // Ponto aleatório dentro do segmento vencedor
     const randomAngleInSegment = Math.random() * segmentAngle;
     
     const targetAngle = segmentStartAngle + randomAngleInSegment;
 
-    // The final rotation should point the pointer to the targetAngle
-    const randomSpins = Math.floor(Math.random() * 4) + 8;
-    const finalRotation = (randomSpins * 360) - targetAngle + (360 - 90); // Adjust to align with top pointer
+    // A rotação final deve apontar o ponteiro para o targetAngle
+    const randomSpins = Math.floor(Math.random() * 4) + 8; // 8 a 11 voltas
+    const finalRotation = (randomSpins * 360) - targetAngle; // O 90 foi removido, ajuste de acordo com a posição do ponteiro
     
-    setRotation(prev => prev + finalRotation);
+    setRotation(finalRotation);
 
     setTimeout(() => {
       const winnings = parseFloat((bet * winningSeg.value).toFixed(2));
@@ -209,6 +213,8 @@ export function WheelOfFortune() {
 
       setIsSpinning(false);
       setBetAmount('');
+      // Mantém a posição visual final para a próxima rodada
+      setRotation(finalRotation % 360);
     }, 8000); 
   };
 
