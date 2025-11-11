@@ -1,45 +1,45 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { useDashboard } from '@/context/dashboard-context';
+import { cn } from '@/lib/utils';
 
-// === CONFIGURAÇÃO DOS SEGMENTOS (PESOS + CORES) ===
+// Segments configuration based on the provided image
+// Weights are adjusted to make higher values rarer
 const segments = [
-  { value: 0,   label: '0x',   color: 'hsl(4 90% 58%)',   weight: 28 },   // Vermelho
-  { value: 0.5, label: '0.5x',  color: 'hsl(36 95% 55%)',  weight: 24 },   // Laranja
-  { value: 1,   label: '1x',   color: 'hsl(200 95% 55%)', weight: 26 },   // Azul
-  { value: 1.3, label: '1.3x',  color: 'hsl(122 80% 55%)', weight: 12 },   // Verde
-  { value: 2,   label: '2x',   color: 'hsl(275 80% 60%)', weight: 7 },    // Roxo
-  { value: 3,   label: '3x',   color: 'hsl(48 95% 55%)',  weight: 3 },    // Amarelo
-] as const;
+    { value: 1,   label: '1x',   color: '#22c55e', weight: 15 }, // Green
+    { value: 1,   label: '1x',   color: '#3b82f6', weight: 15 }, // Blue
+    { value: 1.3, label: '1.3x', color: '#6366f1', weight: 10 }, // Indigo
+    { value: 2,   label: '2x',   color: '#8b5cf6', weight: 5  }, // Purple
+    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
+    { value: 0.5, label: '0.5x', color: '#f97316', weight: 15 }, // Orange
+    { value: 0,   label: '0x',   color: '#f97316', weight: 20 }, // Orange
+];
 
-const totalWeight = segments.reduce((sum, seg) => sum + seg.weight, 0);
+const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
-// === FUNÇÃO PARA GERAR GRADIENTE PROPORCIONAL ===
+// Generates the conic gradient for the wheel background
 const getConicGradient = () => {
   let gradient = 'conic-gradient(';
-  let currentAngle = -90; // Começa no topo (ponteiro)
-
-  segments.forEach((seg, index) => {
+  let currentAngle = -90; // Start at the top
+  segments.forEach((seg, i) => {
     const segmentAngle = (seg.weight / totalWeight) * 360;
     const nextAngle = currentAngle + segmentAngle;
-    gradient += `${seg.color} ${currentAngle.toFixed(4)}deg ${nextAngle.toFixed(4)}deg`;
-    if (index < segments.length - 1) gradient += ', ';
+    gradient += `${seg.color} ${currentAngle}deg ${nextAngle}deg`;
+    if (i < segments.length - 1) gradient += ', ';
     currentAngle = nextAngle;
   });
-
   gradient += ')';
   return gradient;
 };
 
-// === SORTEIO PONDERADO ===
-const getWinningSegment = () => {
+// Weighted random selection for the winning segment
+const getWeightedRandomSegment = () => {
   let r = Math.random() * totalWeight;
   for (const seg of segments) {
     if (r < seg.weight) return seg;
@@ -48,115 +48,96 @@ const getWinningSegment = () => {
   return segments[segments.length - 1];
 };
 
-// === COMPONENTE DA RODA ===
+
 const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
   const transitionStyle = isSpinning
-    ? { transition: 'transform 15s cubic-bezier(0.25, 0.1, 0.25, 1)' }
+    ? { transition: 'transform 8s cubic-bezier(0.2, 0.8, 0.2, 1)' }
     : { transition: 'none' };
 
-  let currentAngle = -90;
-
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto my-8 shadow-2xl">
-      {/* Efeito de glow interno (cassino style) */}
-      <div className="absolute inset-0 rounded-full shadow-inner-glow pointer-events-none" />
+    <div className="relative w-72 h-72 md:w-80 md:h-80 mx-auto my-8 flex items-center justify-center">
+      {/* Holographic Outer Ring */}
+      <div className="absolute w-full h-full rounded-full bg-transparent border-4 border-cyan-400/50 shadow-[0_0_20px_theme(colors.cyan.400),inset_0_0_20px_theme(colors.cyan.500)] animate-pulse" />
+      
+      {/* Tick marks on the outer ring */}
+      {Array.from({ length: 60 }).map((_, i) => (
+        <div 
+          key={`tick-${i}`}
+          className="absolute w-1 h-2 bg-cyan-200/50"
+          style={{
+            transform: `rotate(${i * 6}deg) translate(0, -150px)`,
+          }}
+        />
+      ))}
 
-      {/* Ponteiro fixo no topo */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 w-0 h-0 
-                   border-l-[16px] border-l-transparent 
-                   border-r-[16px] border-r-transparent 
-                   border-t-[28px] border-t-yellow-400 
-                   drop-shadow-lg z-30"
-        style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}
-      />
+      {/* Pointer */}
+      <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-yellow-400 z-30 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" />
 
-      {/* Roda giratória */}
+      {/* The Wheel itself */}
       <div
-        className="relative w-full h-full rounded-full overflow-hidden"
-        style={{
-          transform: `rotate(${rotation}deg)`,
-          ...transitionStyle,
-        }}
+        className={cn('relative w-[90%] h-[90%] rounded-full flex items-center justify-center overflow-hidden shadow-2xl')}
+        style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
       >
-        {/* Gradiente de fundo */}
+        {/* Wheel background with colors */}
         <div
-          className="absolute inset-0 rounded-full border-8 border-gray-900"
+          className="absolute w-full h-full rounded-full"
           style={{ background: getConicGradient() }}
         />
+        {/* Inner shadow for 3D effect */}
+        <div className="absolute w-full h-full rounded-full shadow-[inset_0_0_25px_rgba(0,0,0,0.5)]" />
 
-        {/* Linhas separadoras + labels */}
-        {segments.map((seg, index) => {
+        {/* Segment Labels */}
+        {segments.map((seg, i) => {
+          const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
+          const startAngle = (cumulativeWeight / totalWeight) * 360;
           const segmentAngle = (seg.weight / totalWeight) * 360;
-          const midAngle = currentAngle + segmentAngle / 2;
-          const labelAngle = currentAngle + segmentAngle / 2;
+          const textAngle = startAngle + segmentAngle / 2;
 
-          const line = (
-            <div
-              key={`line-${index}`}
-              className="absolute w-full h-px bg-white/40 origin-center"
-              style={{
-                transform: `rotate(${midAngle}deg)`,
-                top: '50%',
-              }}
-            />
-          );
-
-          const label = (
-            <div
-              key={`label-${index}`}
-              className="absolute w-full h-full flex items-start justify-center"
-              style={{ transform: `rotate(${labelAngle}deg)` }}
-            >
-              <span
-                className="inline-block -rotate-90 translate-y-8 font-bold text-white text-shadow-lg 
-                           drop-shadow-md whitespace-nowrap origin-center"
-                style={{
-                  transform: `rotate(${-labelAngle}deg) translateY(-50%)`,
-                  fontSize: seg.weight < 10 ? '0.75rem' : '0.875rem',
-                }}
-              >
-                {seg.label}
-              </span>
-            </div>
-          );
-
-          currentAngle += segmentAngle;
           return (
-            <React.Fragment key={index}>
-              {line}
-              {label}
-            </React.Fragment>
+            <span
+              key={i}
+              className="absolute left-1/2 top-1/2 text-white text-xl font-bold drop-shadow-md"
+              style={{
+                transform: `rotate(${textAngle}deg) translate(0, -95px) rotate(-${textAngle}deg)`,
+                transformOrigin: '0 0',
+              }}
+            >
+              {seg.label}
+            </span>
           );
         })}
+         {/* Segment divider lines */}
+        {segments.map((seg, i) => {
+            const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
+            const angle = (cumulativeWeight / totalWeight) * 360;
+            return (
+                 <div
+                    key={`line-${i}`}
+                    className="absolute w-px h-full bg-black/30"
+                    style={{
+                        transform: `rotate(${angle-90}deg)`,
+                        transformOrigin: 'center center',
+                        left: '50%',
+                        top: 0
+                    }}
+                />
+            );
+        })}
 
-        {/* Círculo central */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-16 h-16 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 
-                        border-4 border-yellow-500 shadow-2xl z-20 
-                        flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-yellow-400 shadow-inner" />
+        {/* Center Hub */}
+        <div className="absolute w-20 h-20 rounded-full bg-gray-800 border-4 border-yellow-400 z-10 shadow-lg flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-blue-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)]" />
         </div>
       </div>
     </div>
   );
 };
 
-// === ESTILO ADICIONAL (adicione no seu CSS global ou tailwind) ===
-/*
-.shadow-inner-glow {
-  box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.2), 0 0 30px rgba(0, 0, 0, 0.8);
-}
-.text-shadow-lg {
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-}
-*/
 
 export function WheelOfFortune() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { liptBalance, updateLiptBalance } = useDashboard();
-
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -175,32 +156,36 @@ export function WheelOfFortune() {
     setIsSpinning(true);
     updateLiptBalance(-bet);
 
-    const winningSegment = getWinningSegment();
-    const winningIndex = segments.indexOf(winningSegment);
-
-    // Calcular ângulo acumulado até o segmento vencedor
-    let accumulatedAngle = -90;
-    for (let i = 0; i < winningIndex; i++) {
-      accumulatedAngle += (segments[i].weight / totalWeight) * 360;
+    const winningSeg = getWeightedRandomSegment();
+    
+    let cumulativeWeight = 0;
+    for(let i = 0; i < segments.length; i++) {
+        if (segments[i] === winningSeg) {
+            break;
+        }
+        cumulativeWeight += segments[i].weight;
     }
+    
+    const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
+    const segmentAngle = (winningSeg.weight / totalWeight) * 360;
+    const randomAngleInSegment = Math.random() * segmentAngle;
+    
+    const targetAngle = segmentStartAngle + randomAngleInSegment;
 
-    const segmentAngle = (winningSegment.weight / totalWeight) * 360;
-    const targetCenterAngle = accumulatedAngle + segmentAngle / 2;
-    const targetRotation = -(targetCenterAngle);
-
-    const randomSpins = Math.floor(Math.random() * 5) + 8;
-    const finalRotation = (randomSpins * 360) + targetRotation;
+    const randomSpins = Math.floor(Math.random() * 4) + 8; // 8–11 voltas
+    const finalRotation = (randomSpins * 360) + (360 - targetAngle) - (segmentAngle / 2) + 90;
 
     setRotation(finalRotation);
 
     setTimeout(() => {
-      const winnings = bet * winningSegment.value;
+      const winnings = parseFloat((bet * winningSeg.value).toFixed(2));
+
       if (winnings > 0) {
         updateLiptBalance(winnings);
         toast({
           title: t('gameZone.wheelOfFortune.toast.win.title'),
           description: t('gameZone.wheelOfFortune.toast.win.description', {
-            amount: winnings.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+            amount: winnings.toLocaleString('en-US', { minimumFractionDigits: 2 }),
           }),
         });
       } else {
@@ -214,17 +199,15 @@ export function WheelOfFortune() {
       setIsSpinning(false);
       setBetAmount('');
       setRotation(finalRotation % 360);
-    }, 15000);
+    }, 8000); // 8s animação
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 p-4">
+    <div className="flex flex-col items-center justify-center space-y-4">
       <Wheel rotation={rotation} isSpinning={isSpinning} />
 
-      <div className="w-full max-w-xs space-y-3">
-        <Label htmlFor="bet-amount" className="text-lg font-semibold">
-          {t('gameZone.wheelOfFortune.betAmount')}
-        </Label>
+      <div className="w-full max-w-xs space-y-2">
+        <Label htmlFor="bet-amount">{t('gameZone.wheelOfFortune.betAmount')}</Label>
         <Input
           id="bet-amount"
           type="number"
@@ -232,26 +215,25 @@ export function WheelOfFortune() {
           value={betAmount}
           onChange={(e) => setBetAmount(e.target.value)}
           disabled={isSpinning}
-          className="text-lg"
         />
-        <p className="text-sm text-muted-foreground">
-          {t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('pt-BR')} LIPT
+        <p className="text-xs text-muted-foreground">
+          {t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('en-US', { maximumFractionDigits: 0 })} LIPT
         </p>
       </div>
 
       <Button
-        className="w-full max-w-xs font-bold text-xl py-7 bg-gradient-to-r from-yellow-500 to-orange-600 
-                   hover:from-yellow-600 hover:to-orange-700 text-white shadow-lg 
-                   disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full max-w-xs font-bold text-lg py-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
         onClick={handleSpin}
         disabled={isSpinning}
       >
-        {isSpinning ? t('gameZone.wheelOfFortune.spinning') : t('gameZone.wheelOfFortune.spinButton')}
+        {isSpinning
+          ? t('gameZone.wheelOfFortune.spinning')
+          : t('gameZone.wheelOfFortune.spinButton')}
       </Button>
 
       {isSpinning && (
         <p className="text-sm text-muted-foreground animate-pulse">
-          {t('gameZone.wheelOfFortune.spinning')}
+          {t('gameZone.wheelOfFortune.spinning')}...
         </p>
       )}
     </div>
