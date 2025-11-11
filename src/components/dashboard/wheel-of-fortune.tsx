@@ -24,6 +24,7 @@ const segmentAngle = 360 / segmentCount;
 
 const getConicGradient = () => {
     let gradient = 'conic-gradient(';
+    // Offset the start by half a segment to center the labels
     let currentAngle = -segmentAngle / 2;
     for (let i = 0; i < segments.length; i++) {
         gradient += `${segments[i].color} ${currentAngle}deg ${currentAngle + segmentAngle}deg`;
@@ -105,33 +106,33 @@ export function WheelOfFortune() {
       return;
     }
     
+    setIsSpinning(true);
     updateLiptBalance(-bet);
     
-    setIsSpinning(true);
+    const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
+    const result = segments[winningSegmentIndex];
 
     const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
-    const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
     
     // The pointer is at the top (0 degrees).
     // To make segment `i` land at the pointer, we need to rotate the wheel by `-(i * segmentAngle)`.
-    const targetAngle = -(winningSegmentIndex * segmentAngle);
+    // We add a small random offset within the segment to make it look more natural.
+    const randomOffset = (Math.random() - 0.5) * (segmentAngle * 0.8);
+    const targetAngle = -(winningSegmentIndex * segmentAngle) - randomOffset;
 
-    // Get the current rotation from the ref to handle consecutive spins without reset
-    const currentFullSpins = Math.floor(currentRotationRef.current / 360);
-    const finalRotation = (currentFullSpins + randomSpins) * 360 + targetAngle;
+    const finalRotation = (randomSpins * 360) + targetAngle;
     
     currentRotationRef.current = finalRotation;
     setRotation(finalRotation);
 
     setTimeout(() => {
-      const result = segments[winningSegmentIndex];
       const winnings = bet * result.value;
 
       if (winnings > 0) {
         updateLiptBalance(winnings);
         toast({
           title: t('gameZone.wheelOfFortune.toast.win.title'),
-          description: t('gameZone.wheelOfFortune.toast.win.description', { amount: winnings.toFixed(2) }),
+          description: t('gameZone.wheelOfFortune.toast.win.description', { amount: winnings.toLocaleString('en-US', { minimumFractionDigits: 2 }) }),
         });
       } else {
         toast({
@@ -143,6 +144,11 @@ export function WheelOfFortune() {
       
       setIsSpinning(false);
       setBetAmount('');
+
+      // Normalize rotation to keep the number smaller
+      const actualEndRotation = finalRotation % 360;
+      setRotation(actualEndRotation);
+      currentRotationRef.current = actualEndRotation;
 
     }, 15000); // Sync with animation duration
   };
@@ -172,6 +178,7 @@ export function WheelOfFortune() {
       >
         {isSpinning ? t('gameZone.wheelOfFortune.spinning') : t('gameZone.wheelOfFortune.spinButton')}
       </Button>
+      {isSpinning && <p className="text-sm text-muted-foreground">{t('gameZone.wheelOfFortune.spinning')}</p>}
     </div>
   );
 }

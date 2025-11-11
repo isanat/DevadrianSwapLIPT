@@ -919,7 +919,9 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     let translation = get(translations[locale], key, key) as string;
     if (vars) {
       for (const [varKey, varValue] of Object.entries(vars)) {
-        translation = translation.replace(`{${varKey}}`, String(varValue));
+        // Use a regex to replace all occurrences of the placeholder
+        const regex = new RegExp(`\\{${varKey}\\}`, 'g');
+        translation = translation.replace(regex, String(varValue));
       }
     }
     return translation;
