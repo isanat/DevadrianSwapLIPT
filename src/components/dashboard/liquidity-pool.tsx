@@ -57,15 +57,17 @@ export function LiquidityPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <Droplets className="h-6 w-6 text-primary" />
-            {t('liquidityPool.title')}
-          </CardTitle>
-          <HelpTooltip
-            title={t('liquidityPool.title')}
-            content={<p>{t('liquidityPool.tooltip')}</p>}
-          />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Droplets className="h-6 w-6 text-primary" />
+              {t('liquidityPool.title')}
+            </CardTitle>
+            <HelpTooltip
+              title={t('liquidityPool.title')}
+              content={<p>{t('liquidityPool.tooltip')}</p>}
+            />
+          </div>
         </div>
         <CardDescription>{t('liquidityPool.description')}</CardDescription>
       </CardHeader>

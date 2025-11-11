@@ -35,19 +35,21 @@ export function ReferralDashboard() {
   const totalTeamMembers = mockReferrals.reduce((sum, ref) => sum + ref.members, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 h-full">
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-6 w-6 text-primary" />
-              {t('referralProgram.title')}
-            </CardTitle>
-            <HelpTooltip
-              title={t('referralProgram.title')}
-              content={<p>{t('referralProgram.tooltip')}</p>}
-            />
-          </div>
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2">
+                        <Gift className="h-6 w-6 text-primary" />
+                        {t('referralProgram.title')}
+                    </CardTitle>
+                    <HelpTooltip
+                        title={t('referralProgram.title')}
+                        content={<p>{t('referralProgram.tooltip')}</p>}
+                    />
+                </div>
+            </div>
           <CardDescription>{t('referralProgram.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

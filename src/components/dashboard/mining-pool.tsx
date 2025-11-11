@@ -105,15 +105,17 @@ export function MiningPool() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <Pickaxe className="h-6 w-6 text-primary" />
-            {t('miningPool.title')}
-          </CardTitle>
-          <HelpTooltip
-            title={t('miningPool.title')}
-            content={<p>{t('miningPool.tooltip')}</p>}
-          />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Pickaxe className="h-6 w-6 text-primary" />
+              {t('miningPool.title')}
+            </CardTitle>
+            <HelpTooltip
+              title={t('miningPool.title')}
+              content={<p>{t('miningPool.tooltip')}</p>}
+            />
+          </div>
         </div>
         <CardDescription>{t('miningPool.description')}</CardDescription>
       </CardHeader>

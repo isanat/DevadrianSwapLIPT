@@ -53,21 +53,23 @@ export function TokenPurchase() {
   }
 
   return (
-    <Card className="bg-card/80 backdrop-blur-sm">
+    <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <Banknote className="h-6 w-6 text-primary" />
-            {t('tokenPurchase.title')}
-          </CardTitle>
-          <HelpTooltip
-            title={t('tokenPurchase.title')}
-            content={<p>{t('tokenPurchase.tooltip')}</p>}
-          />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="h-6 w-6 text-primary" />
+              {t('tokenPurchase.title')}
+            </CardTitle>
+            <HelpTooltip
+              title={t('tokenPurchase.title')}
+              content={<p>{t('tokenPurchase.tooltip')}</p>}
+            />
+          </div>
         </div>
         <CardDescription>{t('tokenPurchase.description')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex-grow space-y-4">
         <div className="space-y-2">
           <Label htmlFor="usdt-amount">{t('tokenPurchase.youPay')}</Label>
           <Input

@@ -143,7 +143,7 @@ export const DraggableDashboardGrid = () => {
   if (!isClient) {
     // Render a static layout on the server to avoid hydration mismatch and layout shifts
     return (
-        <div className="grid gap-4 md:gap-8 lg:grid-cols-3 auto-rows-min">
+        <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
           {initialItems.map(({ id, className }) => {
             const Component = componentMap[id];
             return <div key={id} className={className}><Component /></div>
@@ -155,7 +155,7 @@ export const DraggableDashboardGrid = () => {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map(item => item.id)} strategy={rectSortingStrategy}>
-        <div className="grid gap-4 md:gap-8 lg:grid-cols-3 auto-rows-min">
+        <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
           {items.map(({ id }) => {
             const Component = componentMap[id];
             if (!Component) return null; // Gracefully handle if a component is removed
