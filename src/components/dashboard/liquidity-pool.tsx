@@ -68,7 +68,7 @@ export function LiquidityPool() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Your LP Tokens</p>
-            <p className="text-2xl font-bold">{lpTokens.toLocaleString()}</p>
+            <p className="text-2xl font-bold">{lpTokens.toLocaleString('en-US')}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Fees Earned</p>
@@ -86,7 +86,7 @@ export function LiquidityPool() {
               <div className="space-y-2">
                 <Label htmlFor="add-lipt-amount">LIPT Amount</Label>
                 <Input id="add-lipt-amount" type="number" placeholder="0.0" value={addLiptAmount} onChange={(e) => setAddLiptAmount(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Balance: {liptBalance.toLocaleString()} LIPT</p>
+                <p className="text-xs text-muted-foreground">Balance: {liptBalance.toLocaleString('en-US')} LIPT</p>
               </div>
               <div className="flex justify-center">
                 <Plus className="h-5 w-5 text-muted-foreground" />
@@ -94,7 +94,7 @@ export function LiquidityPool() {
               <div className="space-y-2">
                 <Label htmlFor="add-usdt-amount">USDT Amount</Label>
                 <Input id="add-usdt-amount" type="number" placeholder="0.0" value={addUsdtAmount} onChange={(e) => setAddUsdtAmount(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Balance: {usdtBalance.toLocaleString()} USDT</p>
+                <p className="text-xs text-muted-foreground">Balance: {usdtBalance.toLocaleString('en-US')} USDT</p>
               </div>
               <Button className="w-full mt-4" variant="default" onClick={handleAddLiquidity}>Add Liquidity</Button>
             </div>
@@ -106,7 +106,7 @@ export function LiquidityPool() {
                   <Input id="remove-lp-amount" type="number" placeholder="0.0" value={removeLpAmount} onChange={(e) => setRemoveLpAmount(e.target.value)} />
                   <Button variant="destructive" onClick={handleRemoveLiquidity}>Remove</Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Your LP tokens: {lpTokens.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Your LP tokens: {lpTokens.toLocaleString('en-US')}</p>
             </div>
           </TabsContent>
         </Tabs>

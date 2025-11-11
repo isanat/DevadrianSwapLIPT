@@ -29,7 +29,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
   return (
     <div className="flex justify-between items-center p-3 rounded-lg border bg-background/50">
       <div>
-        <p className="font-semibold">{stake.amount.toLocaleString()} LIPT</p>
+        <p className="font-semibold">{stake.amount.toLocaleString('en-US')} LIPT</p>
         <p className="text-xs text-muted-foreground">
           {stake.plan.duration} days @ {stake.plan.apy}% APY
         </p>
@@ -117,7 +117,7 @@ export function StakingPool() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
           <div>
             <p className="text-sm text-muted-foreground">Total Staked Balance</p>
-            <p className="text-2xl font-bold">{stakedBalance.toLocaleString()} LIPT</p>
+            <p className="text-2xl font-bold">{stakedBalance.toLocaleString('en-US')} LIPT</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Unclaimed Rewards</p>
@@ -150,7 +150,7 @@ export function StakingPool() {
                   <Input id="stake-amount" type="number" placeholder="0.0" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} />
                   <Button variant="default" onClick={handleStake}>Stake</Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Your wallet balance: {liptBalance.toLocaleString()} LIPT</p>
+                <p className="text-xs text-muted-foreground">Your wallet balance: {liptBalance.toLocaleString('en-US')} LIPT</p>
               </div>
             </div>
           </TabsContent>
