@@ -8,6 +8,9 @@ export type Locale = 'en' | 'pt-BR' | 'es' | 'it';
 const translations = {
   en: {
     toggleLanguage: 'Toggle language',
+    header: {
+      resetLayout: 'Reset Layout',
+    },
     stats: {
       liptPrice: {
         title: 'LIPT Token Price',
@@ -192,6 +195,9 @@ const translations = {
   },
   'pt-BR': {
     toggleLanguage: 'Trocar idioma',
+    header: {
+      resetLayout: 'Redefinir Layout',
+    },
     stats: {
       liptPrice: {
         title: 'Preço do Token LIPT',
@@ -376,6 +382,9 @@ const translations = {
   },
   es: {
     toggleLanguage: 'Cambiar idioma',
+    header: {
+      resetLayout: 'Restablecer Diseño',
+    },
     stats: {
       liptPrice: {
         title: 'Precio del Token LIPT',
@@ -560,6 +569,9 @@ const translations = {
   },
   it: {
     toggleLanguage: 'Cambia lingua',
+    header: {
+      resetLayout: 'Reimposta Layout',
+    },
     stats: {
       liptPrice: {
         title: 'Prezzo del Token LIPT',

@@ -65,7 +65,7 @@ const SortableItem = ({ id, children, className }: { id: string, children: React
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 'auto',
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.7 : 1,
   };
 
   return (
@@ -82,6 +82,11 @@ const SortableItem = ({ id, children, className }: { id: string, children: React
 export const DraggableDashboardGrid = () => {
   const [items, setItems] = useState(initialItems);
   const [isClient, setIsClient] = useState(false);
+
+  const resetLayout = () => {
+    localStorage.removeItem('dashboardLayout');
+    setItems(initialItems);
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -101,6 +106,11 @@ export const DraggableDashboardGrid = () => {
             localStorage.removeItem('dashboardLayout');
         }
     }
+
+    window.addEventListener('resetDashboardLayout', resetLayout);
+    return () => {
+      window.removeEventListener('resetDashboardLayout', resetLayout);
+    };
   }, []);
 
   const sensors = useSensors(
@@ -146,7 +156,7 @@ export const DraggableDashboardGrid = () => {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map(item => item.id)} strategy={rectSortingStrategy}>
         <div className="grid gap-4 md:gap-8 lg:grid-cols-3 auto-rows-min">
-          {items.map(({ id, className }) => {
+          {items.map(({ id }) => {
             const Component = componentMap[id];
             if (!Component) return null; // Gracefully handle if a component is removed
             
