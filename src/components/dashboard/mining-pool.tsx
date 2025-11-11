@@ -140,7 +140,7 @@ export function MiningPool() {
                                 <Bolt size={14} /> 
                                 {plan.power} LIPT/{t('miningPool.hour')}
                               </div>
-                              <div className="text-xs text-muted-foreground">{t('miningPool.cost')}: {plan.cost.toLocaleString()} LIPT</div>
+                              <div className="text-xs text-muted-foreground">{t('miningPool.cost')}: {plan.cost.toLocaleString('en-US')} LIPT</div>
                               <div className="text-xs text-muted-foreground">{plan.duration} {t('stakingPool.days')}</div>
                           </Label>
                       ))}
