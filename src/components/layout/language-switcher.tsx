@@ -21,24 +21,22 @@ const languages = [
 ]
 
 export function LanguageSwitcher() {
-  const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast()
+  // This is a placeholder for a real i18n routing setup.
+  // In a real app, you'd likely use a library like 'next-intl'
+  // and the locale would be part of the URL.
 
   const handleLanguageChange = (locale: string) => {
-    const newPath = `/${locale}${pathname.startsWith('/') ? pathname : `/${pathname}`}`.replace(`/${(router as any).locale}`, '');
-    router.push(newPath);
-
     const language = languages.find(l => l.code === locale);
     if (language) {
       toast({
         title: `Language changed to ${language.name}!`,
-        description: `${language.flag} The page will now be displayed in the selected language.`,
+        description: `${language.flag} The page would now be displayed in the selected language. (Functionality pending full i18n implementation)`,
       });
     }
   };
   
-  const currentLocale = (router as any).locale || 'pt-BR';
+  const currentLocale = 'pt-BR'; // Mock current locale
 
   return (
     <DropdownMenu>
