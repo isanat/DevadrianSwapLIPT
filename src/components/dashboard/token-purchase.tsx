@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 
 export function TokenPurchase() {
-  const { liptPrice, purchaseLipt } = useDashboard();
+  const { liptPrice, purchaseLipt, usdtBalance } = useDashboard();
   const [usdtAmount, setUsdtAmount] = useState('');
   const [liptAmount, setLiptAmount] = useState('');
   const { toast } = useToast();
@@ -31,12 +31,13 @@ export function TokenPurchase() {
   };
 
   const handlePurchase = () => {
-    const amount = parseFloat(liptAmount);
-    if (amount > 0) {
-        purchaseLipt(amount);
+    const amountToBuy = parseFloat(liptAmount);
+    const cost = parseFloat(usdtAmount);
+    if (amountToBuy > 0 && usdtBalance >= cost) {
+        purchaseLipt(amountToBuy);
         toast({
             title: "Purchase Successful!",
-            description: `You have purchased ${amount.toFixed(2)} LIPT.`,
+            description: `You have purchased ${amountToBuy.toFixed(2)} LIPT.`,
         });
         setLiptAmount('');
         setUsdtAmount('');
@@ -44,7 +45,7 @@ export function TokenPurchase() {
         toast({
             variant: "destructive",
             title: "Invalid Amount",
-            description: "Please enter a valid amount to purchase.",
+            description: "Please check your USDT balance and try again.",
         });
     }
   }
@@ -68,6 +69,7 @@ export function TokenPurchase() {
             value={usdtAmount}
             onChange={handleUsdtChange}
           />
+           <p className="text-xs text-muted-foreground">Balance: {usdtBalance.toLocaleString('en-US')} USDT</p>
         </div>
         <div className="flex justify-center my-2">
             <ArrowRightLeft className="h-5 w-5 text-muted-foreground" />

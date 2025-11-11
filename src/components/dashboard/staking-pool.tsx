@@ -150,7 +150,7 @@ export function StakingPool() {
                   <Input id="stake-amount" type="number" placeholder="0.0" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} />
                   <Button variant="default" onClick={handleStake}>Stake</Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Your wallet balance: {liptBalance.toLocaleString('en-US')} LIPT</p>
+                <p className="text-xs text-muted-foreground">Your wallet balance: {liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
               </div>
             </div>
           </TabsContent>

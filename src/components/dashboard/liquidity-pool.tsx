@@ -52,7 +52,7 @@ export function LiquidityPool() {
   };
 
   return (
-    <Card className="bg-card/80 backdrop-blur-sm">
+    <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Droplets className="h-6 w-6 text-primary" />
@@ -60,7 +60,7 @@ export function LiquidityPool() {
         </CardTitle>
         <CardDescription>Provide liquidity to earn trading fees from the LIPT/USDT pair.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center">
           <div>
             <p className="text-sm text-muted-foreground">Your Pool Share</p>
@@ -86,7 +86,7 @@ export function LiquidityPool() {
               <div className="space-y-2">
                 <Label htmlFor="add-lipt-amount">LIPT Amount</Label>
                 <Input id="add-lipt-amount" type="number" placeholder="0.0" value={addLiptAmount} onChange={(e) => setAddLiptAmount(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Balance: {liptBalance.toLocaleString('en-US')} LIPT</p>
+                <p className="text-xs text-muted-foreground">Balance: {liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
               </div>
               <div className="flex justify-center">
                 <Plus className="h-5 w-5 text-muted-foreground" />
