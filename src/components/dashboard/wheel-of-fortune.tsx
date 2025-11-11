@@ -9,14 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 
-// 🎯 Segmentos com pesos (probabilidades) — casa com vantagem ~17%
+// 🎯 Segmentos com pesos e cores do tema DeFi
 const segments = [
-  { value: 0,   label: '0x',   color: 'hsl(4 90% 58%)',    weight: 28 },
-  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)',   weight: 24 },
-  { value: 1,   label: '1x',   color: 'hsl(200 95% 55%)',  weight: 26 },
-  { value: 1.3, label: '1.3x', color: 'hsl(122 80% 55%)',  weight: 12 },
-  { value: 2,   label: '2x',   color: 'hsl(275 80% 60%)',  weight: 7 },
-  { value: 3,   label: '3x',   color: 'hsl(48 95% 55%)',   weight: 3 },
+  { value: 0,   label: '0x',   color: 'hsl(var(--destructive))',  weight: 28 }, // Vermelho
+  { value: 0.5, label: '0.5x', color: 'hsl(var(--muted))',      weight: 24 }, // Cinza Muted
+  { value: 1,   label: '1x',   color: 'hsl(var(--primary))',      weight: 26 }, // Azul Primário
+  { value: 1.3, label: '1.3x', color: 'hsl(var(--accent))',       weight: 12 }, // Verde Accent
+  { value: 2,   label: '2x',   color: 'hsl(var(--primary))',      weight: 7 },  // Azul Primário
+  { value: 3,   label: '3x',   color: 'hsl(var(--accent))',       weight: 3 },  // Verde Accent
 ];
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
@@ -52,17 +52,21 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
     : { transition: 'none' };
 
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto my-8 shadow-[inset_0_0_20px_rgba(255,255,255,0.3),0_0_25px_rgba(0,0,0,0.7)] rounded-full">
+    <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto my-8">
       {/* Ponteiro */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-accent z-20" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 w-0 h-0 
+        border-l-[14px] border-l-transparent 
+        border-r-[14px] border-r-transparent 
+        border-t-[28px] border-t-primary z-20 drop-shadow-lg" 
+      />
 
       <div
-        className={cn('relative w-full h-full rounded-full flex items-center justify-center')}
+        className={cn('relative w-full h-full rounded-full flex items-center justify-center border-4 border-card/80 shadow-lg')}
         style={{ transform: `rotate(${rotation}deg)`, ...transitionStyle }}
       >
         {/* Fundo da roda */}
         <div
-          className="absolute w-full h-full rounded-full border-4 border-primary/40"
+          className="absolute w-full h-full rounded-full"
           style={{ background: getConicGradient() }}
         />
 
@@ -86,7 +90,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         })}
 
         {/* Círculo central */}
-        <div className="absolute w-16 h-16 rounded-full bg-card border-4 border-primary z-10 shadow-md" />
+        <div className="absolute w-16 h-16 rounded-full bg-background border-4 border-card z-10 shadow-inner" />
       </div>
     </div>
   );
