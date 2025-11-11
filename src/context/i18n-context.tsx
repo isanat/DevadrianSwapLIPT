@@ -114,7 +114,7 @@ const translations = {
         invalidAmount: {
           title: 'Invalid Amount',
           description: 'Please check your balances and try again.',
-        }
+        },
       },
     },
     tokenPurchase: {

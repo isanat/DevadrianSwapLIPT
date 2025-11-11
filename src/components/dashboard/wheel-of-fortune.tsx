@@ -88,7 +88,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         {segments.map((seg, i) => {
           const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
           const segmentAngle = (seg.weight / totalWeight) * 360;
-          const textAngle = (cumulativeWeight / totalWeight) * 360 + segmentAngle / 2 - 90;
+          const textAngle = cumulativeWeight * 360 / totalWeight + segmentAngle / 2 - 90;
 
           return (
             <span
