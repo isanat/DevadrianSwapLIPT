@@ -10,6 +10,12 @@ export const STAKING_PLANS = [
 ];
 const EARLY_UNSTAKE_PENALTY_PERCENTAGE = 10; // 10% penalty
 
+export const MINING_PLANS = [
+  { name: 'Basic', cost: 1000, power: 0.5, duration: 30 }, // LIPT/hour
+  { name: 'Advanced', cost: 5000, power: 3.0, duration: 60 },
+  { name: 'Professional', cost: 10000, power: 7.5, duration: 90 },
+];
+
 export interface Stake {
   id: string;
   amount: number;
@@ -19,6 +25,19 @@ export interface Stake {
     apy: number;
   };
 }
+
+export interface Miner {
+  id: string;
+  startDate: number;
+  plan: {
+    name: string;
+    cost: number;
+    power: number; // LIPT per hour
+    duration: number; // days
+  };
+  minedAmount: number;
+}
+
 
 // Define the shape of the context data
 interface DashboardContextData {
@@ -52,6 +71,11 @@ interface DashboardContextData {
   totalInvested: number;
   totalReturns: number;
 
+  // Mining
+  miners: Miner[];
+  miningPower: number;
+  minedRewards: number;
+
   // Actions
   purchaseLipt: (amount: number) => void;
   stakeLipt: (amount: number, plan: { duration: number; apy: number }) => void;
@@ -59,6 +83,8 @@ interface DashboardContextData {
   claimRewards: () => void;
   addLiquidity: (liptAmount: number, usdtAmount: number) => void;
   removeLiquidity: (lpAmount: number) => void;
+  activateMiner: (plan: { name: string; cost: number; power: number; duration: number; }) => void;
+  claimMinedRewards: () => void;
 }
 
 // Create the context with a default undefined value
@@ -93,6 +119,11 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [totalInvested, setTotalInvested] = useState(0);
   const [totalReturns, setTotalReturns] = useState(0);
 
+  // Mining state
+  const [miners, setMiners] = useState<Miner[]>([]);
+  const [miningPower, setMiningPower] = useState(0);
+  const [minedRewards, setMinedRewards] = useState(0);
+
 
   // Update derived states
   useEffect(() => {
@@ -106,8 +137,14 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
 
     const rewardsValue = unclaimedRewards * liptPrice;
     setTotalReturns(rewardsValue + feesEarned);
+    
+    const totalMiningPower = miners.reduce((sum, miner) => {
+      const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
+      return isExpired ? sum : sum + miner.plan.power;
+    }, 0);
+    setMiningPower(totalMiningPower);
 
-  }, [stakes, liptPrice, lpTokens, poolShare, feesEarned, unclaimedRewards]);
+  }, [stakes, liptPrice, lpTokens, poolShare, feesEarned, unclaimedRewards, miners]);
 
 
   // Simulate reward accumulation
@@ -123,9 +160,25 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
             setUnclaimedRewards(prev => prev + newRewards);
         }
         setFeesEarned(prev => prev + 0.05 * lpTokens); // Simulate LP fee earnings
+
+        if (miners.length > 0) {
+          let newMined = 0;
+          const updatedMiners = miners.map(miner => {
+            const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
+            if (!isExpired) {
+              const rewardPerSecond = miner.plan.power / 3600;
+              newMined += rewardPerSecond * 5;
+              return { ...miner, minedAmount: miner.minedAmount + rewardPerSecond * 5 };
+            }
+            return miner;
+          }).filter(miner => !isExpired);
+          setMinedRewards(prev => prev + newMined);
+          // setMiners(updatedMiners); // This can cause issues if not handled carefully, better to just let rewards accumulate
+        }
+
     }, 5000); // run every 5 seconds
     return () => clearInterval(interval);
-  }, [stakes, lpTokens]);
+  }, [stakes, lpTokens, miners]);
 
   // Simulate real-time LIPT price change
   useEffect(() => {
@@ -225,6 +278,26 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
       }
   };
 
+  const activateMiner = (plan: { name: string; cost: number; power: number; duration: number; }) => {
+    if (liptBalance >= plan.cost) {
+      const newMiner: Miner = {
+        id: `miner_${Date.now()}_${Math.random()}`,
+        plan,
+        startDate: Date.now(),
+        minedAmount: 0,
+      };
+      setLiptBalance(prev => prev - plan.cost);
+      setMiners(prev => [...prev, newMiner]);
+      setTotalValueLocked(prev => prev + (plan.cost * liptPrice));
+    }
+  };
+
+  const claimMinedRewards = () => {
+    setLiptBalance(prev => prev + minedRewards);
+    setMinedRewards(0);
+  };
+
+
   const value: DashboardContextData = {
     liptBalance,
     usdtBalance,
@@ -242,12 +315,17 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     referralRewards,
     totalInvested,
     totalReturns,
+    miners,
+    miningPower,
+    minedRewards,
     purchaseLipt,
     stakeLipt,
     unstakeLipt,
     claimRewards,
     addLiquidity,
-    removeLiquidity
+    removeLiquidity,
+    activateMiner,
+    claimMinedRewards
   };
 
   return (

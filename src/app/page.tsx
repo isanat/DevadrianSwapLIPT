@@ -4,6 +4,7 @@ import { LiquidityPool } from '@/components/dashboard/liquidity-pool';
 import { StatsGroup } from '@/components/dashboard/stats-group';
 import { TokenPurchase } from '@/components/dashboard/token-purchase';
 import { ReferralDashboard } from '@/components/dashboard/referral-program';
+import { MiningPool } from '@/components/dashboard/mining-pool';
 
 export default function Home() {
   return (
@@ -15,6 +16,7 @@ export default function Home() {
             <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
               <div className="lg:col-span-2 grid gap-4 md:gap-8 auto-rows-fr">
                 <StakingPool />
+                <MiningPool />
               </div>
               <div className="grid gap-4 md:gap-8 auto-rows-fr">
                 <LiquidityPool />
