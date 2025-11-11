@@ -9,15 +9,22 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 
-// 🎯 Segmentos com pesos (probabilidades) — casa com vantagem ~17%
+// 🎯 Segmentos com pesos (probabilidades) — casa com vantagem
 const segments = [
-  { value: 0,   label: '0x',   color: 'hsl(4 90% 58%)',    weight: 28 },
-  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)',   weight: 24 },
-  { value: 1,   label: '1x',   color: 'hsl(200 95% 55%)',  weight: 26 },
-  { value: 1.3, label: '1.3x', color: 'hsl(122 80% 55%)',  weight: 12 },
-  { value: 2,   label: '2x',   color: 'hsl(275 80% 60%)',  weight: 7 },
-  { value: 3,   label: '3x',   color: 'hsl(48 95% 55%)',   weight: 3 },
+  { value: 0,   label: '0x',   color: 'hsl(4 90% 58%)',    weight: 10 }, // Vermelho
+  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)',   weight: 8 },  // Laranja
+  { value: 1,   label: '1x',   color: 'hsl(200 95% 55%)',  weight: 9 },  // Azul
+  { value: 1,   label: '1x',   color: 'hsl(122 80% 55%)',  weight: 9 },  // Verde
+  { value: 0,   label: '0x',   color: 'hsl(25 50% 40%)',   weight: 9 },  // Marrom escuro
+  { value: 0.5, label: '0.5x', color: 'hsl(15 85% 55%)',   weight: 8 },  // Coral
+  { value: 1.3, label: '1.3x', color: 'hsl(285 70% 60%)',  weight: 12 }, // Lilás
+  { value: 0,   label: '0x',   color: 'hsl(0 0% 10%)',     weight: 9 },  // Preto
+  { value: 0.5, label: '0.5x', color: 'hsl(48 95% 55%)',   weight: 8 },  // Amarelo
+  { value: 1,   label: '1x',   color: 'hsl(0 0% 95%)',     weight: 8 },  // Branco
+  { value: 2,   label: '2x',   color: 'hsl(275 80% 60%)',  weight: 7 },  // Roxo
+  { value: 3,   label: '3x',   color: 'hsl(320 80% 65%)',  weight: 3 },  // Rosa
 ];
+
 
 const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
@@ -78,6 +85,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
               className="absolute left-1/2 top-1/2 text-white text-sm font-bold drop-shadow-md"
               style={{
                 transform: `rotate(${startAngle}deg) translateX(110px) rotate(${-startAngle}deg)`,
+                color: seg.color === 'hsl(0 0% 95%)' ? '#000' : '#fff'
               }}
             >
               {seg.label}
