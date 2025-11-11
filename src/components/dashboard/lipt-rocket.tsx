@@ -51,29 +51,31 @@ const StarField = ({ count = 50 }: { count?: number }) => {
 
 const ShootingStar = () => {
     const [visible, setVisible] = useState(false);
+    const id = useMemo(() => Math.random(), []);
 
     useEffect(() => {
         const showInterval = setInterval(() => {
             setVisible(true);
-            const hideTimeout = setTimeout(() => setVisible(false), 2000); // visible for 2s
+            const hideTimeout = setTimeout(() => setVisible(false), 3000); // Slower animation, visible for 3s
             return () => clearTimeout(hideTimeout);
-        }, Math.random() * 8000 + 4000); // every 4-12 seconds
+        }, Math.random() * 10000 + 5000); // every 5-15 seconds
         
         return () => clearInterval(showInterval);
     }, []);
 
     if (!visible) return null;
 
-    const top = Math.random() * 80;
-    const left = -10; // Start off-screen
-    const animationDuration = Math.random() * 1.5 + 0.5; // 0.5s to 2s travel time
+    const top = -10; // Start above the screen
+    const left = Math.random() * 100; // Start at a random horizontal position
+    const animationDuration = Math.random() * 2 + 2.5; // 2.5s to 4.5s travel time (slower)
 
     return (
       <div 
+        key={id}
         className="absolute animate-shooting-star"
         style={{ top: `${top}%`, left: `${left}%`, animationDuration: `${animationDuration}s` }}
       >
-        <Star className="w-6 h-6 text-yellow-300/80 fill-yellow-300/50" />
+        <Star className="w-4 h-4 text-yellow-300/60 fill-yellow-300/40" />
       </div>
     );
 };
@@ -92,7 +94,10 @@ export function LiptRocket() {
 
   const calculateCrashPoint = () => {
     const r = Math.random();
-    const crashPoint = 1 / (1 - r);
+    // This formula creates a distribution where crashes at low multipliers are more common.
+    // 99 / (100 - r * 100) -> A number between 0.99 and infinity.
+    // We cap it at a reasonable max, e.g., 200, and ensure it's at least 1.01.
+    const crashPoint = 99 / (100 - r * 100);
     return Math.max(1.01, crashPoint);
   };
 
@@ -102,8 +107,8 @@ export function LiptRocket() {
     let currentMultiplier = 1.00;
   
     const interval = setInterval(() => {
-      // Exponential acceleration: the increment grows with the multiplier
-      currentMultiplier += (currentMultiplier * 0.015);
+      // 20x faster: Increase the multiplier factor significantly
+      currentMultiplier += (currentMultiplier * 0.35); // Was 0.015, now much faster
       
       if (gameStatusRef.current === 'cashed_out' || gameStatusRef.current === 'crashed') {
         clearInterval(interval);
@@ -124,10 +129,12 @@ export function LiptRocket() {
         }
       } else {
         setMultiplier(currentMultiplier);
-        const progress = Math.min(90, (Math.log(currentMultiplier) / Math.log(crashPoint)) * 100);
+        // The progress is now logarithmic, so it rises fast at the beginning and slows down visually as it gets higher
+        // This gives a better sense of acceleration.
+        const progress = Math.min(90, (Math.log10(currentMultiplier) / Math.log10(crashPoint)) * 100);
         setRocketPosition(progress);
       }
-    }, 80); // Game loop runs faster (every 80ms)
+    }, 50); // Game loop runs even faster (every 50ms)
   
     return () => clearInterval(interval);
   }, [t, toast]);

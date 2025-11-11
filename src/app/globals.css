@@ -71,11 +71,11 @@
 @layer utilities {
   @keyframes shooting-star {
     0% {
-      transform: translateX(0) rotate(-45deg);
+      transform: translate3d(0, 0, 0) rotate(45deg);
       opacity: 1;
     }
     100% {
-      transform: translateX(120vw) rotate(-45deg);
+      transform: translate3d(-150vw, 150vh, 0) rotate(45deg);
       opacity: 0;
     }
   }
