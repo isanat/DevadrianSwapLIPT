@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 type StatsCardProps = {
   title: string;
-  value: string;
+  value: string | number;
   icon: ReactNode;
   description?: string;
 };
@@ -16,7 +16,7 @@ export function StatsCard({ title, value, icon, description }: StatsCardProps) {
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold">{typeof value === 'number' ? value.toLocaleString() : value}</div>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}

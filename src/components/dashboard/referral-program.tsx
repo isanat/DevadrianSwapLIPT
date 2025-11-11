@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Copy, Gift } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useDashboard } from '@/context/dashboard-context';
 
 export function ReferralProgram() {
   const { toast } = useToast();
+  const { referrals, referralRewards } = useDashboard();
   const referralLink = "https://liptonswap.com/invite?ref=user123";
 
   const copyToClipboard = () => {
@@ -41,11 +43,11 @@ export function ReferralProgram() {
         <div className="grid grid-cols-2 gap-4 text-center pt-4">
             <div>
                 <p className="text-sm text-muted-foreground">Total Referrals</p>
-                <p className="text-2xl font-bold">15</p>
+                <p className="text-2xl font-bold">{referrals}</p>
             </div>
             <div>
                 <p className="text-sm text-muted-foreground">Referral Rewards</p>
-                <p className="text-2xl font-bold">350 LIPT</p>
+                <p className="text-2xl font-bold">{referralRewards.toLocaleString()} LIPT</p>
             </div>
         </div>
       </CardContent>
