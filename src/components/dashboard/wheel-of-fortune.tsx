@@ -10,22 +10,22 @@ import { cn } from '@/lib/utils';
 import { useDashboard } from '@/context/dashboard-context';
 
 const segments = [
-  { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' }, // Green
-  { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },     // Orange
-  { value: 2, label: '2x', color: 'hsl(36 95% 55%)' },     // Orange
-  { value: 0.5, label: '0.5x', color: 'hsl(4 90% 58%)' },    // Red
-  { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' }, // Green
-  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },       // Red
-  { value: 5, label: '5x', color: 'hsl(275 80% 60%)' },  // Purple
-  { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },     // Orange
+  { value: 2, label: '2x', color: 'hsl(122 80% 55%)' },     // Green
+  { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)' },    // Orange
+  { value: 1.5, label: '1.5x', color: 'hsl(36 95% 55%)' },    // Orange
+  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },        // Red
+  { value: 5, label: '5x', color: 'hsl(122 80% 55%)' },     // Green
+  { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },        // Red
+  { value: 1.5, label: '1.5x', color: 'hsl(275 80% 60%)' }, // Purple
+  { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },    // Orange
 ];
+
 
 const segmentCount = segments.length;
 const segmentAngle = 360 / segmentCount;
 
 const getConicGradient = () => {
     let gradient = 'conic-gradient(';
-    // Offset the start by half a segment to center the labels
     let currentAngle = -segmentAngle / 2;
     for (let i = 0; i < segments.length; i++) {
         gradient += `${segments[i].color} ${currentAngle}deg ${currentAngle + segmentAngle}deg`;
@@ -39,7 +39,7 @@ const getConicGradient = () => {
 };
 
 const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean }) => {
-  const transitionStyle = isSpinning 
+  const transitionStyle = isSpinning
     ? { transition: 'transform 15s cubic-bezier(0.25, 0.1, 0.25, 1)' }
     : { transition: 'none' };
 
@@ -47,23 +47,23 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean
     <div className="relative w-64 h-64 md:w-72 md:h-72 mx-auto my-8">
       {/* Pointer */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-accent z-20" />
-      
-      <div 
+
+      <div
         className={cn("relative w-full h-full rounded-full flex items-center justify-center")}
-        style={{ 
+        style={{
           transform: `rotate(${rotation}deg)`,
           ...transitionStyle
         }}
       >
-        <div 
+        <div
           className="absolute w-full h-full rounded-full border-4 border-primary/50"
           style={{ background: getConicGradient() }}
         />
-        
+
         {segments.map((segment, index) => (
             <React.Fragment key={index}>
                 {/* Segment lines */}
-                <div 
+                <div
                     className="absolute h-full w-px bg-black/30"
                     style={{ transform: `rotate(${index * segmentAngle - segmentAngle / 2}deg)`}}
                 />
@@ -106,23 +106,22 @@ export function WheelOfFortune() {
       });
       return;
     }
-    
+
     setIsSpinning(true);
     updateLiptBalance(-bet);
-    
+
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
     const result = segments[winningSegmentIndex];
 
     const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
-    
+
     // The pointer is at the top (0 degrees).
     // To make segment `i` land at the pointer, we need to rotate the wheel by `-(i * segmentAngle)`.
     // We add an offset to center the pointer in the middle of the segment.
     const targetAngle = -(winningSegmentIndex * segmentAngle);
 
     const finalRotation = (randomSpins * 360) + targetAngle;
-    
-    currentRotationRef.current = finalRotation;
+
     setRotation(finalRotation);
 
     setTimeout(() => {
@@ -141,14 +140,13 @@ export function WheelOfFortune() {
           description: t('gameZone.wheelOfFortune.toast.lose.description'),
         });
       }
-      
+
       setIsSpinning(false);
       setBetAmount('');
 
       // Normalize rotation to keep the number smaller
       const actualEndRotation = finalRotation % 360;
       setRotation(actualEndRotation);
-      currentRotationRef.current = actualEndRotation;
 
     }, 15000); // Sync with animation duration
   };
@@ -171,9 +169,9 @@ export function WheelOfFortune() {
         <p className="text-xs text-muted-foreground">{t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
       </div>
 
-      <Button 
+      <Button
         className="w-full max-w-xs font-bold text-lg py-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-        onClick={handleSpin} 
+        onClick={handleSpin}
         disabled={isSpinning}
       >
         {isSpinning ? t('gameZone.wheelOfFortune.spinning') : t('gameZone.wheelOfFortune.spinButton')}
