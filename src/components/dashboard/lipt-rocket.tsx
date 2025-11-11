@@ -10,7 +10,7 @@ import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 import * as PIXI from 'pixi.js';
 
-// --- FOGUETE COM FUMAÇA ---
+// --- FOGUETE COM FUMAÇA (API PIXI.JS v8+) ---
 const createRocket = (app: PIXI.Application) => {
   const container = new PIXI.Container() as PIXI.Container & { smoke: PIXI.Graphics[], flame: PIXI.Graphics };
   container.x = app.screen.width / 2;
@@ -19,39 +19,34 @@ const createRocket = (app: PIXI.Application) => {
 
   // Corpo
   const body = new PIXI.Graphics();
-  body.beginFill(0x94a3b8);
-  body.drawRoundedRect(-12, -30, 24, 45, 5);
-  body.endFill();
-
+  body.fill(0x94a3b8);
+  body.roundRect(-12, -30, 24, 45, 5);
+  
   // Ponta
   const tip = new PIXI.Graphics();
-  tip.beginFill(0xef4444);
+  tip.fill(0xef4444);
   tip.moveTo(0, -45);
   tip.lineTo(-12, -30);
   tip.lineTo(12, -30);
   tip.lineTo(0, -45);
-  tip.endFill();
 
   // Asas
   const leftWing = new PIXI.Graphics();
-  leftWing.beginFill(0xdc2626);
+  leftWing.fill(0xdc2626);
   leftWing.moveTo(-12, 15);
   leftWing.lineTo(-25, 25);
   leftWing.lineTo(-12, 5);
-  leftWing.endFill();
 
   const rightWing = new PIXI.Graphics();
-  rightWing.beginFill(0xdc2626);
+  rightWing.fill(0xdc2626);
   rightWing.moveTo(12, 15);
   rightWing.lineTo(25, 25);
   rightWing.lineTo(12, 5);
-  rightWing.endFill();
 
   // Chama
   const flame = new PIXI.Graphics();
-  flame.beginFill(0xf97316, 0.9);
-  flame.drawEllipse(0, 30, 10, 20);
-  flame.endFill();
+  flame.fill({color: 0xf97316, alpha: 0.9});
+  flame.ellipse(0, 30, 10, 20);
   flame.visible = false;
   container.flame = flame;
 
@@ -75,27 +70,28 @@ const generateCrashPoint = (): number => {
   }
 };
 
-// --- EXPLOSÃO COM TICKER ---
+// --- EXPLOSÃO COM TICKER (API PIXI.JS v8+) ---
 const createExplosion = (app: PIXI.Application, x: number, y: number) => {
   for (let i = 0; i < 30; i++) {
     const p = new PIXI.Graphics();
-    p.beginFill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a);
-    p.drawCircle(0, 0, Math.random() * 4 + 1);
-    p.endFill();
-    p.x = x;
-    p.y = y;
-    p.vx = (Math.random() - 0.5) * 12;
-    p.vy = (Math.random() - 0.5) * 12;
-    p.alpha = 1;
-    app.stage.addChild(p);
+    p.fill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a);
+    p.circle(0, 0, Math.random() * 4 + 1);
+    
+    const particleWithVelocity = p as PIXI.Graphics & { vx: number, vy: number };
+    particleWithVelocity.x = x;
+    particleWithVelocity.y = y;
+    particleWithVelocity.vx = (Math.random() - 0.5) * 12;
+    particleWithVelocity.vy = (Math.random() - 0.5) * 12;
+    particleWithVelocity.alpha = 1;
+    app.stage.addChild(particleWithVelocity);
 
     const ticker = () => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.alpha -= 0.03;
-      if (p.alpha <= 0) {
-        app.stage.removeChild(p);
-        p.destroy();
+      particleWithVelocity.x += particleWithVelocity.vx;
+      particleWithVelocity.y += particleWithVelocity.vy;
+      particleWithVelocity.alpha -= 0.03;
+      if (particleWithVelocity.alpha <= 0) {
+        app.stage.removeChild(particleWithVelocity);
+        particleWithVelocity.destroy();
         app.ticker.remove(ticker);
       }
     };
@@ -142,9 +138,10 @@ export function LiptRocket() {
         appRef.current = app;
         rocketRef.current = createRocket(app);
 
-        // Sons
-        audioRef.current.launch = new Audio('/sounds/rocket-launch.mp3');
-        audioRef.current.crash = new Audio('/sounds/explosion.mp3');
+        // Sons (necessário criar os ficheiros em /public/sounds/)
+        // audioRef.current.launch = new Audio('/sounds/rocket-launch.mp3');
+        // audioRef.current.crash = new Audio('/sounds/explosion.mp3');
+        // audioRef.current.smokePlayed = new Audio('/sounds/smoke-whoosh.mp3')
       }
     };
 
@@ -206,7 +203,7 @@ export function LiptRocket() {
 
       // Som de fumaça
       if (current > 1.5 && !audioRef.current.smokePlayed) {
-        new Audio('/sounds/smoke-whoosh.mp3').play().catch(() => {});
+        // new Audio('/sounds/smoke-whoosh.mp3').play().catch(() => {});
         audioRef.current.smokePlayed = true;
       }
 
@@ -221,11 +218,10 @@ export function LiptRocket() {
           old.destroy();
         }
 
-        const p = new PIXI.Graphics() as any;
+        const p = new PIXI.Graphics() as PIXI.Graphics & { vx: number, vy: number, life: number };
         const size = Math.random() * 3 + 2;
-        p.beginFill(0xdddddd, 0.7 + Math.random() * 0.2);
-        p.drawCircle(0, 0, size);
-        p.endFill();
+        p.fill({color: 0xdddddd, alpha: 0.7 + Math.random() * 0.2});
+        p.circle(0, 0, size);
 
         p.x = rocket.x + (Math.random() - 0.5) * 18;
         p.y = rocket.y + 25 + Math.random() * 8;
@@ -238,15 +234,16 @@ export function LiptRocket() {
         smoke.push(p);
       }
 
-      smoke.forEach((p: any, i: number) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.06;
-        p.alpha -= 0.018;
-        p.scale.set(p.alpha * 1.3);
-        if (p.alpha <= 0 || p.life-- <= 0) {
-          app.stage.removeChild(p);
-          p.destroy();
+      smoke.forEach((p, i) => {
+        const particle = p as PIXI.Graphics & { vx: number, vy: number, life: number };
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.06;
+        particle.alpha -= 0.018;
+        particle.scale.set(particle.alpha * 1.3);
+        if (particle.alpha <= 0 || particle.life-- <= 0) {
+          app.stage.removeChild(particle);
+          particle.destroy();
           smoke.splice(i, 1);
         }
       });
@@ -287,7 +284,7 @@ export function LiptRocket() {
   const handleBet = () => {
     const bet = parseFloat(betAmount);
     if (isNaN(bet) || bet <= 0 || bet > liptBalance) {
-      toast({ variant: 'destructive', title: 'Aposta inválida' });
+      toast({ variant: 'destructive', title: t('gameZone.wheelOfFortune.toast.invalidBet.title') });
       return;
     }
     updateLiptBalance(-bet);
