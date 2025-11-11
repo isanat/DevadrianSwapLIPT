@@ -1,5 +1,6 @@
 import { DevAdrianSwapIcon } from '@/components/icons/devadrian-swap-icon';
 import { ConnectWalletButton } from '@/components/dashboard/connect-wallet-button';
+import { LanguageSwitcher } from './language-switcher';
 
 export function Header() {
   return (
@@ -12,6 +13,7 @@ export function Header() {
           </a>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
+          <LanguageSwitcher />
           <ConnectWalletButton />
         </div>
       </div>
