@@ -4,8 +4,6 @@ import { LiquidityPool } from '@/components/dashboard/liquidity-pool';
 import { StatsGroup } from '@/components/dashboard/stats-group';
 import { TokenPurchase } from '@/components/dashboard/token-purchase';
 import { ReferralDashboard } from '@/components/dashboard/referral-program';
-import { StatsCard } from "@/components/dashboard/stats-card";
-import { Banknote, PiggyBank } from "lucide-react";
 
 export default function Home() {
   return (
