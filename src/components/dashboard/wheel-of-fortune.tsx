@@ -52,6 +52,7 @@ const getWeightedRandomSegment = () => {
 
 
 const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
+  const { t } = useI18n();
   const transitionStyle = isSpinning
     ? { transition: 'transform 8s cubic-bezier(0.2, 0.8, 0.2, 1)' }
     : { transition: 'none' };
@@ -92,17 +93,16 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         {/* Labels dos Segmentos */}
         {segments.map((seg, i) => {
           const cumulativeWeight = segments.slice(0, i).reduce((sum, s) => sum + s.weight, 0);
-          const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
           const segmentAngle = (seg.weight / totalWeight) * 360;
-          const textAngle = segmentStartAngle + (segmentAngle / 2);
+          const textAngle = -90 + (cumulativeWeight / totalWeight) * 360 + segmentAngle / 2;
 
           return (
             <span
               key={i}
               className="absolute left-1/2 top-1/2 text-white text-xl font-bold drop-shadow-md"
               style={{
-                transform: `rotate(${textAngle}deg) translate(0, -95px) rotate(-${textAngle}deg)`,
-                transformOrigin: '0 0',
+                transform: `rotate(${textAngle}deg) translate(95px) rotate(${-textAngle}deg)`,
+                transformOrigin: 'center',
               }}
             >
               {seg.label}
@@ -164,7 +164,7 @@ export function WheelOfFortune() {
     let winningSegmentIndex = -1;
     for(let i = 0; i < segments.length; i++) {
         // Encontra o segmento vencedor no array para calcular o ângulo
-        if (segments[i].label === winningSeg.label && segments[i].color === winningSeg.color && Math.random() < 1 / segments.filter(s => s.label === winningSeg.label && s.color === winningSeg.color).length) {
+        if (segments[i] === winningSeg) {
             winningSegmentIndex = i;
             break;
         }
@@ -188,7 +188,7 @@ export function WheelOfFortune() {
 
     // A rotação final deve apontar o ponteiro para o targetAngle
     const randomSpins = Math.floor(Math.random() * 4) + 8; // 8 a 11 voltas
-    const finalRotation = (randomSpins * 360) - targetAngle; // O 90 foi removido, ajuste de acordo com a posição do ponteiro
+    const finalRotation = (randomSpins * 360) - targetAngle + 90; // +90 to adjust for top pointer
     
     setRotation(finalRotation);
 
