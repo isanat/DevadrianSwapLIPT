@@ -120,8 +120,9 @@ export function LiptRocket() {
         if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current);
         }
+        // Do not destroy the app, just stop the animation
     };
-  }, []);
+  }, [canvasRef.current]); // Re-run if canvasRef becomes available
 
  const startGame = useCallback(() => {
     if (!appRef.current || !rocketRef.current) return;
@@ -323,9 +324,9 @@ export function LiptRocket() {
     setGameStatus('idle');
     setCashedOutMultiplier(null);
     setBetAmount('');
-    if(rocketRef.current) {
+    if(rocketRef.current && appRef.current) {
         rocketRef.current.alpha = 1;
-        rocketRef.current.y = appRef.current!.screen.height - 80;
+        rocketRef.current.y = appRef.current.screen.height - 80;
     }
   };
 
