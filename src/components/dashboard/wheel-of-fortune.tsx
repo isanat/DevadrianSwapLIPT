@@ -11,15 +11,14 @@ import { useDashboard } from '@/context/dashboard-context';
 
 const segments = [
     { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' },     // Green
-    { value: 0.5, label: '0.5x', color: 'hsl(36 95% 55%)' },    // Orange
-    { value: 5, label: '5x', color: 'hsl(36 95% 55%)' },    // Orange
-    { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },        // Red
+    { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },    // Orange
+    { value: 2, label: '2x', color: 'hsl(36 95% 55%)' },    // Orange
+    { value: 0.5, label: '0.5x', color: 'hsl(4 90% 58%)' },        // Red
     { value: 1.5, label: '1.5x', color: 'hsl(122 80% 55%)' },     // Green
     { value: 0, label: '0x', color: 'hsl(4 90% 58%)' },        // Red
-    { value: 2, label: '1.5x', color: 'hsl(275 80% 60%)' }, // Purple
+    { value: 5, label: '5x', color: 'hsl(275 80% 60%)' }, // Purple
     { value: 0, label: '0x', color: 'hsl(36 95% 55%)' },    // Orange
 ];
-
 
 const segmentCount = segments.length;
 const segmentAngle = 360 / segmentCount;
@@ -112,11 +111,10 @@ export function WheelOfFortune() {
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
     const result = segments[winningSegmentIndex];
     
-    const randomSpins = Math.floor(Math.random() * 5) + 8; // 8 to 12 full spins
+    const randomSpins = Math.floor(Math.random() * 5) + 8; 
 
     // The pointer is at the top (0 degrees).
     // To make segment `i` land at the pointer, we need to rotate the wheel by `-(i * segmentAngle)`.
-    // We add an offset to center the pointer in the middle of the segment.
     const targetAngle = -(winningSegmentIndex * segmentAngle);
     
     const finalRotation = (randomSpins * 360) + targetAngle;
@@ -143,11 +141,10 @@ export function WheelOfFortune() {
       setIsSpinning(false);
       setBetAmount('');
 
-      // Normalize rotation to keep the number smaller
       const actualEndRotation = finalRotation % 360;
       setRotation(actualEndRotation);
 
-    }, 15000); // Sync with animation duration
+    }, 15000); 
   };
 
 
