@@ -154,7 +154,7 @@ const translations = {
     wallet: {
       connect: 'Connect Wallet',
       disconnect: 'Wallet Disconnected',
-      connected: 'Wallet Connected Successfully!',
+      connected: 'Wallet Connected',
       metaMaskNotFound: 'MetaMask Not Found',
       installMetaMask: 'Please install the MetaMask browser extension.',
     },
@@ -391,7 +391,7 @@ const translations = {
     wallet: {
       connect: 'Conectar Carteira',
       disconnect: 'Carteira Desconectada',
-      connected: 'Carteira Conectada com Sucesso!',
+      connected: 'Carteira Conectada',
       metaMaskNotFound: 'MetaMask Não Encontrado',
       installMetaMask: 'Por favor, instale a extensão MetaMask no seu navegador.',
     },
@@ -628,7 +628,7 @@ const translations = {
     wallet: {
       connect: 'Conectar Billetera',
       disconnect: 'Billetera Desconectada',
-      connected: '¡Billetera Conectada Exitosamente!',
+      connected: 'Billetera Conectada',
       metaMaskNotFound: 'MetaMask No Encontrado',
       installMetaMask: 'Por favor, instala la extensión de navegador MetaMask.',
     },
@@ -865,7 +865,7 @@ const translations = {
     wallet: {
       connect: 'Connetti Portafoglio',
       disconnect: 'Portafoglio Disconnesso',
-      connected: 'Portafoglio Connesso Correttamente!',
+      connected: 'Portafoglio Connesso',
       metaMaskNotFound: 'MetaMask Non Trovato',
       installMetaMask: 'Per favore, installa l\'estensione per browser MetaMask.',
     },
