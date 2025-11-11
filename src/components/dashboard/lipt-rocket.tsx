@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,11 +8,76 @@ import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
-import { Rocket } from 'lucide-react';
+import { Rocket, Star } from 'lucide-react';
 
-const RocketIcon = () => (
-  <Rocket className="w-12 h-12 md:w-16 md:h-16 text-primary transition-transform duration-500" />
+const RocketIcon = ({crashed}: {crashed: boolean}) => (
+  <div className={cn("relative transition-transform duration-500 w-16 h-16 md:w-20 md:h-20", crashed && "opacity-0 scale-50")}>
+      <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-8 bg-orange-400 rounded-t-full blur-md transition-all duration-300", crashed ? "opacity-0" : "opacity-100")}/>
+      <Rocket className={cn("w-full h-full text-slate-300 -rotate-45 transition-transform duration-300", crashed && "rotate-0")}/>
+  </div>
 );
+
+const StarField = ({ count = 50 }: { count?: number }) => {
+    const stars = useMemo(() => {
+        return Array.from({ length: count }).map((_, i) => ({
+            id: i,
+            size: Math.random() * 2 + 1,
+            left: Math.random() * 100,
+            top: Math.random() * 100,
+            animationDuration: Math.random() * 2 + 1,
+            animationDelay: Math.random() * 3,
+        }));
+    }, [count]);
+
+    return (
+        <div className="absolute inset-0 overflow-hidden">
+            {stars.map(star => (
+                <div
+                    key={star.id}
+                    className="absolute rounded-full bg-yellow-300 animate-pulse"
+                    style={{
+                        width: `${star.size}px`,
+                        height: `${star.size}px`,
+                        left: `${star.left}%`,
+                        top: `${star.top}%`,
+                        animationDuration: `${star.animationDuration}s`,
+                        animationDelay: `${star.animationDelay}s`,
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
+const ShootingStar = () => {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const showInterval = setInterval(() => {
+            setVisible(true);
+            const hideTimeout = setTimeout(() => setVisible(false), 2000); // visible for 2s
+            return () => clearTimeout(hideTimeout);
+        }, Math.random() * 8000 + 4000); // every 4-12 seconds
+        
+        return () => clearInterval(showInterval);
+    }, []);
+
+    if (!visible) return null;
+
+    const top = Math.random() * 80;
+    const left = -10; // Start off-screen
+    const animationDuration = Math.random() * 1.5 + 0.5; // 0.5s to 2s travel time
+
+    return (
+      <div 
+        className="absolute animate-shooting-star"
+        style={{ top: `${top}%`, left: `${left}%`, animationDuration: `${animationDuration}s` }}
+      >
+        <Star className="w-6 h-6 text-yellow-300/80 fill-yellow-300/50" />
+      </div>
+    );
+};
+
 
 export function LiptRocket() {
   const { t } = useI18n();
@@ -26,10 +91,7 @@ export function LiptRocket() {
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
 
   const calculateCrashPoint = () => {
-    // This creates a non-linear probability distribution.
-    // The chance of crashing increases as the multiplier gets higher.
     const r = Math.random();
-    // This will result in most crashes happening between 1x and 3x, with rare flights going much higher.
     const crashPoint = 1 / (1 - r);
     return Math.max(1.01, crashPoint);
   };
@@ -40,9 +102,10 @@ export function LiptRocket() {
     let currentMultiplier = 1.00;
   
     const interval = setInterval(() => {
-      currentMultiplier += 0.01 + (currentMultiplier > 3 ? 0.05 : 0); // Accelerate at higher multipliers
+      // Exponential acceleration: the increment grows with the multiplier
+      currentMultiplier += (currentMultiplier * 0.015);
       
-      if (gameStatus === 'cashed_out') {
+      if (gameStatusRef.current === 'cashed_out' || gameStatusRef.current === 'crashed') {
         clearInterval(interval);
         return;
       }
@@ -52,7 +115,7 @@ export function LiptRocket() {
         setGameStatus('crashed');
         setMultiplier(crashPoint);
         setRocketPosition(100);
-        if (gameStatus !== 'cashed_out') {
+        if (gameStatusRef.current !== 'cashed_out') {
            toast({
             variant: "destructive",
             title: t('gameZone.rocket.toast.crashed.title'),
@@ -61,21 +124,25 @@ export function LiptRocket() {
         }
       } else {
         setMultiplier(currentMultiplier);
-        // Update rocket position based on multiplier (logarithmic scale makes it feel faster at the start)
-        const progress = Math.min(95, Math.log(currentMultiplier) / Math.log(crashPoint) * 100);
+        const progress = Math.min(90, (Math.log(currentMultiplier) / Math.log(crashPoint)) * 100);
         setRocketPosition(progress);
       }
-    }, 100);
+    }, 80); // Game loop runs faster (every 80ms)
   
     return () => clearInterval(interval);
-  }, [t, toast, gameStatus]);
+  }, [t, toast]);
   
+  // Use a ref to get the latest gameStatus inside setInterval
+  const gameStatusRef = React.useRef(gameStatus);
+  useEffect(() => {
+    gameStatusRef.current = gameStatus;
+  }, [gameStatus]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
       const timer = setTimeout(() => {
         runGame();
-      }, 3000); // 3 second countdown before launch
+      }, 3000); 
       return () => clearTimeout(timer);
     }
   }, [gameStatus, runGame]);
@@ -115,7 +182,6 @@ export function LiptRocket() {
     setGameStatus('idle');
     setRocketPosition(0);
     setCashedOutMultiplier(null);
-    // betAmount is intentionally not reset to allow for re-betting
   };
   
   const getButton = () => {
@@ -134,23 +200,24 @@ export function LiptRocket() {
     }
   };
 
-
   return (
     <div className="flex flex-col items-center justify-center space-y-4 p-4 rounded-lg bg-background/50 border">
-      <div className="w-full h-64 md:h-80 bg-gray-900/50 rounded-lg overflow-hidden relative flex items-end justify-center border-b-2 border-primary/20">
-        {/* Rocket Container */}
+      <div className="w-full h-72 md:h-80 bg-gradient-to-b from-gray-900 via-indigo-900/80 to-blue-900/50 rounded-lg overflow-hidden relative flex items-end justify-center border-b-2 border-primary/20">
+        <StarField />
+        <ShootingStar />
+        <ShootingStar />
+
         <div 
-          className="absolute bottom-0 transition-transform duration-100 ease-linear"
-          style={{ transform: `translateY(-${rocketPosition}%)` }}
+          className="absolute bottom-4 transition-transform duration-100 ease-linear"
+          style={{ transform: `translateY(-${rocketPosition * 0.8}%)` }}
         >
-          <RocketIcon />
+          <RocketIcon crashed={gameStatus === 'crashed'} />
         </div>
         
-        {/* Multiplier Display */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center">
             {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
                 <div className='flex flex-col items-center'>
-                    <span className={cn("text-5xl md:text-7xl font-bold", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
+                    <span className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
                         {cashedOutMultiplier ? cashedOutMultiplier.toFixed(2) : multiplier.toFixed(2)}x
                     </span>
                     <span className="text-lg md:text-xl text-white/80 font-semibold mt-2">
@@ -158,8 +225,8 @@ export function LiptRocket() {
                     </span>
                 </div>
             ) : (
-                <h2 className="text-5xl md:text-7xl font-bold text-white drop-shadow-lg">
-                    {gameStatus === 'waiting' ? t('gameZone.rocket.waitingForNextRound') : `${multiplier.toFixed(2)}x`}
+                <h2 className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg">
+                    {gameStatus === 'waiting' ? '...' : `${multiplier.toFixed(2)}x`}
                 </h2>
             )}
         </div>
