@@ -3,6 +3,12 @@ import { StatsCard } from '@/components/dashboard/stats-card';
 import { TrendingUp, Banknote, Coins, PiggyBank } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
 
+const priceHistory = Array.from({ length: 20 }, (_, i) => ({
+  time: `T-${20 - i}`,
+  price: 1.25 + (Math.random() - 0.5) * 0.2 + i * 0.01,
+}));
+
+
 export function StatsGroup() {
     const { liptPrice, totalValueLocked, liptBalance, usdtBalance } = useDashboard();
 
@@ -12,7 +18,9 @@ export function StatsGroup() {
             title="LIPT Token Price"
             value={`$${liptPrice.toFixed(4)}`}
             icon={<TrendingUp className="h-5 w-5 text-primary" />}
-            description="Current market price"
+            description="Last 24 hours"
+            chartData={priceHistory}
+            chartKey="price"
         />
         <StatsCard
             title="Total Value Locked (TVL)"
