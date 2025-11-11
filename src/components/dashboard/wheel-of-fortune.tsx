@@ -36,14 +36,16 @@ const getConicGradient = () => {
     return gradient;
 };
 
-const Wheel = ({ rotation }: { rotation: number }) => {
+const Wheel = ({ rotation, isSpinning }: { rotation: number, isSpinning: boolean }) => {
+  const duration = isSpinning ? 'duration-[5000ms]' : 'duration-0';
+
   return (
     <div className="relative w-64 h-64 md:w-72 md:h-72 mx-auto my-8">
       {/* Pointer */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-accent z-20" />
       
       <div 
-        className="relative w-full h-full rounded-full transition-transform duration-[4000ms] ease-out flex items-center justify-center"
+        className={cn("relative w-full h-full rounded-full transition-transform ease-out flex items-center justify-center", duration)}
         style={{ transform: `rotate(${rotation}deg)` }}
       >
         <div 
@@ -85,6 +87,7 @@ export function WheelOfFortune() {
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const wheelRef = useRef<HTMLDivElement>(null);
 
   const handleSpin = () => {
     const bet = parseFloat(betAmount);
@@ -96,30 +99,26 @@ export function WheelOfFortune() {
       });
       return;
     }
-
-    setIsSpinning(true);
     
     // Deduct bet amount immediately
-    // In a real scenario, this would be a transaction
     purchaseLipt(-bet); // Using purchaseLipt to represent spending tokens
+    
+    // Start spinning
+    setIsSpinning(true);
 
     const randomSpins = Math.floor(Math.random() * 5) + 5; // 5 to 9 full spins
     const winningSegmentIndex = Math.floor(Math.random() * segmentCount);
-    // Calculate stop angle to center the pointer on the middle of the segment
     const stopAngle = winningSegmentIndex * segmentAngle + (segmentAngle / 2);
 
-    // The rotation needs to land on the opposite side of the wheel, so we adjust
     const finalRotation = rotation + (360 * randomSpins) - stopAngle;
 
     setRotation(finalRotation);
 
     setTimeout(() => {
-      setIsSpinning(false);
       const result = segments[winningSegmentIndex];
       const winnings = bet * result.value;
 
       if (winnings > 0) {
-        // Add winnings
         purchaseLipt(winnings);
         toast({
           title: t('gameZone.wheelOfFortune.toast.win.title'),
@@ -132,14 +131,22 @@ export function WheelOfFortune() {
           description: t('gameZone.wheelOfFortune.toast.lose.description'),
         });
       }
+      
+      setIsSpinning(false);
       setBetAmount('');
-    }, 4000); // Sync with animation duration
+      
+      // To allow for consecutive spins, we don't reset the rotation to 0, 
+      // but we need to normalize it to avoid infinitely large numbers.
+      const normalizedRotation = finalRotation % 360;
+      setRotation(normalizedRotation);
+
+    }, 5000); // Sync with animation duration
   };
 
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
-      <Wheel rotation={rotation} />
+      <Wheel rotation={rotation} isSpinning={isSpinning} />
 
       <div className="w-full max-w-xs space-y-2">
         <Label htmlFor="bet-amount">{t('gameZone.wheelOfFortune.betAmount')}</Label>
