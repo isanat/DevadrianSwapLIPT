@@ -138,7 +138,7 @@ export default function AdminMiningPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                       {isLoadingData ? <Skeleton className='h-40 w-full' /> : (
+                       {isLoadingData || !isClient ? <Skeleton className='h-40 w-full' /> : (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -149,7 +149,7 @@ export default function AdminMiningPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {isClient && miningData?.miners.map((miner: Miner) => (
+                                    {miningData?.miners.map((miner: Miner) => (
                                         <TableRow key={miner.id}>
                                             <TableCell className='font-mono text-xs'>{`user...${miner.id.slice(-6)}`}</TableCell>
                                             <TableCell>{miner.plan.name}</TableCell>

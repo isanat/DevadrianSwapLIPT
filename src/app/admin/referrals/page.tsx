@@ -30,7 +30,7 @@ export default function AdminReferralsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? <Skeleton className='h-60 w-full' /> : (
+                        {isLoading || !isClient ? <Skeleton className='h-60 w-full' /> : (
                              <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -40,7 +40,7 @@ export default function AdminReferralsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {isClient && data?.network.map(level => (
+                                    {data?.network.map(level => (
                                         <TableRow key={level.id}>
                                             <TableCell className='font-bold'>{level.level}</TableCell>
                                             <TableCell>{level.members.toLocaleString()}</TableCell>

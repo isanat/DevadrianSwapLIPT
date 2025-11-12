@@ -66,6 +66,12 @@ const StakingTableRow = ({ stake }: { stake: Stake }) => {
 
 export default function AdminStakingPage() {
     const { data: stakingData, isLoading } = useSWR('staking', getStakingData);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
 
     const allStakes = stakingData?.stakes || [];
     const totalStaked = stakingData?.stakedBalance || 0;
@@ -84,7 +90,7 @@ export default function AdminStakingPage() {
                         <CardTitle className="text-sm font-medium">Total LIPT Staked</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? <Skeleton className="h-8 w-3/5" /> : <div className="text-2xl font-bold">{totalStaked.toLocaleString()} LIPT</div>}
+                        {isLoading || !isClient ? <Skeleton className="h-8 w-3/5" /> : <div className="text-2xl font-bold">{totalStaked.toLocaleString()} LIPT</div>}
                     </CardContent>
                 </Card>
                  <Card>
@@ -92,7 +98,7 @@ export default function AdminStakingPage() {
                         <CardTitle className="text-sm font-medium">Active Stake Positions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                       {isLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{activeStakesCount}</div>}
+                       {isLoading || !isClient ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{activeStakesCount}</div>}
                     </CardContent>
                 </Card>
                  <Card>
@@ -100,7 +106,7 @@ export default function AdminStakingPage() {
                         <CardTitle className="text-sm font-medium">Unclaimed Rewards</CardTitle>
                     </CardHeader>
                     <CardContent>
-                       {isLoading ? <Skeleton className="h-8 w-2/5" /> : <div className="text-2xl font-bold">{unclaimedRewards.toFixed(2)} LIPT</div>}
+                       {isLoading || !isClient ? <Skeleton className="h-8 w-2/5" /> : <div className="text-2xl font-bold">{unclaimedRewards.toFixed(2)} LIPT</div>}
                     </CardContent>
                 </Card>
             </div>
