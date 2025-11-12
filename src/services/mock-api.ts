@@ -1,8 +1,7 @@
 // This file mocks a backend API.
 // In a real application, this would be making network requests to a real server.
 
-// Most of the logic has been commented out to prepare for real blockchain integration.
-// Components will now show their loading/empty states instead of using this mock data.
+let isDataInitialized = false;
 
 export const STAKING_PLANS = [
   { duration: 20, apy: 12.5 },
@@ -64,14 +63,13 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const getFromStorage = <T>(key: string, defaultValue: T): T => {
   if (typeof window === 'undefined') return defaultValue;
-  // const stored = localStorage.getItem(key);
-  // return stored ? JSON.parse(stored) : defaultValue;
-  return defaultValue; // Always return default to ensure no mock data is used
+  const stored = localStorage.getItem(key);
+  return stored ? JSON.parse(stored) : defaultValue;
 };
 
 const saveToStorage = <T>(key: string, value: T) => {
-  // if (typeof window === 'undefined') return;
-  // localStorage.setItem(key, JSON.stringify(value));
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(key, JSON.stringify(value));
 };
 
 
@@ -84,20 +82,25 @@ const initialWallet = {
 const initialStats = {
   liptPrice: 1.25,
   totalValueLocked: 1234567,
-  totalInvested: 0,
-  totalReturns: 0,
+  totalInvested: 8500,
+  totalReturns: 125.50,
 };
 
-const initialStaking = {
-  stakes: [],
-  stakedBalance: 0,
-  unclaimedRewards: 0,
+const initialStaking: { stakes: Stake[], stakedBalance: number, unclaimedRewards: number } = {
+  stakes: [
+    { id: 'stake_1', amount: 5000, plan: STAKING_PLANS[2], startDate: Date.now() - 10 * 24 * 60 * 60 * 1000 },
+    { id: 'stake_2', amount: 2500, plan: STAKING_PLANS[1], startDate: Date.now() - 25 * 24 * 60 * 60 * 1000 },
+  ],
+  stakedBalance: 7500,
+  unclaimedRewards: 88.54,
 };
 
-const initialMining = {
-  miners: [],
-  miningPower: 0,
-  minedRewards: 0,
+const initialMining: { miners: Miner[], miningPower: number, minedRewards: number } = {
+  miners: [
+      { id: 'miner_1', plan: MINING_PLANS[0], startDate: Date.now() - 5 * 24 * 60 * 60 * 1000, minedAmount: 60 },
+  ],
+  miningPower: 0.5,
+  minedRewards: 60,
 };
 
 const initialLiquidity = {
@@ -106,14 +109,14 @@ const initialLiquidity = {
   feesEarned: 55.75,
 };
 
-const initialLottery = {
+const initialLottery: LotteryState = {
     ticketPrice: 10,
     totalTickets: 1250,
-    userTickets: [],
+    userTickets: [101, 256, 812],
     currentDraw: {
       id: 2,
       prizePool: 12500,
-      endTime: Date.now() + 60 * 1000, // 1 minute from now
+      endTime: Date.now() + 24 * 60 * 60 * 1000, 
       status: 'OPEN',
     },
     previousDraws: [
@@ -129,6 +132,42 @@ const initialLottery = {
     ],
 };
 
+const initialReferralData = {
+    totalReferrals: 12,
+    totalRewards: 1530.75,
+    network: [
+        { id: 1, level: 1, members: 5, commission: 850.50 },
+        { id: 2, level: 2, members: 23, commission: 450.25 },
+        { id: 3, level: 3, members: 58, commission: 180.00 },
+        { id: 4, level: 4, members: 112, commission: 50.00 },
+        { id: 5, level: 5, members: 250, commission: 0.00 },
+    ]
+};
+
+const initialLeaderboardData = [
+  { rank: 1, avatar: '123', name: 'CryptoKing', commission: 5432.10 },
+  { rank: 2, avatar: '456', name: 'DeFiQueen', commission: 4876.54 },
+  { rank: 3, avatar: '789', name: 'SatoshiJr', commission: 4210.98 },
+  { rank: 4, avatar: '101', name: 'LamboMoon', commission: 3567.12 },
+  { rank: 5, avatar: '112', name: 'ETHDev', commission: 3123.45 },
+];
+
+
+const initializeMockData = () => {
+    if (typeof window !== 'undefined' && !isDataInitialized) {
+        saveToStorage('wallet', initialWallet);
+        saveToStorage('stats', initialStats);
+        saveToStorage('staking', initialStaking);
+        saveToStorage('mining', initialMining);
+        saveToStorage('liquidity', initialLiquidity);
+        saveToStorage('lottery', initialLottery);
+        saveToStorage('referral', initialReferralData);
+        saveToStorage('leaderboard', initialLeaderboardData);
+        isDataInitialized = true;
+    }
+}
+initializeMockData();
+
 // Price history for chart
 export const priceHistory = Array.from({ length: 20 }, (_, i) => ({
   time: `T-${20 - i}`,
@@ -140,196 +179,277 @@ export const priceHistory = Array.from({ length: 20 }, (_, i) => ({
 
 // GETTERS
 export const getWalletData = async () => {
-  // await wait(300);
-  // return getFromStorage('wallet', initialWallet);
-  return undefined;
+  await wait(300);
+  return getFromStorage('wallet', initialWallet);
 };
 
 export const getDashboardStats = async () => {
-  // await wait(500);
-  // return getFromStorage('stats', initialStats);
-  return undefined;
+  await wait(500);
+  return getFromStorage('stats', initialStats);
 };
 
 export const getStakingData = async () => {
-  // await wait(600);
-  // return getFromStorage('staking', initialStaking);
-  return undefined;
+  await wait(600);
+  // Simulate rewards accumulation
+  const staking = getFromStorage('staking', initialStaking);
+  staking.unclaimedRewards += Math.random() * 0.1;
+  saveToStorage('staking', staking);
+  return staking;
 };
 
 export const getMiningData = async () => {
-  // await wait(700);
-  // return getFromStorage('mining', initialMining);
-  return undefined;
+  await wait(700);
+  const mining = getFromStorage('mining', initialMining);
+  mining.minedRewards += mining.miningPower / (60 * 12); // Simulate 5 sec interval
+  mining.miners = mining.miners.map(m => ({ ...m, minedAmount: m.minedAmount + m.plan.power / (60*12) }))
+  saveToStorage('mining', mining);
+  return mining;
 };
 
 export const getLiquidityData = async () => {
-  // await wait(400);
-  // return getFromStorage('liquidity', initialLiquidity);
-  return undefined;
+  await wait(400);
+  const liquidity = getFromStorage('liquidity', initialLiquidity);
+  liquidity.feesEarned += Math.random() * 0.01;
+  saveToStorage('liquidity', liquidity);
+  return liquidity;
 };
 
 export const getLotteryData = async () => {
-    // await wait(500);
-    // return getFromStorage('lottery', initialLottery);
-    return undefined;
+    await wait(500);
+    return getFromStorage('lottery', initialLottery);
 };
 
 export const getReferralData = async () => {
-    // await wait(800);
-    return undefined;
+    await wait(800);
+    return getFromStorage('referral', initialReferralData);
 };
 
 export const getLeaderboardData = async () => {
-    // await wait(1200);
-    return undefined;
+    await wait(1200);
+    return getFromStorage('leaderboard', initialLeaderboardData);
 }
 
 // --- ACTIONS (MUTATIONS) ---
 
 export const purchaseLipt = async (amount: number) => {
   await wait(1000);
-  console.log("Mock purchaseLipt called. In a real app, this would be a blockchain transaction.");
-  // const wallet = getFromStorage('wallet', initialWallet);
-  // const stats = getFromStorage('stats', initialStats);
-  // const cost = amount * stats.liptPrice;
-  // if (wallet.usdtBalance < cost) {
-  //   throw new Error('Insufficient USDT balance');
-  // }
-  // wallet.usdtBalance -= cost;
-  // wallet.liptBalance += amount;
-  // saveToStorage('wallet', wallet);
-  // return wallet;
-  return Promise.resolve();
+  const wallet = getFromStorage('wallet', initialWallet);
+  const stats = getFromStorage('stats', initialStats);
+  const cost = amount * stats.liptPrice;
+  if (wallet.usdtBalance < cost) {
+    throw new Error('Insufficient USDT balance');
+  }
+  wallet.usdtBalance -= cost;
+  wallet.liptBalance += amount;
+  saveToStorage('wallet', wallet);
+  return wallet;
 };
 
 export const stakeLipt = async (amount: number, plan: { duration: number; apy: number }) => {
     await wait(1500);
-    console.log("Mock stakeLipt called. In a real app, this would be a blockchain transaction.");
-    // const wallet = getFromStorage('wallet', initialWallet);
-    // const staking = getFromStorage('staking', initialStaking);
+    const wallet = getFromStorage('wallet', initialWallet);
+    const staking = getFromStorage('staking', initialStaking);
 
-    // if (wallet.liptBalance < amount) {
-    //     throw new Error('Insufficient LIPT balance');
-    // }
+    if (wallet.liptBalance < amount) {
+        throw new Error('Insufficient LIPT balance');
+    }
 
-    // const newStake: Stake = {
-    //     id: `stake_${Date.now()}_${Math.random()}`,
-    //     amount,
-    //     plan,
-    //     startDate: Date.now(),
-    // };
+    const newStake: Stake = {
+        id: `stake_${Date.now()}_${Math.random()}`,
+        amount,
+        plan,
+        startDate: Date.now(),
+    };
 
-    // wallet.liptBalance -= amount;
-    // staking.stakes.push(newStake);
-    // staking.stakedBalance += amount;
+    wallet.liptBalance -= amount;
+    staking.stakes.push(newStake);
+    staking.stakedBalance += amount;
 
-    // saveToStorage('wallet', wallet);
-    // saveToStorage('staking', staking);
-    // return { wallet, staking };
-    return Promise.resolve();
+    saveToStorage('wallet', wallet);
+    saveToStorage('staking', staking);
+    return { wallet, staking };
 };
 
 export const unstakeLipt = async (stakeId: string) => {
     await wait(1200);
-    console.log("Mock unstakeLipt called. In a real app, this would be a blockchain transaction.");
-    // const wallet = getFromStorage('wallet', initialWallet);
-    // const staking = getFromStorage('staking', initialStaking);
+    const wallet = getFromStorage('wallet', initialWallet);
+    const staking = getFromStorage('staking', initialStaking);
 
-    // const stakeIndex = staking.stakes.findIndex(s => s.id === stakeId);
-    // if (stakeIndex === -1) {
-    //     throw new Error('Stake not found');
-    // }
+    const stakeIndex = staking.stakes.findIndex(s => s.id === stakeId);
+    if (stakeIndex === -1) {
+        throw new Error('Stake not found');
+    }
 
-    // const stake = staking.stakes[stakeIndex];
-    // const now = Date.now();
-    // const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
+    const stake = staking.stakes[stakeIndex];
+    const now = Date.now();
+    const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
     
-    // let amountToReturn = stake.amount;
-    // let penalty = 0;
+    let amountToReturn = stake.amount;
+    let penalty = 0;
 
-    // if (stakeAgeInDays < stake.plan.duration) {
-    //   penalty = (stake.amount * EARLY_UNSTAKE_PENALTY_PERCENTAGE) / 100;
-    //   amountToReturn = stake.amount - penalty;
-    // }
+    if (stakeAgeInDays < stake.plan.duration) {
+      penalty = (stake.amount * EARLY_UNSTAKE_PENALTY_PERCENTAGE) / 100;
+      amountToReturn = stake.amount - penalty;
+    }
 
-    // wallet.liptBalance += amountToReturn;
-    // staking.stakedBalance -= stake.amount;
-    // staking.stakes.splice(stakeIndex, 1);
+    wallet.liptBalance += amountToReturn;
+    staking.stakedBalance -= stake.amount;
+    staking.stakes.splice(stakeIndex, 1);
     
-    // saveToStorage('wallet', wallet);
-    // saveToStorage('staking', staking);
-    return { penalty: 0 };
+    saveToStorage('wallet', wallet);
+    saveToStorage('staking', staking);
+    return { penalty };
 };
 
 export const claimStakingRewards = async () => {
     await wait(800);
-    console.log("Mock claimStakingRewards called. In a real app, this would be a blockchain transaction.");
-    // const wallet = getFromStorage('wallet', initialWallet);
-    // const staking = getFromStorage('staking', initialStaking);
+    const wallet = getFromStorage('wallet', initialWallet);
+    const staking = getFromStorage('staking', initialStaking);
 
-    // wallet.liptBalance += staking.unclaimedRewards;
-    // staking.unclaimedRewards = 0;
+    wallet.liptBalance += staking.unclaimedRewards;
+    staking.unclaimedRewards = 0;
 
-    // saveToStorage('wallet', wallet);
-    // saveToStorage('staking', staking);
-    // return { wallet, staking };
-    return Promise.resolve();
+    saveToStorage('wallet', wallet);
+    saveToStorage('staking', staking);
+    return { wallet, staking };
 };
 
 export const addLiquidity = async (liptAmount: number, usdtAmount: number) => {
     await wait(1800);
-    console.log("Mock addLiquidity called. In a real app, this would be a blockchain transaction.");
-    return Promise.resolve();
+    const wallet = getFromStorage('wallet', initialWallet);
+    if (wallet.liptBalance < liptAmount || wallet.usdtBalance < usdtAmount) {
+        throw new Error('Insufficient balance');
+    }
+    wallet.liptBalance -= liptAmount;
+    wallet.usdtBalance -= usdtAmount;
+    const liquidity = getFromStorage('liquidity', initialLiquidity);
+    // Dummy calculation for new LP tokens
+    liquidity.lpTokens += (liptAmount + usdtAmount) / 100;
+    saveToStorage('wallet', wallet);
+    saveToStorage('liquidity', liquidity);
+    return { success: true };
 };
 
 export const removeLiquidity = async (lpAmount: number) => {
     await wait(1600);
-    console.log("Mock removeLiquidity called. In a real app, this would be a blockchain transaction.");
-    return Promise.resolve();
+    const wallet = getFromStorage('wallet', initialWallet);
+    const liquidity = getFromStorage('liquidity', initialLiquidity);
+    if (liquidity.lpTokens < lpAmount) {
+        throw new Error('Insufficient LP tokens');
+    }
+    liquidity.lpTokens -= lpAmount;
+    // Dummy calculation for returned assets
+    wallet.liptBalance += lpAmount * 50;
+    wallet.usdtBalance += lpAmount * 60;
+    saveToStorage('wallet', wallet);
+    saveToStorage('liquidity', liquidity);
+    return { success: true };
 };
 
 export const activateMiner = async (plan: { name: string; cost: number; power: number; duration: number; }) => {
     await wait(1300);
-    console.log("Mock activateMiner called. In a real app, this would be a blockchain transaction.");
-    return Promise.resolve();
+    const wallet = getFromStorage('wallet', initialWallet);
+    const mining = getFromStorage('mining', initialMining);
+    if (wallet.liptBalance < plan.cost) {
+        throw new Error('Insufficient LIPT balance');
+    }
+    wallet.liptBalance -= plan.cost;
+    const newMiner: Miner = {
+        id: `miner_${Date.now()}`,
+        plan,
+        startDate: Date.now(),
+        minedAmount: 0,
+    };
+    mining.miners.push(newMiner);
+    mining.miningPower += plan.power;
+    saveToStorage('wallet', wallet);
+    saveToStorage('mining', mining);
+    return { success: true };
 };
 
 export const claimMinedRewards = async () => {
     await wait(900);
-    console.log("Mock claimMinedRewards called. In a real app, this would be a blockchain transaction.");
-    return Promise.resolve();
+    const wallet = getFromStorage('wallet', initialWallet);
+    const mining = getFromStorage('mining', initialMining);
+
+    wallet.liptBalance += mining.minedRewards;
+    mining.minedRewards = 0;
+    mining.miners = mining.miners.map(m => ({ ...m, minedAmount: 0 }));
+
+    saveToStorage('wallet', wallet);
+    saveToStorage('mining', mining);
+    return { success: true };
 };
 
 // Game Actions
 export const spinWheel = async (bet: number, winningSegment: {value: number}) => {
     await wait(500); // Server-side validation
-    console.log("Mock spinWheel called. In a real app, this would be a blockchain transaction.");
+    const wallet = getFromStorage('wallet', initialWallet);
+    if (wallet.liptBalance < bet) {
+        throw new Error('Insufficient LIPT balance for bet');
+    }
     const winnings = bet * winningSegment.value;
+    wallet.liptBalance = wallet.liptBalance - bet + winnings;
+    saveToStorage('wallet', wallet);
     return { winnings, multiplier: winningSegment.value };
 }
 
 export const placeRocketBet = async (bet: number) => {
     await wait(400);
-    console.log("Mock placeRocketBet called. In a real app, this would be a blockchain transaction.");
+    const wallet = getFromStorage('wallet', initialWallet);
+    if (wallet.liptBalance < bet) {
+        throw new Error('Insufficient LIPT balance for bet');
+    }
+    // Bet is "removed" from balance until cashout or crash
+    wallet.liptBalance -= bet;
+    saveToStorage('wallet', wallet);
     return { success: true };
 }
 
 export const cashOutRocket = async (bet: number, multiplier: number) => {
     await wait(200);
-    console.log("Mock cashOutRocket called. In a real app, this would be a blockchain transaction.");
+    const wallet = getFromStorage('wallet', initialWallet);
     const winnings = bet * multiplier;
+    wallet.liptBalance += winnings; // Return winnings to balance
+    saveToStorage('wallet', wallet);
+
     return { winnings };
 }
 
 export const buyLotteryTickets = async (quantity: number) => {
     await wait(1000);
-    console.log("Mock buyLotteryTickets called. In a real app, this would be a blockchain transaction.");
+    const wallet = getFromStorage('wallet', initialWallet);
+    const lottery = getFromStorage('lottery', initialLottery);
+    const cost = quantity * lottery.ticketPrice;
+    if (wallet.liptBalance < cost) {
+        throw new Error("Insufficient LIPT balance");
+    }
+    wallet.liptBalance -= cost;
+    
+    let newTickets = [];
+    for(let i = 0; i < quantity; i++) {
+        newTickets.push(lottery.totalTickets + i + 1);
+    }
+    lottery.userTickets.push(...newTickets);
+    lottery.totalTickets += quantity;
+    lottery.currentDraw.prizePool += cost;
+
+    saveToStorage('wallet', wallet);
+    saveToStorage('lottery', lottery);
     return { success: true };
 };
 
 export const claimLotteryPrize = async () => {
     await wait(1100);
-    console.log("Mock claimLotteryPrize called. In a real app, this would be a blockchain transaction.");
-    return { success: true };
+    const wallet = getFromStorage('wallet', initialWallet);
+    const lottery = getFromStorage('lottery', initialLottery);
+    
+    if (lottery.currentDraw.status === 'CLOSED' && lottery.currentDraw.winnerAddress === 'user123' && !lottery.currentDraw.prizeClaimed) {
+        wallet.liptBalance += lottery.currentDraw.prizePool;
+        lottery.currentDraw.prizeClaimed = true;
+        saveToStorage('wallet', wallet);
+        saveToStorage('lottery', lottery);
+        return { success: true };
+    }
+    throw new Error("Not a winner or prize already claimed");
 };

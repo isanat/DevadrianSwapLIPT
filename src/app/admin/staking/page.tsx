@@ -8,7 +8,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import useSWR from 'swr';
-import { getStakingData, Stake } from '@/services/mock-api';
+import { Stake } from '@/services/mock-api';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const StakingTableRow = ({ stake }: { stake: Stake }) => {
@@ -52,7 +52,7 @@ const StakingTableRow = ({ stake }: { stake: Stake }) => {
 }
 
 export default function AdminStakingPage() {
-    const { data: stakingData, isLoading } = useSWR('staking', getStakingData);
+    const { data: stakingData, isLoading } = useSWR('staking', { revalidateOnFocus: true });
 
     const allStakes = stakingData?.stakes || [];
 
@@ -106,7 +106,7 @@ export default function AdminStakingPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {isLoading ? (
+                            {isLoading && allStakes.length === 0 ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i}>
                                         <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
