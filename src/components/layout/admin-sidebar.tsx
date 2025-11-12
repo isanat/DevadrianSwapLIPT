@@ -18,8 +18,6 @@ import {
   Settings,
   Users,
   Shield,
-  LifeBuoy,
-  FileText,
   Gamepad2,
   Pickaxe,
   Archive,
@@ -77,7 +75,7 @@ export function AdminSidebar() {
 
             <SidebarMenuItem>
               <SidebarMenuSub>
-                <SidebarMenuSubTrigger asChild>
+                <SidebarMenuSubTrigger>
                     <SidebarMenuButton tooltip={{ children: 'DeFi Management' }} isSubmenu>
                         <Shield />
                         <span>DeFi Management</span>
@@ -102,7 +100,7 @@ export function AdminSidebar() {
 
            <SidebarMenuItem>
               <SidebarMenuSub>
-                  <SidebarMenuSubTrigger asChild>
+                  <SidebarMenuSubTrigger>
                     <SidebarMenuButton tooltip={{ children: 'Game Zone' }} isSubmenu>
                         <Gamepad2 />
                         <span>Game Zone</span>

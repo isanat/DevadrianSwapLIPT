@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Banknote, Users, Activity, Wallet, TrendingUp, BarChart } from 'lucide-react';
+import { Banknote, Users, Activity, Wallet, TrendingUp } from 'lucide-react';
 
 const stats = [
     { title: 'Total Value Locked (TVL)', value: '$1,234,567.89', icon: <Wallet className="h-6 w-6 text-muted-foreground" />, change: '+2.5%' },
