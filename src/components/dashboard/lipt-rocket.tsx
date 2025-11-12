@@ -175,7 +175,7 @@ export function LiptRocket() {
     };
   }, [isClient]);
 
-  const startGame = () => {
+  const startGame = useCallback(() => {
     const app = appRef.current;
     const rocket = rocketRef.current;
     if (!app || !rocket) return;
@@ -188,8 +188,6 @@ export function LiptRocket() {
     rocket.y = app.screen.height - 80;
     rocket.alpha = 1;
     rocket.flame.visible = true;
-
-    crashPointRef.current = generateCrashPoint();
 
     const animate = () => {
         if (multiplierRef.current >= crashPointRef.current) {
@@ -257,14 +255,14 @@ export function LiptRocket() {
     };
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
-  };
+  }, []);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
       const timer = setTimeout(startGame, 3000);
       return () => clearTimeout(timer);
     }
-  }, [gameStatus]);
+  }, [gameStatus, startGame]);
 
   const handleBet = async () => {
     const bet = parseFloat(betAmount);
@@ -274,6 +272,9 @@ export function LiptRocket() {
     }
     
     setIsLoadingAction(true);
+    // CRITICAL: Generate crash point BEFORE starting the game round.
+    crashPointRef.current = generateCrashPoint();
+    
     try {
         await placeRocketBet(bet);
         mutate('wallet');
