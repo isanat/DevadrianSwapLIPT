@@ -7,6 +7,7 @@ import { Banknote, Users, Activity, Wallet, TrendingUp } from 'lucide-react';
 import useSWR from 'swr';
 import { getDashboardStats } from '@/services/mock-api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatsCard } from '@/components/dashboard/stats-card';
 
 const recentActivities = [
     { id: 'TXN12345', type: 'Stake', user: '0x1a2b...c3d4', amount: '5,000 LIPT', status: 'Completed', time: '2 minutes ago' },
@@ -25,35 +26,6 @@ const getStatusBadge = (status: string) => {
     }
 };
 
-const StatCard = ({ title, value, icon, change, isLoading }: { title: string; value: string; icon: React.ReactNode; change: string; isLoading: boolean }) => {
-    const [isClient, setIsClient] = useState(false);
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                {icon}
-            </CardHeader>
-            <CardContent>
-                {isLoading || !isClient ? (
-                    <>
-                        <Skeleton className="h-8 w-3/4 mb-2" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </>
-                ) : (
-                    <>
-                        <div className="text-2xl font-bold">{value}</div>
-                        <p className="text-xs text-green-400">{change} from last month</p>
-                    </>
-                )}
-            </CardContent>
-        </Card>
-    )
-};
-
 export default function AdminDashboardPage() {
     const { data: stats, isLoading } = useSWR('stats', getDashboardStats, { refreshInterval: 10000 });
     const [isClient, setIsClient] = useState(false);
@@ -64,7 +36,7 @@ export default function AdminDashboardPage() {
     return (
         <div className="flex flex-1 flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-                {isLoading || !stats ? (
+                {isLoading || !isClient ? (
                     <>
                         <Skeleton className="h-[120px]" />
                         <Skeleton className="h-[120px]" />
@@ -73,30 +45,33 @@ export default function AdminDashboardPage() {
                     </>
                 ) : (
                     <>
-                        <StatCard 
+                        <StatsCard 
                             title='Total Value Locked (TVL)' 
-                            value={`$${stats.totalValueLocked.toLocaleString('en-US', {maximumFractionDigits: 2})}`} 
+                            value={stats?.totalValueLocked}
+                            prefix="$"
                             icon={<Wallet className="h-6 w-6 text-muted-foreground" />} 
                             change='+2.5%' 
                             isLoading={isLoading} 
                         />
-                        <StatCard 
+                        <StatsCard 
                             title='Total Trading Volume' 
-                            value={`$${stats.totalVolume.toLocaleString('en-US', {maximumFractionDigits: 2})}`} 
+                            value={stats?.totalVolume}
+                            prefix="$"
                             icon={<TrendingUp className="h-6 w-6 text-muted-foreground" />} 
                             change='+5.2%' 
                             isLoading={isLoading} 
                         />
-                        <StatCard 
+                        <StatsCard 
                             title='Total Users' 
-                            value={`${stats.totalUsers.toLocaleString()}`} 
+                            value={stats?.totalUsers}
                             icon={<Users className="h-6 w-6 text-muted-foreground" />} 
                             change='+15' 
                             isLoading={isLoading} 
                         />
-                        <StatCard 
+                        <StatsCard 
                             title='Protocol Revenue' 
-                            value={`$${stats.protocolRevenue.toLocaleString('en-US', {maximumFractionDigits: 2})}`} 
+                            value={stats?.protocolRevenue}
+                            prefix="$"
                             icon={<Banknote className="h-6 w-6 text-muted-foreground" />} 
                             change='+8.1%' 
                             isLoading={isLoading} 

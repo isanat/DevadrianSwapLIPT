@@ -1,99 +1,55 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { type ReactNode, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Area, AreaChart } from 'recharts';
+import { Skeleton } from '../ui/skeleton';
 
 type StatsCardProps = {
   title: string;
-  value: string | number;
+  value?: number;
   icon: ReactNode;
-  description?: string;
-  className?: string;
-  chartData?: any[];
-  chartKey?: string;
+  change?: string;
+  isLoading: boolean;
+  prefix?: string;
+  suffix?: string;
 };
 
-const chartConfig = {
-  price: {
-    label: 'Price',
-    color: 'hsl(var(--primary))',
-  },
-};
-
-export function StatsCard({ title, value, icon, description, className, chartData, chartKey }: StatsCardProps) {
-  const [displayValue, setDisplayValue] = useState<string | number>('');
+export function StatsCard({ title, value, icon, change, isLoading, prefix, suffix }: StatsCardProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client-side after hydration.
-    // It's a safe place to format values that might differ between server and client.
     setIsClient(true);
-    if (typeof value === 'number') {
-      setDisplayValue(value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    } else {
-      setDisplayValue(value);
-    }
-  }, [value]);
+  }, []);
+  
+  if (isLoading || !isClient) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                {icon}
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-8 w-3/4 mb-2" />
+                {change && <Skeleton className="h-4 w-1/2" />}
+            </CardContent>
+        </Card>
+    )
+  }
+
+  const formattedValue = typeof value === 'number' ? value.toLocaleString('en-US', {maximumFractionDigits: 2}) : '0';
 
   return (
-    <Card className={cn("bg-card/80 backdrop-blur-sm transition-all hover:bg-card/90 hover:scale-[1.02] cursor-pointer flex flex-col", className)}>
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-between">
-        <div>
-          <div className="text-2xl font-bold">{isClient ? displayValue : ''}</div>
-          {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
-          )}
-        </div>
-        {chartData && chartKey && isClient && (
-          <div className="h-16 -ml-6 -mr-2 -mb-7 mt-4">
-             <ChartContainer config={chartConfig} className="h-full w-full">
-              <AreaChart
-                accessibilityLayer
-                data={chartData}
-                margin={{
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                }}
-              >
-                <defs>
-                  <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-price)"
-                      stopOpacity={0.8}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-price)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                </defs>
-                <Area
-                  dataKey={chartKey}
-                  type="natural"
-                  fill="url(#fillPrice)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-price)"
-                  stackId="a"
-                />
-                 <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel hideIndicator />}
-                />
-              </AreaChart>
-            </ChartContainer>
-          </div>
-        )}
+      <CardContent>
+          <div className="text-2xl font-bold">{prefix}{formattedValue}{suffix}</div>
+          {change && <p className="text-xs text-green-400">{change} from last month</p>}
       </CardContent>
     </Card>
   );
