@@ -7,9 +7,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
 
 export default function AdminLotteryPage() {
     const { data: lotteryData, isLoading } = useSWR('lottery', getLotteryData);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     return (
         <div className="flex flex-1 flex-col gap-4">
@@ -29,11 +35,11 @@ export default function AdminLotteryPage() {
                         <div className="grid gap-4 sm:grid-cols-2">
                              <div className='p-4 rounded-lg bg-muted/50'>
                                 <p className="text-sm text-muted-foreground">Prize Pool</p>
-                                {isLoading ? <Skeleton className='h-8 w-3/4' /> : <p className="text-2xl font-bold">{lotteryData?.currentDraw.prizePool.toLocaleString()} LIPT</p>}
+                                {isLoading || !isClient ? <Skeleton className='h-8 w-3/4' /> : <p className="text-2xl font-bold">{lotteryData?.currentDraw.prizePool.toLocaleString()} LIPT</p>}
                             </div>
                              <div className='p-4 rounded-lg bg-muted/50'>
                                 <p className="text-sm text-muted-foreground">Total Tickets Sold</p>
-                                {isLoading ? <Skeleton className='h-8 w-1/4' /> : <p className="text-2xl font-bold">{lotteryData?.totalTickets.toLocaleString()}</p>}
+                                {isLoading || !isClient ? <Skeleton className='h-8 w-1/4' /> : <p className="text-2xl font-bold">{lotteryData?.totalTickets.toLocaleString()}</p>}
                             </div>
                         </div>
                          <div className='space-y-2'>
@@ -52,7 +58,7 @@ export default function AdminLotteryPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className='space-y-3'>
-                        {isLoading ? <Skeleton className='h-40 w-full' /> : (
+                        {isLoading || !isClient ? <Skeleton className='h-40 w-full' /> : (
                             lotteryData?.previousDraws.map((draw: LotteryDraw) => (
                                 <div key={draw.id} className='p-3 rounded-lg bg-muted/50 flex justify-between items-center'>
                                     <div>
@@ -61,7 +67,7 @@ export default function AdminLotteryPage() {
                                     </div>
                                     <div className='text-right'>
                                         <p className='font-bold'>{draw.prizePool.toLocaleString()} LIPT</p>
-                                        <p className='text-xs text-muted-foreground'>Ticket #{draw.winningTicket}</p>
+                                        <p className='text-xs text-muted-foreground'>Ticket #{draw.winningTicket?.toLocaleString()}</p>
                                     </div>
                                 </div>
                             ))
