@@ -301,7 +301,7 @@ SidebarRail.displayName = "SidebarRail"
 const SidebarInset = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
->(( { className, ...props }, ref) => {
+>(({ className, ...props }, ref) => {
   return (
     <div
       ref={ref}
@@ -693,22 +693,59 @@ SidebarMenuSub.displayName = "SidebarMenuSub"
 
 const SidebarMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof Collapsible.Trigger>,
-  React.ComponentProps<typeof Collapsible.Trigger> & { asChild?: boolean }
->(({ asChild, className, children, ...props }, ref) => {
-  return (
+  React.ComponentProps<typeof Collapsible.Trigger> & {
+    tooltip?: React.ComponentProps<typeof TooltipContent> | string
+  }
+>(({ className, tooltip, children, ...props }, ref) => {
+  const { state, isMobile } = useSidebar()
+  const trigger = (
     <Collapsible.Trigger
       ref={ref}
-      asChild={asChild}
+      asChild
       className={cn(
-        buttonVariants({ variant: "default", size: "default" }),
-        sidebarMenuButtonVariants(),
-        "justify-between",
+        "group/submenu-trigger",
         className
       )}
       {...props}
     >
-      {children}
+      <button
+        className={cn(sidebarMenuButtonVariants(), "justify-between w-full")}
+      >
+        <div className="flex items-center gap-3">
+            {children}
+        </div>
+        <ChevronDown
+          data-sidebar="submenu-indicator"
+          className={cn(
+            "ml-auto size-4 group-data-[collapsible=icon]:hidden",
+            "transition-transform ease-in-out group-data-[state=open]/submenu-trigger:rotate-180"
+          )}
+        />
+      </button>
     </Collapsible.Trigger>
+  )
+  
+  if (!tooltip) {
+      return trigger
+  }
+
+  if (typeof tooltip === "string") {
+      tooltip = {
+        children: tooltip,
+      }
+  }
+
+  return (
+      <Tooltip>
+        <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+        <TooltipContent
+          side="right"
+          align="center"
+          hidden={state !== "collapsed" || isMobile}
+          className="capitalize"
+          {...tooltip}
+        />
+      </Tooltip>
   )
 })
 SidebarMenuSubTrigger.displayName = "SidebarMenuSubTrigger"
