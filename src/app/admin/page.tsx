@@ -1,5 +1,5 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -25,30 +25,41 @@ const getStatusBadge = (status: string) => {
     }
 };
 
-const StatCard = ({ title, value, icon, change, isLoading }: { title: string; value: string; icon: React.ReactNode; change: string; isLoading: boolean }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            {icon}
-        </CardHeader>
-        <CardContent>
-            {isLoading ? (
-                <>
-                    <Skeleton className="h-8 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                </>
-            ) : (
-                <>
-                    <div className="text-2xl font-bold">{value}</div>
-                    <p className="text-xs text-green-400">{change} from last month</p>
-                </>
-            )}
-        </CardContent>
-    </Card>
-);
+const StatCard = ({ title, value, icon, change, isLoading }: { title: string; value: string; icon: React.ReactNode; change: string; isLoading: boolean }) => {
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                {icon}
+            </CardHeader>
+            <CardContent>
+                {isLoading || !isClient ? (
+                    <>
+                        <Skeleton className="h-8 w-3/4 mb-2" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </>
+                ) : (
+                    <>
+                        <div className="text-2xl font-bold">{value}</div>
+                        <p className="text-xs text-green-400">{change} from last month</p>
+                    </>
+                )}
+            </CardContent>
+        </Card>
+    )
+};
 
 export default function AdminDashboardPage() {
     const { data: stats, isLoading } = useSWR('stats', getDashboardStats, { refreshInterval: 10000 });
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const statsCards = [
         { title: 'Total Value Locked (TVL)', value: `$${stats?.totalValueLocked.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <Wallet className="h-6 w-6 text-muted-foreground" />, change: '+2.5%' },
@@ -83,7 +94,7 @@ export default function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {isLoading ? (
+                                {isLoading || !isClient ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <TableRow key={i}>
                                             <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>

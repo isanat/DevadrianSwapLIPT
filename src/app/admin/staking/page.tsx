@@ -17,7 +17,15 @@ const StakingTableRow = ({ stake }: { stake: Stake }) => {
         setIsClient(true);
     }, []);
 
-    const isMature = isClient ? (stake.startDate + stake.plan.duration * 24 * 60 * 60 * 1000) < Date.now() : false;
+    if (!isClient) {
+        return (
+             <TableRow>
+                <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
+            </TableRow>
+        )
+    }
+
+    const isMature = (stake.startDate + stake.plan.duration * 24 * 60 * 60 * 1000) < Date.now();
     const startDate = new Date(stake.startDate).toLocaleDateString();
 
     return (
@@ -29,15 +37,13 @@ const StakingTableRow = ({ stake }: { stake: Stake }) => {
                 <div className="font-medium">{stake.amount.toLocaleString()} LIPT</div>
             </TableCell>
             <TableCell>{stake.plan.duration} days @ {stake.plan.apy}%</TableCell>
-            <TableCell>{isClient ? startDate : <Skeleton className='h-4 w-20' />}</TableCell>
+            <TableCell>{startDate}</TableCell>
             <TableCell>
-                {isClient ? (
-                    isMature ? (
-                        <Badge variant="secondary" className='text-green-400 border-green-400'>Mature</Badge>
-                    ) : (
-                        <Badge variant="secondary" className='text-yellow-400 border-yellow-400'>Staking</Badge>
-                    )
-                ) : <Skeleton className='h-6 w-16' />}
+                {isMature ? (
+                    <Badge variant="secondary" className='text-green-400 border-green-400'>Mature</Badge>
+                ) : (
+                    <Badge variant="secondary" className='text-yellow-400 border-yellow-400'>Staking</Badge>
+                )}
             </TableCell>
             <TableCell className="text-right">
                 <DropdownMenu>
