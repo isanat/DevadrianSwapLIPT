@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { get } from 'lodash';
 
 export const STAKING_PLANS = [
   { duration: 20, apy: 12.5 },
@@ -157,7 +158,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     currentDraw: {
       id: 2,
       prizePool: 12500, // 1250 tickets * 10 LIPT
-      endTime: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
+      endTime: Date.now() + 60 * 1000, // 1 minute from now
       status: 'OPEN',
     },
     previousDraws: [
