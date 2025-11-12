@@ -7,7 +7,9 @@ import {
   SidebarMenuButton,
   SidebarMenuSub,
   SidebarMenuSubButton,
+  SidebarMenuSubContent,
   SidebarMenuSubItem,
+  SidebarMenuSubTrigger,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
