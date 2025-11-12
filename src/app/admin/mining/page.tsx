@@ -16,6 +16,11 @@ export default function AdminMiningPage() {
     const { data: miningData, isLoading: isLoadingData } = useSWR('mining', getMiningData);
     const [plans, setPlans] = useState<MiningPlan[]>(initialPlans);
     const [editingPlan, setEditingPlan] = useState<MiningPlan | null>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const handleEdit = (plan: MiningPlan) => {
         setEditingPlan({ ...plan });
@@ -54,13 +59,13 @@ export default function AdminMiningPage() {
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Miners</CardTitle>
                     </CardHeader>
-                    <CardContent>{isLoadingData ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{miningData?.miners.length || 0}</div>}</CardContent>
+                    <CardContent>{isLoadingData || !isClient ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{miningData?.miners.length || 0}</div>}</CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Mining Power</CardTitle>
                     </CardHeader>
-                    <CardContent>{isLoadingData ? <Skeleton className="h-8 w-2/4" /> : <div className="text-2xl font-bold">{miningData?.miningPower.toFixed(2) || '0.00'} LIPT/h</div>}</CardContent>
+                    <CardContent>{isLoadingData || !isClient ? <Skeleton className="h-8 w-2/4" /> : <div className="text-2xl font-bold">{miningData?.miningPower.toFixed(2) || '0.00'} LIPT/h</div>}</CardContent>
                 </Card>
              </div>
             <main className="grid gap-4 md:grid-cols-2">
@@ -106,7 +111,7 @@ export default function AdminMiningPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {plans.map(plan => (
+                                    {isClient && plans.map(plan => (
                                         <TableRow key={plan.name}>
                                             <TableCell className='font-medium'>{plan.name}</TableCell>
                                             <TableCell>{plan.cost.toLocaleString()}</TableCell>
@@ -144,7 +149,7 @@ export default function AdminMiningPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {miningData?.miners.map((miner: Miner) => (
+                                    {isClient && miningData?.miners.map((miner: Miner) => (
                                         <TableRow key={miner.id}>
                                             <TableCell className='font-mono text-xs'>{`user...${miner.id.slice(-6)}`}</TableCell>
                                             <TableCell>{miner.plan.name}</TableCell>

@@ -5,9 +5,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getReferralData } from '@/services/mock-api';
 import useSWR from 'swr';
+import { useState, useEffect } from 'react';
 
 export default function AdminReferralsPage() {
     const { data, isLoading } = useSWR('referral', getReferralData);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     return (
         <div className="flex flex-1 flex-col gap-4">
@@ -34,7 +40,7 @@ export default function AdminReferralsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {data?.network.map(level => (
+                                    {isClient && data?.network.map(level => (
                                         <TableRow key={level.id}>
                                             <TableCell className='font-bold'>{level.level}</TableCell>
                                             <TableCell>{level.members.toLocaleString()}</TableCell>

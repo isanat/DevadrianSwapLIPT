@@ -23,9 +23,13 @@ type Segment = typeof initialSegments[0];
 export default function AdminWheelPage() {
     const [segments, setSegments] = useState<Segment[]>(initialSegments);
 
-    const handleSegmentChange = (index: number, field: keyof Segment, newValue: number) => {
+    const handleSegmentChange = (index: number, field: keyof Segment, newValue: number | string) => {
         const newSegments = [...segments];
-        newSegments[index] = { ...newSegments[index], [field]: newValue };
+        if (typeof newValue === 'string' && field !== 'color') {
+            newSegments[index] = { ...newSegments[index], [field]: parseFloat(newValue) };
+        } else {
+             newSegments[index] = { ...newSegments[index], [field]: newValue };
+        }
         setSegments(newSegments);
     };
 
@@ -67,19 +71,19 @@ export default function AdminWheelPage() {
                                 {segments.map((seg, index) => (
                                     <TableRow key={index}>
                                         <TableCell>
-                                            <Input type="number" value={seg.value} onChange={(e) => handleSegmentChange(index, 'value', parseFloat(e.target.value))} className='w-24' />
+                                            <Input type="number" value={seg.value} onChange={(e) => handleSegmentChange(index, 'value', e.target.value)} className='w-24' />
                                         </TableCell>
                                         <TableCell>
                                             <div className='flex items-center gap-2'>
-                                                <Input type="number" value={seg.weight} onChange={(e) => handleSegmentChange(index, 'weight', parseInt(e.target.value))} className='w-24' />
+                                                <Input type="number" value={seg.weight} onChange={(e) => handleSegmentChange(index, 'weight', e.target.value)} className='w-24' />
                                                 <span className='text-xs text-muted-foreground'>({((seg.weight / totalWeight) * 100).toFixed(2)}%)</span>
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                             <Input type="color" value={seg.color} onChange={(e) => handleSegmentChange(index, 'color', e.target.value as any)} className='p-0 w-12 h-10' />
+                                             <Input type="color" value={seg.color} onChange={(e) => handleSegmentChange(index, 'color', e.target.value)} className='p-0 w-12 h-10' />
                                         </TableCell>
                                         <TableCell className='text-right'>
-                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(index)}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteSegment(index)}>
                                                 <Trash2 className='h-4 w-4 text-destructive' />
                                             </Button>
                                         </TableCell>
