@@ -87,13 +87,13 @@ export function AdminSidebar() {
                 <SidebarMenuSubItem>
                     <SidebarMenuSubButton href="/admin/staking" isActive={pathname === '/admin/staking'}>
                         <Archive />
-                        Staking Pools
+                        <span>Staking Pools</span>
                     </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                     <SidebarMenuSubButton href="#">
                         <Pickaxe />
-                        Mining Room
+                        <span>Mining Room</span>
                     </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
             </SidebarMenuSubContent>
@@ -108,19 +108,19 @@ export function AdminSidebar() {
                   <SidebarMenuSubItem>
                       <SidebarMenuSubButton href="#">
                       <RotateCw/>
-                          Wheel of Fortune
+                          <span>Wheel of Fortune</span>
                       </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                       <SidebarMenuSubButton href="#">
                           <Rocket />
-                          LIPT Rocket
+                          <span>LIPT Rocket</span>
                       </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                       <SidebarMenuSubButton href="#">
                           <Ticket />
-                          Daily Lottery
+                          <span>Daily Lottery</span>
                       </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
               </SidebarMenuSubContent>

@@ -125,7 +125,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
+              "group/sidebar-wrapper flex min-h-svh w-full",
               className
             )}
             ref={ref}
@@ -303,7 +303,7 @@ const SidebarInset = React.forwardRef<
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
   return (
-    <div
+    <main
       ref={ref}
       className={cn(
         "flex-1",
@@ -691,7 +691,7 @@ SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 const SidebarMenuSub = React.forwardRef<
   React.ElementRef<typeof Collapsible.Root>,
   React.ComponentPropsWithoutRef<typeof Collapsible.Root>
->((props, ref) => <Collapsible.Root ref={ref} asChild {...props} />)
+>((props, ref) => <Collapsible.Root ref={ref} {...props} />)
 
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
@@ -700,14 +700,21 @@ const SidebarMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof Collapsible.Trigger>,
   React.ComponentProps<typeof Collapsible.Trigger> & {
     tooltip?: React.ComponentProps<typeof TooltipContent> | string
-  }
->(({ className, tooltip, children, ...props }, ref) => {
+  } & VariantProps<typeof sidebarMenuButtonVariants>
+>(({ className, tooltip, children, variant, size, ...props }, ref) => {
   const { state, isMobile } = useSidebar()
   const trigger = (
     <Collapsible.Trigger ref={ref} asChild {...props}>
-      <SidebarMenuButton isSubmenu>
-        {children}
-      </SidebarMenuButton>
+       <button className={cn(sidebarMenuButtonVariants({variant, size}), className)}>
+          {children}
+          <ChevronDown
+            data-sidebar="submenu-indicator"
+            className={cn(
+              "ml-auto size-4 group-data-[collapsible=icon]:hidden",
+              "transition-transform ease-in-out group-data-[state=open]:rotate-180"
+            )}
+          />
+       </button>
     </Collapsible.Trigger>
   )
   
