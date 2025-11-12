@@ -1,8 +1,14 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getReferralData } from '@/services/mock-api';
+import useSWR from 'swr';
 
 export default function AdminReferralsPage() {
+    const { data, isLoading } = useSWR('referral', getReferralData);
+
     return (
         <div className="flex flex-1 flex-col gap-4">
             <header>
@@ -18,7 +24,26 @@ export default function AdminReferralsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p>Detailed referral network data, search functionality, and commission management tools will be displayed here.</p>
+                        {isLoading ? <Skeleton className='h-60 w-full' /> : (
+                             <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Level</TableHead>
+                                        <TableHead>Members</TableHead>
+                                        <TableHead>Commission Earned</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {data?.network.map(level => (
+                                        <TableRow key={level.id}>
+                                            <TableCell className='font-bold'>{level.level}</TableCell>
+                                            <TableCell>{level.members.toLocaleString()}</TableCell>
+                                            <TableCell>{level.commission.toLocaleString()} LIPT</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
                     </CardContent>
                 </Card>
             </main>

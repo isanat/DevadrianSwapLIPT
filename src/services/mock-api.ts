@@ -82,6 +82,9 @@ const initialWallet = {
 const initialStats = {
   liptPrice: 1.25,
   totalValueLocked: 1234567,
+  totalVolume: 5678910,
+  totalUsers: 1432,
+  protocolRevenue: 12345,
   totalInvested: 8500,
   totalReturns: 125.50,
 };
@@ -104,9 +107,13 @@ const initialMining: { miners: Miner[], miningPower: number, minedRewards: numbe
 };
 
 const initialLiquidity = {
-  poolShare: 0.12,
-  lpTokens: 45.8,
-  feesEarned: 55.75,
+  totalLipt: 500000,
+  totalUsdt: 625000,
+  totalLpTokens: 10000,
+  volume24h: 125000,
+  userPoolShare: 0.12,
+  userLpTokens: 45.8,
+  userFeesEarned: 55.75,
 };
 
 const initialLottery: LotteryState = {
@@ -155,14 +162,14 @@ const initialLeaderboardData = [
 
 const initializeMockData = () => {
     if (typeof window !== 'undefined' && !isDataInitialized) {
-        saveToStorage('wallet', initialWallet);
-        saveToStorage('stats', initialStats);
-        saveToStorage('staking', initialStaking);
-        saveToStorage('mining', initialMining);
-        saveToStorage('liquidity', initialLiquidity);
-        saveToStorage('lottery', initialLottery);
-        saveToStorage('referral', initialReferralData);
-        saveToStorage('leaderboard', initialLeaderboardData);
+        if (!localStorage.getItem('wallet')) saveToStorage('wallet', initialWallet);
+        if (!localStorage.getItem('stats')) saveToStorage('stats', initialStats);
+        if (!localStorage.getItem('staking')) saveToStorage('staking', initialStaking);
+        if (!localStorage.getItem('mining')) saveToStorage('mining', initialMining);
+        if (!localStorage.getItem('liquidity')) saveToStorage('liquidity', initialLiquidity);
+        if (!localStorage.getItem('lottery')) saveToStorage('lottery', initialLottery);
+        if (!localStorage.getItem('referral')) saveToStorage('referral', initialReferralData);
+        if (!localStorage.getItem('leaderboard')) saveToStorage('leaderboard', initialLeaderboardData);
         isDataInitialized = true;
     }
 }
@@ -209,7 +216,7 @@ export const getMiningData = async () => {
 export const getLiquidityData = async () => {
   await wait(400);
   const liquidity = getFromStorage('liquidity', initialLiquidity);
-  liquidity.feesEarned += Math.random() * 0.01;
+  liquidity.userFeesEarned += Math.random() * 0.01;
   saveToStorage('liquidity', liquidity);
   return liquidity;
 };
@@ -324,7 +331,7 @@ export const addLiquidity = async (liptAmount: number, usdtAmount: number) => {
     wallet.usdtBalance -= usdtAmount;
     const liquidity = getFromStorage('liquidity', initialLiquidity);
     // Dummy calculation for new LP tokens
-    liquidity.lpTokens += (liptAmount + usdtAmount) / 100;
+    liquidity.userLpTokens += (liptAmount + usdtAmount) / 100;
     saveToStorage('wallet', wallet);
     saveToStorage('liquidity', liquidity);
     return { success: true };
@@ -334,10 +341,10 @@ export const removeLiquidity = async (lpAmount: number) => {
     await wait(1600);
     const wallet = getFromStorage('wallet', initialWallet);
     const liquidity = getFromStorage('liquidity', initialLiquidity);
-    if (liquidity.lpTokens < lpAmount) {
+    if (liquidity.userLpTokens < lpAmount) {
         throw new Error('Insufficient LP tokens');
     }
-    liquidity.lpTokens -= lpAmount;
+    liquidity.userLpTokens -= lpAmount;
     // Dummy calculation for returned assets
     wallet.liptBalance += lpAmount * 50;
     wallet.usdtBalance += lpAmount * 60;

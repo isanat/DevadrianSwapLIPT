@@ -4,13 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Banknote, Users, Activity, Wallet, TrendingUp } from 'lucide-react';
-
-const stats = [
-    { title: 'Total Value Locked (TVL)', value: '$1,234,567.89', icon: <Wallet className="h-6 w-6 text-muted-foreground" />, change: '+2.5%' },
-    { title: 'Total Trading Volume', value: '$5,678,910.11', icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />, change: '+5.2%' },
-    { title: 'Total Users', value: '1,432', icon: <Users className="h-6 w-6 text-muted-foreground" />, change: '+15' },
-    { title: 'Protocol Revenue', value: '$12,345.67', icon: <Banknote className="h-6 w-6 text-muted-foreground" />, change: '+8.1%' },
-];
+import useSWR from 'swr';
+import { getDashboardStats } from '@/services/mock-api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const recentActivities = [
     { id: 'TXN12345', type: 'Stake', user: '0x1a2b...c3d4', amount: '5,000 LIPT', status: 'Completed', time: '2 minutes ago' },
@@ -29,21 +25,43 @@ const getStatusBadge = (status: string) => {
     }
 };
 
+const StatCard = ({ title, value, icon, change, isLoading }: { title: string; value: string; icon: React.ReactNode; change: string; isLoading: boolean }) => (
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            {icon}
+        </CardHeader>
+        <CardContent>
+            {isLoading ? (
+                <>
+                    <Skeleton className="h-8 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                </>
+            ) : (
+                <>
+                    <div className="text-2xl font-bold">{value}</div>
+                    <p className="text-xs text-green-400">{change} from last month</p>
+                </>
+            )}
+        </CardContent>
+    </Card>
+);
+
 export default function AdminDashboardPage() {
+    const { data: stats, isLoading } = useSWR('stats', getDashboardStats, { refreshInterval: 10000 });
+
+    const statsCards = [
+        { title: 'Total Value Locked (TVL)', value: `$${stats?.totalValueLocked.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <Wallet className="h-6 w-6 text-muted-foreground" />, change: '+2.5%' },
+        { title: 'Total Trading Volume', value: `$${stats?.totalVolume.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />, change: '+5.2%' },
+        { title: 'Total Users', value: `${stats?.totalUsers.toLocaleString() || '0'}`, icon: <Users className="h-6 w-6 text-muted-foreground" />, change: '+15' },
+        { title: 'Protocol Revenue', value: `$${stats?.protocolRevenue.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <Banknote className="h-6 w-6 text-muted-foreground" />, change: '+8.1%' },
+    ];
+
     return (
         <div className="flex flex-1 flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-                {stats.map((stat, index) => (
-                    <Card key={index}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                            {stat.icon}
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stat.value}</div>
-                            <p className="text-xs text-green-400">{stat.change} from last month</p>
-                        </CardContent>
-                    </Card>
+                {statsCards.map((stat) => (
+                    <StatCard key={stat.title} {...stat} isLoading={isLoading} />
                 ))}
             </div>
 
@@ -65,19 +83,27 @@ export default function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {recentActivities.map((activity) => (
-                                    <TableRow key={activity.id}>
-                                        <TableCell>
-                                            <div className="font-mono text-xs">{activity.user}</div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="font-medium">{activity.type}</div>
-                                        </TableCell>
-                                        <TableCell>{activity.amount}</TableCell>
-                                        <TableCell>{getStatusBadge(activity.status)}</TableCell>
-                                        <TableCell className="text-right text-muted-foreground">{activity.time}</TableCell>
-                                    </TableRow>
-                                ))}
+                                {isLoading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    recentActivities.map((activity) => (
+                                        <TableRow key={activity.id}>
+                                            <TableCell>
+                                                <div className="font-mono text-xs">{activity.user}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="font-medium">{activity.type}</div>
+                                            </TableCell>
+                                            <TableCell>{activity.amount}</TableCell>
+                                            <TableCell>{getStatusBadge(activity.status)}</TableCell>
+                                            <TableCell className="text-right text-muted-foreground">{activity.time}</TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>

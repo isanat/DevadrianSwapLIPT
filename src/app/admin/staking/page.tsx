@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import useSWR from 'swr';
-import { Stake } from '@/services/mock-api';
+import { getStakingData, Stake } from '@/services/mock-api';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const StakingTableRow = ({ stake }: { stake: Stake }) => {
@@ -52,12 +51,12 @@ const StakingTableRow = ({ stake }: { stake: Stake }) => {
 }
 
 export default function AdminStakingPage() {
-    const { data: stakingData, isLoading } = useSWR('staking');
+    const { data: stakingData, isLoading } = useSWR('staking', getStakingData);
 
     const allStakes = stakingData?.stakes || [];
-
     const totalStaked = stakingData?.stakedBalance || 0;
     const activeStakesCount = allStakes.length;
+    const unclaimedRewards = stakingData?.unclaimedRewards || 0;
 
     return (
         <div className="flex flex-1 flex-col gap-4">
@@ -87,7 +86,7 @@ export default function AdminStakingPage() {
                         <CardTitle className="text-sm font-medium">Unclaimed Rewards</CardTitle>
                     </CardHeader>
                     <CardContent>
-                       {isLoading ? <Skeleton className="h-8 w-2/5" /> : <div className="text-2xl font-bold">{stakingData?.unclaimedRewards.toFixed(2)} LIPT</div>}
+                       {isLoading ? <Skeleton className="h-8 w-2/5" /> : <div className="text-2xl font-bold">{unclaimedRewards.toFixed(2)} LIPT</div>}
                     </CardContent>
                 </Card>
             </div>
