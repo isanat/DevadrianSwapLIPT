@@ -1,18 +1,18 @@
-// src/context/SWRProvider.tsx
 'use client';
 
 import { SWRConfig } from 'swr';
 import React from 'react';
-import axios from 'axios';
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data);
-
+// We remove the global fetcher. Data fetching will be specified
+// directly in the useSWR hooks when we integrate with the blockchain.
 export const SWRProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <SWRConfig
       value={{
-        fetcher: (resource: any) => resource(), // Use the function itself as the fetcher
-        refreshInterval: 30000, // Optional: auto-refresh data every 30 seconds
+        // By setting a fetcher that does nothing, we disable the old mock calls.
+        fetcher: () => Promise.resolve(undefined),
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
       }}
     >
       {children}
