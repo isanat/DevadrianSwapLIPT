@@ -276,9 +276,20 @@ export function LiptRocket() {
 
       <div ref={canvasRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
-            {gameStatus === 'waiting' ? '...' : `${multiplier.toFixed(2)}x`}
-          </h2>
+          {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
+             <div className='flex flex-col items-center'>
+              <span className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
+                {(cashedOutMultiplier ?? multiplier).toFixed(2)}x
+              </span>
+              <span className="text-lg md:text-xl text-white/80 font-semibold mt-2">
+                {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
+              </span>
+            </div>
+          ) : (
+            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+              {gameStatus === 'waiting' ? '...' : `${multiplier.toFixed(2)}x`}
+            </h2>
+          )}
         </div>
       </div>
 
