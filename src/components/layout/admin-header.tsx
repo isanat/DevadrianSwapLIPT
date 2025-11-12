@@ -25,6 +25,7 @@ const navLinks = [
     { href: '/admin/liquidity', label: 'Liquidity' },
     { href: '/admin/mining', label: 'Mining' },
     { href: '/admin/referrals', label: 'Referrals' },
+    { href: '/admin/settings', label: 'Platform Settings' },
 ];
 
 const gameLinks = [
