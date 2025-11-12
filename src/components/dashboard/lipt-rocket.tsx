@@ -13,7 +13,7 @@ import * as PIXI from 'pixi.js';
 // --- FOGUETE (PIXI v8) ---
 const createRocket = (app: PIXI.Application) => {
   const container = new PIXI.Container() as PIXI.Container & { 
-    smoke: PIXI.Graphics[]; 
+    smoke: (PIXI.Graphics & { vx?: number, vy?: number, life?: number })[]; 
     flame: PIXI.Graphics 
   };
 
@@ -52,7 +52,7 @@ const createRocket = (app: PIXI.Application) => {
 // --- EXPLOSÃO ---
 const createExplosion = (app: PIXI.Application, x: number, y: number) => {
   for (let i = 0; i < 30; i++) {
-    const p = new PIXI.Graphics();
+    const p = new PIXI.Graphics() as PIXI.Graphics & { vx: number, vy: number };
     p.circle(0, 0, Math.random() * 4 + 1).fill(Math.random() > 0.4 ? 0xf97316 : 0xfef08a);
     p.x = x;
     p.y = y;
@@ -99,27 +99,30 @@ export function LiptRocket() {
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
-  const rocketRef = useRef<PIXI.Container & { smoke: PIXI.Graphics[], flame: PIXI.Graphics } | null>(null);
+  const rocketRef = useRef<PIXI.Container & { smoke: (PIXI.Graphics & { vx?: number, vy?: number, life?: number })[], flame: PIXI.Graphics } | null>(null);
   const animationFrameId = useRef<number | null>(null);
   const crashPointRef = useRef(1.0);
 
   // --- INICIALIZA PIXI ---
   useEffect(() => {
     const setupPixi = async () => {
-      if (!canvasRef.current || appRef.current) return;
+      if (canvasRef.current && !appRef.current) {
+        const app = new PIXI.Application();
+        await app.init({
+          width: canvasRef.current.clientWidth,
+          height: 320,
+          backgroundColor: 0x0f172a,
+          antialias: true,
+          resizeTo: canvasRef.current,
+        });
 
-      const app = new PIXI.Application();
-      await app.init({
-        width: canvasRef.current.clientWidth,
-        height: 320,
-        backgroundColor: 0x0f172a,
-        antialias: true,
-        resizeTo: canvasRef.current,
-      });
+        if (canvasRef.current && !canvasRef.current.querySelector('canvas')) {
+          canvasRef.current.appendChild(app.canvas);
+        }
 
-      canvasRef.current.appendChild(app.canvas);
-      appRef.current = app;
-      rocketRef.current = createRocket(app);
+        appRef.current = app;
+        rocketRef.current = createRocket(app);
+      }
     };
 
     setupPixi();
@@ -131,51 +134,51 @@ export function LiptRocket() {
     };
   }, []);
 
-  // --- START GAME ---
   const startGame = useCallback(() => {
     if (!appRef.current || !rocketRef.current) return;
-
+  
     const app = appRef.current;
     const rocket = rocketRef.current;
-
+  
     setGameStatus('in_progress');
     setCashedOutMultiplier(null);
-
+  
     rocket.x = app.screen.width / 2;
     rocket.y = app.screen.height - 80;
     rocket.alpha = 1;
-    rocket.flame.visible = false;
+    rocket.flame.visible = true; // LIGA A CHAMA AQUI
+  
+    // Limpa fumaça
     rocket.smoke.forEach(p => {
       app.stage.removeChild(p);
       p.destroy();
     });
     rocket.smoke = [];
-
+  
     const crashPoint = generateCrashPoint();
     crashPointRef.current = crashPoint;
-    let current = 1.0;
-
+    let current = 1.01; // COMEÇA COM 1.01x
+  
     const animate = () => {
       current += 0.001 + 0.0008 * current;
       setMultiplier(current);
-
+  
       const progress = Math.min(0.95, (current - 1) / (crashPoint - 1));
       rocket.y = app.screen.height - 80 - progress * (app.screen.height - 100);
       rocket.flame.scale.y = 1 + progress * 2.5;
-      rocket.flame.visible = true;
-
+  
       // FUMAÇA
       const smoke = rocket.smoke;
       const emitRate = current > 1.1 ? Math.min(3, Math.floor((current - 1) * 6)) : 0;
-
+  
       for (let i = 0; i < emitRate; i++) {
         if (smoke.length > 60) {
           const old = smoke.shift()!;
           app.stage.removeChild(old);
           old.destroy();
         }
-
-        const p = new PIXI.Graphics();
+  
+        const p = new PIXI.Graphics() as PIXI.Graphics & { vx: number, vy: number, life: number };
         p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
         p.x = rocket.x + (Math.random() - 0.5) * 18;
         p.y = rocket.y + 30;
@@ -185,9 +188,9 @@ export function LiptRocket() {
         app.stage.addChild(p);
         smoke.push(p);
       }
-
+  
       for (let i = smoke.length - 1; i >= 0; i--) {
-        const p = smoke[i];
+        const p = smoke[i] as PIXI.Graphics & { vx: number, vy: number, life: number };
         p.x += p.vx;
         p.y += p.vy;
         p.vy += 0.06;
@@ -199,25 +202,20 @@ export function LiptRocket() {
           smoke.splice(i, 1);
         }
       }
-
+  
       if (current < crashPoint) {
         animationFrameId.current = requestAnimationFrame(animate);
       } else {
+        // CRASH
         setMultiplier(crashPoint);
         setGameStatus('crashed');
         setCrashHistory(prev => [crashPoint, ...prev].slice(0, 10));
         rocket.alpha = 0;
         rocket.flame.visible = false;
         createExplosion(app, rocket.x, rocket.y);
-
-        toast({
-          variant: "destructive",
-          title: "Explodiu!",
-          description: `Crash em ${crashPoint.toFixed(2)}x`
-        });
       }
     };
-
+  
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
   }, [toast]);
