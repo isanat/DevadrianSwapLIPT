@@ -3,14 +3,16 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import * as Collapsible from "@radix-ui/react-collapsible"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { ChevronDown, PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
+import { CollapsibleContent } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -21,7 +23,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useLocalStorage } from "@/hooks/use-local-storage"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_WIDTH = "16rem"
@@ -761,12 +762,6 @@ const GroupLabel = SidebarGroupLabel
 const GroupAction = SidebarGroupAction
 const GroupContent = SidebarGroupContent
 const Menu = SidebarMenu
-const MenuItem = SidebarMenuItem
-const MenuButton = SidebarMenuButton
-const MenuAction = SidebarMenuAction
-const MenuBadge = SidebarMenuBadge
-const MenuSkeleton = SidebarMenuSkeleton
-const Separator = SidebarSeparator
 const Item = SidebarMenuItem
 const Sub = Collapsible
 const SubTrigger = React.forwardRef<
@@ -797,10 +792,10 @@ export {
   GroupContent as SidebarGroupContent,
   Menu as SidebarMenu,
   Item as SidebarMenuItem,
-  Button as SidebarMenuButton,
-  Action as SidebarMenuAction,
-  Badge as SidebarMenuBadge,
-  Skeleton as SidebarMenuSkeleton,
+  SidebarMenuButton,
+  SidebarMenuAction,
+  SidebarMenuBadge,
+  SidebarMenuSkeleton,
   Sub as SidebarMenuSub,
   SubTrigger as SidebarMenuSubTrigger,
   SubContent as SidebarMenuSubContent,
