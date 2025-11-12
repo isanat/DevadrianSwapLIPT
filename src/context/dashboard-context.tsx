@@ -38,6 +38,25 @@ export interface Miner {
   minedAmount: number;
 }
 
+// --- LOTTERY TYPES ---
+export interface LotteryDraw {
+  id: number;
+  prizePool: number;
+  endTime: number;
+  status: 'OPEN' | 'CLOSED';
+  winningTicket?: number;
+  winnerAddress?: string;
+  prizeClaimed?: boolean;
+}
+
+export interface LotteryState {
+  ticketPrice: number;
+  currentDraw: LotteryDraw;
+  previousDraws: LotteryDraw[];
+  userTickets: number[]; // Numbers of tickets bought by the user for the current draw
+  totalTickets: number;
+}
+
 
 // Define the shape of the context data
 interface DashboardContextData {
@@ -76,6 +95,9 @@ interface DashboardContextData {
   miningPower: number;
   minedRewards: number;
 
+  // Lottery
+  lottery: LotteryState;
+
   // Actions
   purchaseLipt: (amount: number) => void;
   updateLiptBalance: (amount: number) => void;
@@ -86,6 +108,8 @@ interface DashboardContextData {
   removeLiquidity: (lpAmount: number) => void;
   activateMiner: (plan: { name: string; cost: number; power: number; duration: number; }) => void;
   claimMinedRewards: () => void;
+  buyLotteryTickets: (quantity: number) => void;
+  claimLotteryPrize: () => void;
 }
 
 // Create the context with a default undefined value
@@ -125,82 +149,30 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [miningPower, setMiningPower] = useState(0);
   const [minedRewards, setMinedRewards] = useState(0);
 
+  // Lottery state
+  const [lottery, setLottery] = useState<LotteryState>({
+    ticketPrice: 10,
+    totalTickets: 1250,
+    userTickets: [],
+    currentDraw: {
+      id: 2,
+      prizePool: 12500, // 1250 tickets * 10 LIPT
+      endTime: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
+      status: 'OPEN',
+    },
+    previousDraws: [
+      {
+        id: 1,
+        prizePool: 11800,
+        endTime: Date.now() - 1,
+        status: 'CLOSED',
+        winningTicket: 345,
+        winnerAddress: '0xABC...DEF',
+        prizeClaimed: true,
+      },
+    ],
+  });
 
-  // Update derived states
-  useEffect(() => {
-    const totalStaked = stakes.reduce((sum, stake) => sum + stake.amount, 0);
-    setStakedBalance(totalStaked);
-
-    const totalStakedValue = totalStaked * liptPrice;
-    // Assuming LP tokens value is somewhat represented by fees earned for simplicity
-    const totalLPValue = (lpTokens / (poolShare / 100)) * (feesEarned / poolShare) || 0;
-    setTotalInvested(totalStakedValue + totalLPValue);
-
-    const rewardsValue = unclaimedRewards * liptPrice;
-    setTotalReturns(rewardsValue + feesEarned);
-    
-    const totalMiningPower = miners.reduce((sum, miner) => {
-      const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
-      return isExpired ? sum : sum + miner.plan.power;
-    }, 0);
-    setMiningPower(totalMiningPower);
-
-  }, [stakes, liptPrice, lpTokens, poolShare, feesEarned, unclaimedRewards, miners]);
-
-
-  // Simulate reward accumulation
-  useEffect(() => {
-    const interval = setInterval(() => {
-        if (stakes.length > 0) {
-            let newRewards = 0;
-            stakes.forEach(stake => {
-                const secondsInYear = 365 * 24 * 60 * 60;
-                const rewardPerSecond = (stake.amount * (stake.plan.apy / 100)) / secondsInYear;
-                newRewards += rewardPerSecond * 5; // new rewards for 5 seconds
-            });
-            setUnclaimedRewards(prev => prev + newRewards);
-        }
-        setFeesEarned(prev => prev + 0.05 * lpTokens); // Simulate LP fee earnings
-
-        setMiners(currentMiners => {
-          if (currentMiners.length === 0) return [];
-    
-          let newMined = 0;
-          const updatedMiners = currentMiners.map(miner => {
-            const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
-            if (!isExpired) {
-              const rewardPerSecond = miner.plan.power / 3600;
-              newMined += rewardPerSecond * 5;
-              return { ...miner, minedAmount: miner.minedAmount + rewardPerSecond * 5 };
-            }
-            return miner;
-          });
-    
-          setMinedRewards(prev => prev + newMined);
-          
-          // Filter out expired miners
-          return updatedMiners.filter(miner => {
-            const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
-            return !isExpired;
-          });
-        });
-
-    }, 5000); // run every 5 seconds
-    return () => clearInterval(interval);
-  }, [stakes, lpTokens]);
-
-  // Simulate real-time LIPT price change
-  useEffect(() => {
-    const priceInterval = setInterval(() => {
-      setLiptPrice(prevPrice => {
-        const change = (Math.random() - 0.5) * 0.01; // small random change
-        const newPrice = prevPrice + change;
-        return newPrice > 0 ? newPrice : 0.01; // ensure price doesn't go below zero
-      });
-    }, 3000); // update every 3 seconds
-
-    return () => clearInterval(priceInterval);
-  }, []);
 
   // ======== ACTIONS ========
   const purchaseLipt = (amount: number) => {
@@ -310,6 +282,155 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     setMinedRewards(0);
   };
 
+  const buyLotteryTickets = (quantity: number) => {
+    const cost = quantity * lottery.ticketPrice;
+    if (liptBalance < cost) {
+      throw new Error('Insufficient LIPT balance');
+    }
+
+    setLiptBalance(prev => prev - cost);
+    setLottery(prev => {
+      const newTickets = Array.from({ length: quantity }, () => prev.totalTickets + Math.random());
+      const newTicketNumbers = Array.from({length: quantity}, (_, i) => prev.totalTickets + i + 1);
+
+      return {
+        ...prev,
+        totalTickets: prev.totalTickets + quantity,
+        userTickets: [...prev.userTickets, ...newTicketNumbers],
+        currentDraw: {
+          ...prev.currentDraw,
+          prizePool: prev.currentDraw.prizePool + cost,
+        },
+      };
+    });
+  };
+
+  const claimLotteryPrize = () => {
+    if (lottery.currentDraw.status === 'CLOSED' && !lottery.currentDraw.prizeClaimed) {
+      setLiptBalance(prev => prev + lottery.currentDraw.prizePool);
+      setLottery(prev => ({
+        ...prev,
+        currentDraw: {
+          ...prev.currentDraw,
+          prizeClaimed: true,
+        },
+      }));
+    }
+  };
+  
+  const _triggerLotteryDraw = () => {
+    setLottery(prev => {
+      const { currentDraw, totalTickets } = prev;
+      if (currentDraw.status !== 'OPEN') return prev;
+
+      // Simulate drawing a winner
+      const winningTicket = Math.floor(Math.random() * totalTickets) + 1;
+      const isUserWinner = prev.userTickets.includes(winningTicket);
+      
+      const closedDraw: LotteryDraw = {
+        ...currentDraw,
+        status: 'CLOSED',
+        winningTicket: winningTicket,
+        winnerAddress: isUserWinner ? 'user123' : `0x${[...Array(10)].map(() => Math.floor(Math.random() * 16).toString(16)).join('')}...`,
+        prizeClaimed: false,
+      };
+
+      const newDraw: LotteryDraw = {
+        id: currentDraw.id + 1,
+        prizePool: 1000, // Base prize
+        endTime: Date.now() + 24 * 60 * 60 * 1000,
+        status: 'OPEN',
+      };
+
+      return {
+        ...prev,
+        userTickets: [],
+        totalTickets: 0,
+        currentDraw: newDraw,
+        previousDraws: [closedDraw, ...prev.previousDraws].slice(0, 5), // Keep last 5
+      };
+    });
+  };
+
+  // --- GLOBAL EFFECTS ---
+
+  // Update derived states
+  useEffect(() => {
+    const totalStaked = stakes.reduce((sum, stake) => sum + stake.amount, 0);
+    setStakedBalance(totalStaked);
+
+    const totalStakedValue = totalStaked * liptPrice;
+    const totalLPValue = (lpTokens / (poolShare / 100)) * (feesEarned / poolShare) || 0;
+    setTotalInvested(totalStakedValue + totalLPValue);
+
+    const rewardsValue = unclaimedRewards * liptPrice;
+    setTotalReturns(rewardsValue + feesEarned);
+    
+    const totalMiningPower = miners.reduce((sum, miner) => {
+      const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
+      return isExpired ? sum : sum + miner.plan.power;
+    }, 0);
+    setMiningPower(totalMiningPower);
+
+  }, [stakes, liptPrice, lpTokens, poolShare, feesEarned, unclaimedRewards, miners]);
+
+
+  // Simulate reward accumulation & lottery countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+        // Staking rewards
+        if (stakes.length > 0) {
+            let newRewards = 0;
+            stakes.forEach(stake => {
+                const secondsInYear = 365 * 24 * 60 * 60;
+                const rewardPerSecond = (stake.amount * (stake.plan.apy / 100)) / secondsInYear;
+                newRewards += rewardPerSecond * 5; 
+            });
+            setUnclaimedRewards(prev => prev + newRewards);
+        }
+        // LP Fees
+        setFeesEarned(prev => prev + 0.05 * lpTokens); 
+
+        // Mining rewards
+        setMiners(currentMiners => {
+          if (currentMiners.length === 0) return [];
+    
+          let newMined = 0;
+          const updatedMiners = currentMiners.map(miner => {
+            const isExpired = Date.now() > miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
+            if (!isExpired) {
+              const rewardPerSecond = miner.plan.power / 3600;
+              newMined += rewardPerSecond * 5;
+              return { ...miner, minedAmount: miner.minedAmount + rewardPerSecond * 5 };
+            }
+            return miner;
+          });
+    
+          setMinedRewards(prev => prev + newMined);
+          return updatedMiners;
+        });
+
+        // Lottery Draw
+        if (lottery.currentDraw.endTime <= Date.now()) {
+            _triggerLotteryDraw();
+        }
+
+    }, 5000); 
+    return () => clearInterval(interval);
+  }, [stakes, lpTokens, lottery.currentDraw.endTime]);
+
+  // Simulate real-time LIPT price change
+  useEffect(() => {
+    const priceInterval = setInterval(() => {
+      setLiptPrice(prevPrice => {
+        const change = (Math.random() - 0.5) * 0.01; 
+        const newPrice = prevPrice + change;
+        return newPrice > 0 ? newPrice : 0.01; 
+      });
+    }, 3000); 
+
+    return () => clearInterval(priceInterval);
+  }, []);
 
   const value: DashboardContextData = {
     liptBalance,
@@ -331,6 +452,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     miners,
     miningPower,
     minedRewards,
+    lottery,
     purchaseLipt,
     updateLiptBalance,
     stakeLipt,
@@ -339,7 +461,9 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     addLiquidity,
     removeLiquidity,
     activateMiner,
-    claimMinedRewards
+    claimMinedRewards,
+    buyLotteryTickets,
+    claimLotteryPrize,
   };
 
   return (
@@ -357,5 +481,3 @@ export const useDashboard = () => {
   }
   return context;
 };
-
-    

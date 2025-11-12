@@ -260,6 +260,40 @@ const translations = {
       },
       lottery: {
         title: 'Daily Lottery',
+        prizePool: 'Current Prize Pool',
+        drawInProgress: 'Draw in Progress',
+        hours: 'Hours',
+        minutes: 'Minutes',
+        seconds: 'Seconds',
+        buyTickets: 'Buy Tickets',
+        buyButton: 'Buy',
+        ticketCost: 'Ticket Cost',
+        yourTickets: 'Your Tickets for this Draw',
+        noTickets: 'You have no tickets for this draw.',
+        previousDraws: 'Previous Draws',
+        previousDrawsDesc: 'See the results of recent lotteries.',
+        draw: 'Draw',
+        winner: 'Winner',
+        winnerTitle: 'Congratulations!',
+        winnerDesc: 'You won the lottery!',
+        winner: {
+          title: 'Congratulations!',
+          description: 'You won the grand prize of {amount} LIPT!',
+          claimButton: 'Claim Prize',
+        },
+        toast: {
+          success: {
+            title: 'Tickets Purchased',
+            description: 'You bought {amount} tickets. Good luck!',
+          },
+          invalidAmount: {
+            title: 'Invalid Amount',
+          },
+          claimed: {
+            title: 'Prize Claimed!',
+            description: 'You have claimed {amount} LIPT. Congratulations!',
+          }
+        }
       }
     },
   },
@@ -517,6 +551,40 @@ const translations = {
       },
       lottery: {
         title: 'Loteria Diária',
+        prizePool: 'Prêmio Acumulado',
+        drawInProgress: 'Sorteio em Andamento',
+        hours: 'Horas',
+        minutes: 'Minutos',
+        seconds: 'Segundos',
+        buyTickets: 'Comprar Bilhetes',
+        buyButton: 'Comprar',
+        ticketCost: 'Custo do Bilhete',
+        yourTickets: 'Seus Bilhetes para este Sorteio',
+        noTickets: 'Você não tem bilhetes para este sorteio.',
+        previousDraws: 'Sorteios Anteriores',
+        previousDrawsDesc: 'Veja os resultados das loterias recentes.',
+        draw: 'Sorteio',
+        winner: 'Vencedor',
+        winnerTitle: 'Parabéns!',
+        winnerDesc: 'Você ganhou na loteria!',
+        winner: {
+          title: 'Parabéns!',
+          description: 'Você ganhou o grande prêmio de {amount} LIPT!',
+          claimButton: 'Reivindicar Prêmio',
+        },
+        toast: {
+          success: {
+            title: 'Bilhetes Comprados',
+            description: 'Você comprou {amount} bilhetes. Boa sorte!',
+          },
+          invalidAmount: {
+            title: 'Quantidade Inválida',
+          },
+          claimed: {
+            title: 'Prêmio Reivindicado!',
+            description: 'Você reivindicou {amount} LIPT. Parabéns!',
+          }
+        }
       }
     },
   },
@@ -774,7 +842,41 @@ const translations = {
       },
       lottery: {
         title: 'Lotería Diaria',
-      },
+        prizePool: 'Bote Actual',
+        drawInProgress: 'Sorteo en Curso',
+        hours: 'Horas',
+        minutes: 'Minutos',
+        seconds: 'Segundos',
+        buyTickets: 'Comprar Billetes',
+        buyButton: 'Comprar',
+        ticketCost: 'Costo del Billete',
+        yourTickets: 'Tus Billetes para este Sorteo',
+        noTickets: 'No tienes billetes para este sorteo.',
+        previousDraws: 'Sorteos Anteriores',
+        previousDrawsDesc: 'Ver los resultados de las loterías recientes.',
+        draw: 'Sorteo',
+        winner: 'Ganador',
+        winnerTitle: '¡Felicidades!',
+        winnerDesc: '¡Ganaste la lotería!',
+        winner: {
+          title: '¡Felicidades!',
+          description: '¡Has ganado el gran premio de {amount} LIPT!',
+          claimButton: 'Reclamar Premio',
+        },
+        toast: {
+          success: {
+            title: 'Billetes Comprados',
+            description: 'Has comprado {amount} billetes. ¡Buena suerte!',
+          },
+          invalidAmount: {
+            title: 'Cantidad Inválida',
+          },
+          claimed: {
+            title: '¡Premio Reclamado!',
+            description: 'Has reclamado {amount} LIPT. ¡Felicidades!',
+          }
+        }
+      }
     },
   },
   it: {
@@ -1031,7 +1133,41 @@ const translations = {
       },
       lottery: {
         title: 'Lotteria Giornaliera',
-      },
+        prizePool: 'Montepremi Attuale',
+        drawInProgress: 'Estrazione in Corso',
+        hours: 'Ore',
+        minutes: 'Minuti',
+        seconds: 'Secondi',
+        buyTickets: 'Compra Biglietti',
+        buyButton: 'Compra',
+        ticketCost: 'Costo Biglietto',
+        yourTickets: 'I Tuoi Biglietti per questa Estrazione',
+        noTickets: 'Non hai biglietti per questa estrazione.',
+        previousDraws: 'Estrazioni Precedenti',
+        previousDrawsDesc: 'Guarda i risultati delle lotterie recenti.',
+        draw: 'Estrazione',
+        winner: 'Vincitore',
+        winnerTitle: 'Congratulazioni!',
+        winnerDesc: 'Hai vinto alla lotteria!',
+        winner: {
+            title: 'Congratulazioni!',
+            description: 'Hai vinto il primo premio di {amount} LIPT!',
+            claimButton: 'Riscuoti Premio',
+        },
+        toast: {
+            success: {
+                title: 'Biglietti Acquistati',
+                description: 'Hai acquistato {amount} biglietti. Buona fortuna!',
+            },
+            invalidAmount: {
+                title: 'Importo non valido',
+            },
+            claimed: {
+                title: 'Premio Riscattato!',
+                description: 'Hai riscosso {amount} LIPT. Congratulazioni!',
+            }
+        }
+      }
     },
   },
 };

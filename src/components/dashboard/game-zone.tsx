@@ -9,6 +9,7 @@ import { HelpTooltip } from './help-tooltip';
 import { WheelOfFortune } from './wheel-of-fortune';
 import { GameReport } from './game-report';
 import { LiptRocket } from './lipt-rocket';
+import { DailyLottery } from './daily-lottery';
 
 export function GameZone() {
   const { t } = useI18n();
@@ -44,7 +45,7 @@ export function GameZone() {
                 <Rocket className="h-4 w-4 mr-2"/>
                 {t('gameZone.rocket.title')}
             </TabsTrigger>
-            <TabsTrigger value="lottery" disabled>
+            <TabsTrigger value="lottery">
                 <Ticket className="h-4 w-4 mr-2"/>
                 {t('gameZone.lottery.title')}
             </TabsTrigger>
@@ -72,8 +73,8 @@ export function GameZone() {
           <TabsContent value="rocket" className="mt-4">
             <LiptRocket />
           </TabsContent>
-          <TabsContent value="lottery">
-            {/* Lottery Game Component will go here */}
+          <TabsContent value="lottery" className="mt-4">
+            <DailyLottery />
           </TabsContent>
         </Tabs>
       </CardContent>
