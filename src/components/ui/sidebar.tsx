@@ -688,8 +688,13 @@ const SidebarMenuSkeleton = React.forwardRef<
 })
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
-const SidebarMenuSub = Collapsible.Root
+const SidebarMenuSub = React.forwardRef<
+  React.ElementRef<typeof Collapsible.Root>,
+  React.ComponentPropsWithoutRef<typeof Collapsible.Root>
+>((props, ref) => <Collapsible.Root ref={ref} asChild {...props} />)
+
 SidebarMenuSub.displayName = "SidebarMenuSub"
+
 
 const SidebarMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof Collapsible.Trigger>,
@@ -699,29 +704,10 @@ const SidebarMenuSubTrigger = React.forwardRef<
 >(({ className, tooltip, children, ...props }, ref) => {
   const { state, isMobile } = useSidebar()
   const trigger = (
-    <Collapsible.Trigger
-      ref={ref}
-      asChild
-      className={cn(
-        "group/submenu-trigger",
-        className
-      )}
-      {...props}
-    >
-      <button
-        className={cn(sidebarMenuButtonVariants(), "justify-between w-full")}
-      >
-        <div className="flex items-center gap-3">
-            {children}
-        </div>
-        <ChevronDown
-          data-sidebar="submenu-indicator"
-          className={cn(
-            "ml-auto size-4 group-data-[collapsible=icon]:hidden",
-            "transition-transform ease-in-out group-data-[state=open]/submenu-trigger:rotate-180"
-          )}
-        />
-      </button>
+    <Collapsible.Trigger ref={ref} asChild {...props}>
+      <SidebarMenuButton isSubmenu>
+        {children}
+      </SidebarMenuButton>
     </Collapsible.Trigger>
   )
   
