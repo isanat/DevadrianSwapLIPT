@@ -5,6 +5,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getLiquidityData } from '@/services/mock-api';
 import useSWR from 'swr';
 import { useState, useEffect } from 'react';
+import { StatsCard } from '@/components/dashboard/stats-card';
+import { Banknote, Coins, TrendingUp, Wallet } from 'lucide-react';
 
 export default function AdminLiquidityPage() {
     const { data, isLoading } = useSWR('liquidity', getLiquidityData);
@@ -13,12 +15,12 @@ export default function AdminLiquidityPage() {
     useEffect(() => {
         setIsClient(true);
     }, []);
-
+    
     const stats = !data ? [] : [
-        { name: 'Total LIPT in Pool', value: data.totalLipt?.toLocaleString(), unit: 'LIPT' },
-        { name: 'Total USDT in Pool', value: data.totalUsdt?.toLocaleString(), unit: 'USDT' },
-        { name: 'Total LP Tokens Issued', value: data.totalLpTokens?.toLocaleString(), unit: 'LP' },
-        { name: 'Pool Volume (24h)', value: `$${data.volume24h?.toLocaleString()}` },
+        { title: 'Total LIPT in Pool', value: data.totalLipt, suffix: ' LIPT', icon: <Coins className="h-6 w-6 text-muted-foreground" /> },
+        { title: 'Total USDT in Pool', value: data.totalUsdt, suffix: ' USDT', icon: <Banknote className="h-6 w-6 text-muted-foreground" /> },
+        { title: 'Total LP Tokens Issued', value: data.totalLpTokens, suffix: ' LP', icon: <Wallet className="h-6 w-6 text-muted-foreground" /> },
+        { title: 'Pool Volume (24h)', value: data.volume24h, prefix: '$', icon: <TrendingUp className="h-6 w-6 text-muted-foreground" /> },
     ];
 
     return (
@@ -41,14 +43,15 @@ export default function AdminLiquidityPage() {
                     ))
                 ) : (
                     stats.map(stat => (
-                        <Card key={stat.name}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stat.value} <span className="text-base text-muted-foreground">{stat.unit}</span></div>
-                            </CardContent>
-                        </Card>
+                        <StatsCard
+                            key={stat.title}
+                            title={stat.title}
+                            value={stat.value}
+                            prefix={stat.prefix}
+                            suffix={stat.suffix}
+                            icon={stat.icon}
+                            isLoading={isLoading}
+                        />
                     ))
                 )}
             </div>
