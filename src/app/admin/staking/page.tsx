@@ -52,7 +52,7 @@ const StakingTableRow = ({ stake }: { stake: Stake }) => {
 }
 
 export default function AdminStakingPage() {
-    const { data: stakingData, isLoading } = useSWR('staking', { revalidateOnFocus: true });
+    const { data: stakingData, isLoading } = useSWR('staking');
 
     const allStakes = stakingData?.stakes || [];
 
