@@ -307,6 +307,7 @@ const SidebarInset = React.forwardRef<
       ref={ref}
       className={cn(
         "flex-1",
+        "duration-200 transition-[margin] peer-data-[collapsible=icon]:md:ml-[--sidebar-width-icon]",
         className
       )}
       {...props}
@@ -567,7 +568,7 @@ const SidebarMenuButton = React.forwardRef<
               data-sidebar="submenu-indicator"
               className={cn(
                 "ml-auto size-4 group-data-[collapsible=icon]:hidden",
-                "transition-transform ease-in-out group-data-[state=open]:rotate-180"
+                "transition-transform ease-in-out group-data-[state=open]/submenu:rotate-180"
               )}
             />
           )}
@@ -691,58 +692,17 @@ SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 const SidebarMenuSub = React.forwardRef<
   React.ElementRef<typeof Collapsible.Root>,
   React.ComponentPropsWithoutRef<typeof Collapsible.Root>
->((props, ref) => <Collapsible.Root ref={ref} className="group/submenu" asChild {...props} />)
+>(({className, ...props}, ref) => (
+    <Collapsible.Root
+      ref={ref}
+      className={cn('group/submenu', className)}
+      {...props}
+    />
+  ))
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
 
-const SidebarMenuSubTrigger = React.forwardRef<
-  React.ElementRef<typeof Collapsible.Trigger>,
-  React.ComponentProps<typeof Collapsible.Trigger> & {
-    tooltip?: React.ComponentProps<typeof TooltipContent> | string
-  } & VariantProps<typeof sidebarMenuButtonVariants>
->(({ className, tooltip, children, variant, size, ...props }, ref) => {
-  const { state, isMobile } = useSidebar()
-
-  const trigger = (
-    <Collapsible.Trigger ref={ref} asChild {...props}>
-        <button className={cn(sidebarMenuButtonVariants({ variant, size }), className)}>
-        {children}
-        <ChevronDown
-            data-sidebar="submenu-indicator"
-            className={cn(
-            "ml-auto size-4 group-data-[collapsible=icon]:hidden",
-            "transition-transform ease-in-out group-data-[state=open]/submenu:rotate-180"
-            )}
-        />
-        </button>
-    </Collapsible.Trigger>
-  )
-
-  if (!tooltip) {
-    return trigger
-  }
-
-  if (typeof tooltip === "string") {
-    tooltip = {
-      children: tooltip,
-    }
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{trigger}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={state !== "collapsed" || isMobile}
-        className="capitalize"
-        {...tooltip}
-      />
-    </Tooltip>
-  )
-})
-SidebarMenuSubTrigger.displayName = "SidebarMenuSubTrigger"
-
+const SidebarMenuSubTrigger = Collapsible.Trigger
 
 const SidebarMenuSubContent = React.forwardRef<
   React.ElementRef<typeof CollapsibleContent>,

@@ -9,9 +9,9 @@ import {
   SidebarMenuSubContent,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
-  SidebarMenuSubTrigger,
   SidebarTrigger,
   useSidebar,
+  SidebarMenuSubTrigger,
 } from '@/components/ui/sidebar';
 import {
   BarChart2,
@@ -39,20 +39,20 @@ export function AdminSidebar() {
     <>
       <SidebarHeader>
         <div className="flex h-10 w-full items-center gap-2 border-b border-sidebar-border px-2">
-            <Button asChild variant="ghost" className="h-auto p-1 text-primary">
-                <a href="/">
-                    <DevAdrianSwapIcon className="size-6 shrink-0" />
-                </a>
-            </Button>
+          <Button asChild variant="ghost" className="h-auto p-1 text-primary">
+            <a href="/">
+              <DevAdrianSwapIcon className="size-6 shrink-0" />
+            </a>
+          </Button>
 
-            <h2
+          <h2
             className="text-base font-semibold duration-200"
             data-state={state}
-            >
+          >
             DevAdrian Swap
-            </h2>
-            <div className="flex-1" />
-            <SidebarTrigger className="hidden md:flex" />
+          </h2>
+          <div className="flex-1" />
+          <SidebarTrigger className="hidden md:flex" />
         </div>
       </SidebarHeader>
 
@@ -77,54 +77,58 @@ export function AdminSidebar() {
               <span>User Management</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-            
+
           <SidebarMenuSub>
-            <SidebarMenuSubTrigger tooltip={{ children: 'DeFi Management' }}>
-                <Shield />
-                <span>DeFi Management</span>
+            <SidebarMenuSubTrigger>
+              <SidebarMenuButton isSubmenu tooltip={{ children: 'DeFi Management' }}>
+                  <Shield />
+                  <span>DeFi Management</span>
+              </SidebarMenuButton>
             </SidebarMenuSubTrigger>
             <SidebarMenuSubContent>
-                <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="/admin/staking" isActive={pathname === '/admin/staking'}>
-                        <Archive />
-                        <span>Staking Pools</span>
-                    </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="#">
-                        <Pickaxe />
-                        <span>Mining Room</span>
-                    </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton href="/admin/staking" isActive={pathname === '/admin/staking'}>
+                  <Archive />
+                  <span>Staking Pools</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton href="#">
+                  <Pickaxe />
+                  <span>Mining Room</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
             </SidebarMenuSubContent>
           </SidebarMenuSub>
 
-           <SidebarMenuSub>
-             <SidebarMenuSubTrigger tooltip={{ children: 'Game Zone' }}>
-                <Gamepad2 />
-                <span>Game Zone</span>
-              </SidebarMenuSubTrigger>
-              <SidebarMenuSubContent>
-                  <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                      <RotateCw/>
-                          <span>Wheel of Fortune</span>
-                      </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                          <Rocket />
-                          <span>LIPT Rocket</span>
-                      </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                          <Ticket />
-                          <span>Daily Lottery</span>
-                      </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-              </SidebarMenuSubContent>
-            </SidebarMenuSub>
+          <SidebarMenuSub>
+            <SidebarMenuSubTrigger>
+               <SidebarMenuButton isSubmenu tooltip={{ children: 'Game Zone' }}>
+                    <Gamepad2 />
+                    <span>Game Zone</span>
+                </SidebarMenuButton>
+            </SidebarMenuSubTrigger>
+            <SidebarMenuSubContent>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton href="#">
+                  <RotateCw />
+                  <span>Wheel of Fortune</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton href="#">
+                  <Rocket />
+                  <span>LIPT Rocket</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton href="#">
+                  <Ticket />
+                  <span>Daily Lottery</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            </SidebarMenuSubContent>
+          </SidebarMenuSub>
 
           <SidebarMenuItem>
             <SidebarMenuButton
