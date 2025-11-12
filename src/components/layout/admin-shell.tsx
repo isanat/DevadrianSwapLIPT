@@ -1,12 +1,12 @@
 'use client';
 
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/layout/admin-sidebar';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <div className="relative flex min-h-screen flex-col bg-background text-foreground">
+      <div className="relative flex min-h-screen flex-row bg-background text-foreground">
         <Sidebar>
           <AdminSidebar />
         </Sidebar>

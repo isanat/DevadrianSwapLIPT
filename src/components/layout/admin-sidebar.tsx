@@ -9,9 +9,9 @@ import {
   SidebarMenuSubContent,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarMenuSubTrigger,
   SidebarTrigger,
   useSidebar,
-  SidebarMenuSubTrigger,
 } from '@/components/ui/sidebar';
 import {
   BarChart2,
@@ -21,7 +21,6 @@ import {
   Gamepad2,
   Pickaxe,
   Archive,
-  ChevronDown,
   RotateCw,
   Rocket,
   Ticket,
@@ -77,62 +76,52 @@ export function AdminSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
             
-          <SidebarMenuSub asChild>
-            <SidebarMenuItem>
-                <SidebarMenuSubTrigger>
-                    <div className="flex items-center gap-3">
-                        <Shield />
-                        <span className="group-data-[collapsible=icon]:hidden">DeFi Management</span>
-                    </div>
-                    <ChevronDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden"/>
-                </SidebarMenuSubTrigger>
-                <SidebarMenuSubContent>
-                    <SidebarMenuSubItem>
-                        <SidebarMenuSubButton href="#">
-                            <Archive />
-                            Staking Pools
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <SidebarMenuSubButton href="#">
-                            <Pickaxe />
-                            Mining Room
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                </SidebarMenuSubContent>
-            </SidebarMenuItem>
+          <SidebarMenuSub>
+            <SidebarMenuSubTrigger>
+                <Shield />
+                <span>DeFi Management</span>
+            </SidebarMenuSubTrigger>
+            <SidebarMenuSubContent>
+                <SidebarMenuSubItem>
+                    <SidebarMenuSubButton href="#">
+                        <Archive />
+                        Staking Pools
+                    </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                    <SidebarMenuSubButton href="#">
+                        <Pickaxe />
+                        Mining Room
+                    </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+            </SidebarMenuSubContent>
           </SidebarMenuSub>
 
-           <SidebarMenuSub asChild>
-             <SidebarMenuItem>
-                <SidebarMenuSubTrigger>
-                    <div className="flex items-center gap-3">
-                        <Gamepad2 />
-                        <span className="group-data-[collapsible=icon]:hidden">Game Zone</span>
-                    </div>
-                    <ChevronDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden"/>
-                </SidebarMenuSubTrigger>
-                <SidebarMenuSubContent>
-                    <SidebarMenuSubItem>
-                        <SidebarMenuSubButton href="#">
-                        <RotateCw/>
-                            Wheel of Fortune
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <SidebarMenuSubButton href="#">
-                            <Rocket />
-                            LIPT Rocket
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <SidebarMenuSubButton href="#">
-                            <Ticket />
-                            Daily Lottery
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                </SidebarMenuSubContent>
-                </SidebarMenuItem>
+           <SidebarMenuSub>
+             <SidebarMenuSubTrigger>
+                  <Gamepad2 />
+                  <span>Game Zone</span>
+              </SidebarMenuSubTrigger>
+              <SidebarMenuSubContent>
+                  <SidebarMenuSubItem>
+                      <SidebarMenuSubButton href="#">
+                      <RotateCw/>
+                          Wheel of Fortune
+                      </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                      <SidebarMenuSubButton href="#">
+                          <Rocket />
+                          LIPT Rocket
+                      </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                      <SidebarMenuSubButton href="#">
+                          <Ticket />
+                          Daily Lottery
+                      </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+              </SidebarMenuSubContent>
             </SidebarMenuSub>
 
           <SidebarMenuItem>
