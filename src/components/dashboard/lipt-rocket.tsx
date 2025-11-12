@@ -190,14 +190,20 @@ export function LiptRocket() {
     rocket.flame.visible = true;
 
     const animate = () => {
+        // Stop animation if component unmounts or status changes
+        if (!appRef.current || appRef.current.destroyed || gameStatus === 'crashed' || gameStatus === 'cashed_out') {
+            if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+            return;
+        }
+
         if (multiplierRef.current >= crashPointRef.current) {
           setGameStatus('crashed');
           setCrashHistory(prev => [crashPointRef.current, ...prev].slice(0, 10));
           if (rocketRef.current) {
             rocketRef.current.alpha = 0;
             rocketRef.current.flame.visible = false;
+            createExplosion(app, rocket.x, rocket.y);
           }
-          createExplosion(app, rocket.x, rocket.y);
           setIsLoadingAction(false); // Enable "Play Again" button
         } else {
            multiplierRef.current += 0.001 + 0.0008 * multiplierRef.current;
@@ -255,7 +261,7 @@ export function LiptRocket() {
     };
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
-  }, []);
+  }, [gameStatus]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -353,6 +359,7 @@ export function LiptRocket() {
       return (
         <div className="flex flex-col items-center space-y-4 p-4 rounded-lg bg-background/50 border">
             <div className="flex gap-1 flex-wrap justify-center h-6"></div>
+            <Skeleton className="w-full h-24" />
             <Skeleton className="w-full h-72 md:h-80 rounded-lg" />
             <div className="w-full max-w-xs space-y-2">
                 <Skeleton className="h-5 w-24" />
@@ -378,23 +385,28 @@ export function LiptRocket() {
         </div>
       )}
 
-      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
-          {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
+      <div className="w-full text-center p-4 rounded-lg bg-slate-900/50">
+        {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
             <div className='flex flex-col items-center'>
               <span className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
                 {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
               </span>
-              <span className="text-lg md:text-xl text-white/80 font-semibold mt-2">
+              <span className="text-lg md:text-xl text-white/80 font-semibold mt-1">
                 {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
               </span>
             </div>
           ) : (
-            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+            <h2 className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg transition-colors", 
+                displayMultiplier < 2 ? 'text-white' : 
+                displayMultiplier < 5 ? 'text-yellow-300' : 'text-green-400'
+            )}>
               {gameStatus === 'waiting' ? '...' : `${displayMultiplier.toFixed(2)}x`}
             </h2>
           )}
-        </div>
+      </div>
+
+      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden border-y-2 border-primary/20">
+        {/* O canvas do PIXI será inserido aqui */}
       </div>
 
       <div className="w-full max-w-xs space-y-2">
