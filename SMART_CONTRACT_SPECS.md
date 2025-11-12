@@ -134,6 +134,61 @@ Um jogo de sorte onde os utilizadores apostam LIPT para girar uma roleta.
 - **Evento:**
   - `WheelSpun(user, betAmount, multiplier, winnings)`
 
+### 3.7. Zona de Jogos (Foguete LIPT - "Crash Game")
+Um jogo de aposta onde os utilizadores apostam LIPT e decidem quando fazer "cash out" de um multiplicador crescente.
+
+- **Lógica:**
+  - O jogo consiste num multiplicador que começa em 1.00x e aumenta exponencialmente.
+  - A qualquer momento, o jogo pode "crashar" num ponto aleatório. Este ponto de crash deve ser determinado de forma segura e transparente antes do início da ronda, usando uma fonte de aleatoriedade (ex: Chainlink VRF).
+  - Os utilizadores fazem uma aposta antes do início da ronda.
+  - Durante a ronda, eles podem fazer "cash out" a qualquer momento, recebendo `betAmount * currentMultiplier`.
+  - Se um utilizador não fizer cash out antes do ponto de crash, ele perde a aposta.
+- **Funções:**
+  - **`playRocket(betAmount)`:**
+    - O utilizador regista a sua aposta `betAmount` para a próxima ronda. Os LIPT são transferidos para o contrato.
+  - **`cashOutRocket()`:**
+    - O utilizador solicita o cash out na ronda atual.
+    - O contrato verifica se a ronda ainda está ativa (não "crashou").
+    - Se for válido, calcula o prémio `betAmount * currentMultiplier` e transfere-o para o utilizador.
+- **Eventos:**
+  - `RocketRoundStarted(roundId, crashPointHash)` (o hash do ponto de crash é revelado no início)
+  - `RocketBetPlaced(roundId, user, betAmount)`
+  -`RocketCashedOut(roundId, user, cashOutMultiplier, winnings)`
+  - `RocketRoundCrashed(roundId, crashPoint)` (o ponto de crash é revelado no final)
+
+### 3.8. Zona de Jogos (Lotaria Diária)
+Uma lotaria periódica onde os utilizadores podem comprar bilhetes para ganhar um prémio acumulado.
+
+- **Lógica:**
+  - A lotaria tem sorteios com uma duração definida (ex: 24 horas).
+  - Os utilizadores compram bilhetes com LIPT. O custo de cada bilhete é fixo.
+  - Uma parte do custo dos bilhetes vai para o prémio acumulado (`prizePool`).
+  - No final do período, um bilhete vencedor é sorteado aleatoriamente, usando uma fonte segura de aleatoriedade (ex: Chainlink VRF).
+- **Estruturas de Dados:**
+  - `LotteryDraw`: `{ id: uint, endTime: uint, prizePool: uint, status: enum, winningTicket: uint, winnerAddress: address }`
+  - `Ticket`: `{ owner: address, drawId: uint, ticketId: uint }`
+- **Configuração:**
+  - `ticketPrice`: Custo de cada bilhete em LIPT.
+  - `drawDuration`: Duração de cada sorteio em segundos.
+- **Funções:**
+  - **`buyTickets(ticketQuantity)`:**
+    - O utilizador compra `ticketQuantity` bilhetes.
+    - O contrato calcula o custo total (`ticketPrice * ticketQuantity`), transfere os LIPT do utilizador e atribui os números dos bilhetes.
+  - **`closeAndDrawWinner()`:**
+    - Função restrita (possivelmente chamada por um keeper da Chainlink) que é executada após `endTime`.
+    - Solicita um número aleatório à Chainlink VRF.
+    - Com o número aleatório, determina o bilhete vencedor e o endereço do vencedor.
+    - Atualiza o estado do sorteio para "CLOSED" e inicia um novo sorteio.
+  - **`claimLotteryPrize(drawId)`:**
+    - O vencedor do sorteio `drawId` chama esta função.
+    - O contrato verifica se o chamador é o vencedor e se o prémio já não foi reivindicado.
+    - Transfere o `prizePool` para o vencedor.
+- **Eventos:**
+  - `NewLotteryDraw(drawId, endTime)`
+  - `TicketsPurchased(user, drawId, ticketQuantity)`
+  - `LotteryWinnerDrawn(drawId, winningTicket, winnerAddress)`
+  - `LotteryPrizeClaimed(drawId, user, amount)`
+
 ## 4. Funções de Consulta (View/Pure)
 
 O contrato deve expor funções de `view` para que o front-end possa ler o estado da blockchain sem custos de gás, incluindo:
@@ -144,4 +199,6 @@ O contrato deve expor funções de `view` para que o front-end possa ler o estad
 - `getUserMiners(userAddress)`: Retorna todos os mineradores ativos de um utilizador.
 - `getMinedRewards(userAddress)`: Retorna as recompensas de mineração não reclamadas.
 - `getReferralNetwork(userAddress)`: Retorna informações sobre a rede de referidos de um utilizador.
+- `getLotteryStatus()`: Retorna os detalhes do sorteio atual da lotaria.
+- `getUserLotteryTickets(userAddress, drawId)`: Retorna os bilhetes de um utilizador para um sorteio específico.
 - E outras funções de consulta necessárias para popular todos os dados da UI.
