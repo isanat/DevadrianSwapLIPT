@@ -693,16 +693,13 @@ const SidebarMenuSub = Collapsible.Root;
 
 const SidebarMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof SidebarMenuButton>,
-  React.ComponentProps<typeof SidebarMenuButton> & {
-    asChild?: boolean
-  }
->(({ asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : Collapsible.Trigger
-  return (
-    <Comp ref={ref} asChild>
-      <SidebarMenuButton {...props} />
-    </Comp>
-  )
+  React.ComponentProps<typeof SidebarMenuButton>
+>(({ asChild, ...props }, ref) => {
+    return (
+        <Collapsible.Trigger asChild>
+            <SidebarMenuButton {...props} ref={ref} />
+        </Collapsible.Trigger>
+    )
 })
 SidebarMenuSubTrigger.displayName = "SidebarMenuSubTrigger"
 
