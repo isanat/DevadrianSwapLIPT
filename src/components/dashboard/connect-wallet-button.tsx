@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Wallet, LogOut, Loader2 } from 'lucide-react';
+import { Wallet, LogOut, Loader2, UserCircle } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
@@ -34,7 +34,7 @@ export function ConnectWalletButton() {
 
   if (isConnecting) {
     return (
-      <Button variant="outline" disabled className="gap-2 bg-background/50">
+      <Button variant="outline" disabled className="gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
         {t('wallet.connecting', {defaultValue: 'Connecting...'})}
       </Button>
@@ -46,20 +46,28 @@ export function ConnectWalletButton() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 bg-background/50 hover:bg-accent hover:text-accent-foreground transition-all duration-300">
-                    <Avatar className="h-6 w-6">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                   <Avatar className="h-8 w-8">
                         <AvatarImage src={`https://effigy.im/a/${address}.svg`} alt="Wallet Avatar" />
-                        <AvatarFallback>{shortAddress.substring(0, 2)}</AvatarFallback>
+                        <AvatarFallback><UserCircle/></AvatarFallback>
                     </Avatar>
-                    {shortAddress}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t('wallet.myWallet', {defaultValue: 'My Wallet'})}</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className='w-56'>
+                <DropdownMenuLabel className='font-normal'>
+                  <div className='flex flex-col space-y-1'>
+                    <p className='text-sm font-medium leading-none'>Administrator</p>
+                    <p className='text-xs leading-none text-muted-foreground'>{shortAddress}</p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={copyToClipboard}>
                     {t('wallet.copyAddress', { defaultValue: 'Copy Address' })}
                 </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <a href="/" className='w-full'>Frontend</a>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => disconnect()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>{t('wallet.disconnect')}</span>
@@ -70,7 +78,7 @@ export function ConnectWalletButton() {
   }
 
   return (
-    <Button onClick={() => connect({ connector: injected() })} variant="outline" className="gap-2 bg-background/50 hover:bg-accent hover:text-accent-foreground transition-all duration-300">
+    <Button onClick={() => connect({ connector: injected() })} variant="secondary" className="gap-2">
       <Wallet className="h-4 w-4" />
       {t('wallet.connect')}
     </Button>

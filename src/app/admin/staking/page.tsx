@@ -60,13 +60,13 @@ export default function AdminStakingPage() {
     const activeStakesCount = allStakes.length;
 
     return (
-        <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <div className="flex flex-1 flex-col gap-4">
             <header>
                 <h1 className="text-2xl font-bold tracking-tight">Staking Management</h1>
                 <p className="text-muted-foreground">Monitor and manage all staking activities on the platform.</p>
             </header>
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-                <Card className="bg-card/50 backdrop-blur-sm">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total LIPT Staked</CardTitle>
                     </CardHeader>
@@ -74,7 +74,7 @@ export default function AdminStakingPage() {
                         {isLoading ? <Skeleton className="h-8 w-3/5" /> : <div className="text-2xl font-bold">{totalStaked.toLocaleString()} LIPT</div>}
                     </CardContent>
                 </Card>
-                 <Card className="bg-card/50 backdrop-blur-sm">
+                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Stake Positions</CardTitle>
                     </CardHeader>
@@ -82,7 +82,7 @@ export default function AdminStakingPage() {
                        {isLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{activeStakesCount}</div>}
                     </CardContent>
                 </Card>
-                 <Card className="bg-card/50 backdrop-blur-sm">
+                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Unclaimed Rewards</CardTitle>
                     </CardHeader>
@@ -92,7 +92,7 @@ export default function AdminStakingPage() {
                 </Card>
             </div>
 
-            <Card className="bg-card/50 backdrop-blur-sm">
+            <Card>
                 <CardHeader>
                     <CardTitle>All Active Stakes</CardTitle>
                     <CardDescription>A list of all user staking positions on the platform.</CardDescription>

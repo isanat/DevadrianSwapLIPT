@@ -31,10 +31,10 @@ const getStatusBadge = (status: string) => {
 
 export default function AdminDashboardPage() {
     return (
-        <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <div className="flex flex-1 flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
                 {stats.map((stat, index) => (
-                    <Card key={index} className="bg-card/50 backdrop-blur-sm">
+                    <Card key={index}>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                             {stat.icon}
@@ -48,7 +48,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
-                <Card className="lg:col-span-2 bg-card/50 backdrop-blur-sm">
+                <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Activity /> Recent Platform Activity</CardTitle>
                         <CardDescription>A log of the most recent user transactions and activities.</CardDescription>
