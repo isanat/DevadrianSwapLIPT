@@ -79,8 +79,12 @@ export function DailyLottery() {
   };
 
   const handleClaim = () => {
+    const prizeAmount = lottery.currentDraw.prizePool;
     claimLotteryPrize();
-    toast({ title: t('gameZone.lottery.toast.claimed.title'), description: t('gameZone.lottery.toast.claimed.description', { amount: lottery.currentDraw.prizePool }) });
+    toast({ 
+        title: t('gameZone.lottery.toast.claimed.title'), 
+        description: t('gameZone.lottery.toast.claimed.description', { amount: prizeAmount.toLocaleString() }) 
+    });
   };
 
 
