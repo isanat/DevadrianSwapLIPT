@@ -12,45 +12,51 @@ import useSWR, { useSWRConfig } from 'swr';
 import { getWalletData, placeRocketBet, cashOutRocket } from '@/services/mock-api';
 import { Skeleton } from '../ui/skeleton';
 
-type Star = PIXI.Graphics & { speed: number; twinkle: number; size: number };
+type Star = PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number };
 type SmokeParticle = PIXI.Graphics & { vx: number; vy: number; life: number };
 type Rocket = PIXI.Container & { smoke: SmokeParticle[]; flame: PIXI.Graphics };
-type ExplosionParticle = PIXI.Graphics & { vx: number; vy: number };
+type ExplosionParticle = PIXI.Graphics & { vx: number, vy: number };
 
 
-// --- ESTRELAS ---
+// --- ESTRELAS TURBINADAS (3 CAMADAS) ---
 const createStars = (app: PIXI.Application): Star[] => {
     const stars: Star[] = [];
-    for (let i = 0; i < 80; i++) {
-        const star = new PIXI.Graphics() as Star;
-        const size = Math.random() * 1.5 + 0.8;
-        star.size = size;
-        const colors = [0xfef08a, 0xfcd34d, 0xfbb41c, 0xf97316];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        star.circle(0, 0, size).fill(color);
-        star.x = Math.random() * app.screen.width;
-        star.y = Math.random() * app.screen.height;
-        star.speed = 1 + Math.random() * 2;
-        star.twinkle = Math.random() * Math.PI * 2;
-        stars.push(star);
-        app.stage.addChildAt(star, 0);
+    for (let layer = 0; layer < 3; layer++) {
+        const layerCount = layer === 0 ? 40 : layer === 1 ? 60 : 80;
+        const baseSpeed = layer === 0 ? 0.8 : layer === 1 ? 3 : 8;
+        for (let i = 0; i < layerCount; i++) {
+            const star = new PIXI.Graphics() as Star;
+            const size = (layer === 0 ? Math.random() * 1.5 + 0.8 : Math.random() * 2 + 1.2);
+            star.size = size;
+            const colors = [0xfef08a, 0xfcd34d, 0xfbb41c, 0xf97316];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            star.circle(0, 0, size).fill(color);
+            star.alpha = layer === 0 ? 0.9 : 0.7;
+            star.x = Math.random() * app.screen.width;
+            star.y = Math.random() * app.screen.height;
+            star.speed = baseSpeed + Math.random() * (layer === 2 ? 5 : 2);
+            star.layer = layer;
+            star.twinkle = Math.random() * Math.PI * 2;
+            stars.push(star);
+            app.stage.addChildAt(star, 0); // Adiciona no fundo
+        }
     }
     return stars;
 };
 
-// --- FOGUETE ---
+// --- FOGUETE COM FUMAÇA ---
 const createRocket = (app: PIXI.Application): Rocket => {
   const container = new PIXI.Container() as Rocket;
   container.x = app.screen.width / 2;
-  container.y = app.screen.height - 40;
-  container.pivot.set(0, 0);
+  container.y = app.screen.height - 80;
+  container.pivot.set(0, -10);
 
-  const body = new PIXI.Graphics().roundRect(-10, -25, 20, 35, 5).fill(0x94a3b8);
-  const tip = new PIXI.Graphics().moveTo(0, -35).lineTo(-10, -25).lineTo(10, -25).closePath().fill(0xef4444);
-  const leftWing = new PIXI.Graphics().moveTo(-10, 10).lineTo(-20, 15).lineTo(-10, 0).closePath().fill(0xdc2626);
-  const rightWing = new PIXI.Graphics().moveTo(10, 10).lineTo(20, 15).lineTo(10, 0).closePath().fill(0xdc2626);
+  const body = new PIXI.Graphics().roundRect(-12, -30, 24, 45, 5).fill(0x94a3b8);
+  const tip = new PIXI.Graphics().moveTo(0, -45).lineTo(-12, -30).lineTo(12, -30).closePath().fill(0xef4444);
+  const leftWing = new PIXI.Graphics().moveTo(-12, 15).lineTo(-25, 25).lineTo(-12, 5).closePath().fill(0xdc2626);
+  const rightWing = new PIXI.Graphics().moveTo(12, 15).lineTo(25, 25).lineTo(12, 5).closePath().fill(0xdc2626);
 
-  const flame = new PIXI.Graphics().ellipse(0, 15, 8, 15).fill({ color: 0xf97316, alpha: 0.9 });
+  const flame = new PIXI.Graphics().ellipse(0, 30, 10, 20).fill({ color: 0xf97316, alpha: 0.9 });
   flame.visible = false;
   container.flame = flame;
 
@@ -149,7 +155,7 @@ export function LiptRocket() {
         });
 
         if (canvasContainerRef.current) {
-            canvasContainerRef.current.innerHTML = ''; 
+            canvasContainerRef.current.innerHTML = ''; // Limpa antes de adicionar
             canvasContainerRef.current.appendChild(app.canvas);
         }
 
@@ -179,36 +185,65 @@ export function LiptRocket() {
     multiplierRef.current = 1.01;
 
     rocket.x = app.screen.width / 2;
-    rocket.y = app.screen.height - 40;
+    rocket.y = app.screen.height - 80;
     rocket.alpha = 1;
     rocket.flame.visible = true;
 
     const animate = () => {
-        if (!appRef.current || appRef.current.destroyed || gameStatus === 'crashed' || gameStatus === 'cashed_out') {
-            if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
-            return;
-        }
-
         if (multiplierRef.current >= crashPointRef.current) {
           setGameStatus('crashed');
           setCrashHistory(prev => [crashPointRef.current, ...prev].slice(0, 10));
           if (rocketRef.current) {
             rocketRef.current.alpha = 0;
             rocketRef.current.flame.visible = false;
-            createExplosion(app, rocket.x, rocket.y);
           }
-          setIsLoadingAction(false); 
+          createExplosion(app, rocket.x, rocket.y);
+          setIsLoadingAction(false); // Enable "Play Again" button
         } else {
            multiplierRef.current += 0.001 + 0.0008 * multiplierRef.current;
            setDisplayMultiplier(multiplierRef.current);
            
-           // Limita a subida a 20% da altura do canvas
-           const maxRise = app.screen.height * 0.20;
-           const progress = Math.min(1, (multiplierRef.current - 1) / 9); // Atinge 1 em 10x
-           rocket.y = (app.screen.height - 40) - (progress * maxRise);
+           const progress = Math.min(0.95, (multiplierRef.current - 1) / (crashPointRef.current - 1));
+           rocket.y = app.screen.height - 80 - progress * (app.screen.height - 100);
+           rocket.flame.scale.y = 1 + progress * 2.5;
 
+           // FUMAÇA
+            const smoke = rocket.smoke;
+            const emitRate = multiplierRef.current > 1.1 ? Math.min(3, Math.floor((multiplierRef.current - 1) * 6)) : 0;
+            for (let i = 0; i < emitRate; i++) {
+                if (smoke.length > 60) {
+                    const old = smoke.shift()!;
+                    if (old && !old.destroyed) old.destroy();
+                }
+                const p = new PIXI.Graphics() as SmokeParticle;
+                p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
+                p.x = rocket.x + (Math.random() - 0.5) * 18;
+                p.y = rocket.y + 30;
+                p.vx = (Math.random() - 0.5) * 2;
+                p.vy = 1.5 + Math.random();
+                app.stage.addChild(p);
+                smoke.push(p);
+            }
+            for (let i = smoke.length - 1; i >= 0; i--) {
+                const p = smoke[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.06;
+                p.alpha -= 0.02;
+                if (p.alpha > 0) p.scale.set(p.alpha);
+                if (p.alpha <= 0) {
+                    p.destroy();
+                    smoke.splice(i, 1);
+                }
+            }
+
+
+           // ESTRELAS
+           const starSpeedMultiplier = 1 + progress * 50;
            starsRef.current.forEach(star => {
-             star.y += star.speed;
+             star.y += star.speed * starSpeedMultiplier;
+             star.twinkle += 0.15;
+             star.alpha = 0.4 + (Math.sin(star.twinkle) * 0.4);
              if (star.y > app.screen.height + star.size) {
                star.y = -star.size * 2;
                star.x = Math.random() * app.screen.width;
@@ -220,7 +255,7 @@ export function LiptRocket() {
     };
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
-  }, [gameStatus]);
+  }, []);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -237,6 +272,7 @@ export function LiptRocket() {
     }
     
     setIsLoadingAction(true);
+    // CRITICAL: Generate crash point BEFORE starting the game round.
     crashPointRef.current = generateCrashPoint();
     
     try {
@@ -266,9 +302,8 @@ export function LiptRocket() {
         toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: multiplierRef.current.toFixed(2) }) });
     } catch (e: any) {
         toast({ variant: 'destructive', title: e.message });
-        if (animationFrameId.current === null) {
-          animationFrameId.current = requestAnimationFrame(startGame);
-        }
+        // Resume animation if cash out fails
+        animationFrameId.current = requestAnimationFrame(startGame);
     } finally {
         setIsLoadingAction(false);
     }
@@ -277,8 +312,14 @@ export function LiptRocket() {
   const handleReset = () => {
     const rocket = rocketRef.current;
     if (rocket) {
+        rocket.smoke.forEach(p => {
+            if (p && !p.destroyed) {
+              p.destroy();
+            }
+        });
+        rocket.smoke = [];
         rocket.alpha = 1;
-        rocket.y = appRef.current!.screen.height - 40;
+        rocket.y = appRef.current!.screen.height - 80;
         rocket.flame.visible = false;
     }
     setDisplayMultiplier(1.0);
@@ -312,7 +353,6 @@ export function LiptRocket() {
       return (
         <div className="flex flex-col items-center space-y-4 p-4 rounded-lg bg-background/50 border">
             <div className="flex gap-1 flex-wrap justify-center h-6"></div>
-            <Skeleton className="w-full h-24" />
             <Skeleton className="w-full h-72 md:h-80 rounded-lg" />
             <div className="w-full max-w-xs space-y-2">
                 <Skeleton className="h-5 w-24" />
@@ -338,28 +378,23 @@ export function LiptRocket() {
         </div>
       )}
 
-      <div className="w-full text-center p-4 rounded-lg bg-slate-900/50 min-h-[100px] flex flex-col justify-center">
-        {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
+      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
+          {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
             <div className='flex flex-col items-center'>
-              <span className={cn("text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
+              <span className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
                 {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
               </span>
-              <span className="text-xl text-white/80 font-semibold mt-1">
+              <span className="text-lg md:text-xl text-white/80 font-semibold mt-2">
                 {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
               </span>
             </div>
           ) : (
-            <h2 className={cn("text-5xl font-bold drop-shadow-lg transition-colors", 
-                displayMultiplier < 2 ? 'text-white' : 
-                displayMultiplier < 5 ? 'text-yellow-300' : 'text-green-400'
-            )}>
-              {gameStatus === 'waiting' ? t('gameZone.rocket.waitingForNextRound') : `${displayMultiplier.toFixed(2)}x`}
+            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+              {gameStatus === 'waiting' ? '...' : `${displayMultiplier.toFixed(2)}x`}
             </h2>
           )}
-      </div>
-
-      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden border-y-2 border-primary/20">
-        {/* O canvas do PIXI será inserido aqui */}
+        </div>
       </div>
 
       <div className="w-full max-w-xs space-y-2">
