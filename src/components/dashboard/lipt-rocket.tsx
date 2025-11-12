@@ -85,7 +85,7 @@ const createExplosion = (app: PIXI.Application, x: number, y: number) => {
 
 // --- ESTRELAS TURBINADAS (3 CAMADAS) ---
 const createStars = (app: PIXI.Application) => {
-  const stars: (PIXI.Graphics & { speed: number; layer: number; twinkle: number })[] = [];
+  const stars: (PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number })[] = [];
   
   for (let layer = 0; layer < 3; layer++) { // 3 camadas de profundidade
     const layerCount = layer === 0 ? 40 : layer === 1 ? 60 : 80; // Mais estrelas nas camadas rápidas
@@ -134,7 +134,7 @@ export function LiptRocket() {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const rocketRef = useRef<PIXI.Container & { smoke: (PIXI.Graphics & { vx: number, vy: number, life: number })[], flame: PIXI.Graphics } | null>(null);
-  const starsRef = useRef<(PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number })[] | null>([]);
+  const starsRef = useRef<(PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number })[]>([]);
   const animationFrameId = useRef<number | null>(null);
   const crashPointRef = useRef(1.0);
   const audioRef = useRef<{ launch?: HTMLAudioElement; crash?: HTMLAudioElement; smokePlayed?: boolean }>({});
@@ -172,7 +172,7 @@ export function LiptRocket() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
       if (appRef.current) {
-        appRef.current.destroy(true, { children: true, texture: true });
+        appRef.current.destroy(true, { children: true, texture: true, baseTexture: false });
         appRef.current = null;
       }
     };
@@ -331,8 +331,10 @@ export function LiptRocket() {
     if (rocketRef.current && appRef.current) {
         // Limpa fumaça restante
         rocketRef.current.smoke.forEach(p => {
-            appRef.current!.stage.removeChild(p);
-            p.destroy();
+            if (p && !p.destroyed) {
+              appRef.current!.stage.removeChild(p);
+              p.destroy();
+            }
         });
         rocketRef.current.smoke = [];
 
