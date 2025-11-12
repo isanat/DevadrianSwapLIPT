@@ -165,11 +165,11 @@ export function DailyLottery() {
                     <div key={draw.id} className="flex justify-between items-center p-3 rounded-lg bg-background/50">
                         <div>
                             <p className="font-semibold flex items-center gap-2"><Trophy size={14} className="text-yellow-400"/> {t('gameZone.lottery.draw')} #{draw.id}</p>
-                            <p className="text-xs text-muted-foreground">{t('gameZone.lottery.winner')}: {draw.winnerAddress.substring(0, 6)}...{draw.winnerAddress.substring(draw.winnerAddress.length - 4)}</p>
+                            <p className="text-xs text-muted-foreground">{t('gameZone.lottery.winner')}: {draw.winnerAddress && `${draw.winnerAddress.substring(0, 6)}...${draw.winnerAddress.substring(draw.winnerAddress.length - 4)}`}</p>
                         </div>
                         <div className="text-right">
                            <p className="font-bold text-lg text-primary">{draw.prizePool.toLocaleString()} LIPT</p>
-                           <p className="text-xs font-semibold text-muted-foreground flex items-center justify-end gap-1"><Ticket size={12}/> #{String(draw.winningTicket).padStart(6, '0')}</p>
+                           <p className="text-xs font-semibold text-muted-foreground flex items-center justify-end gap-1"><Ticket size={12}/> #{draw.winningTicket && String(draw.winningTicket).padStart(6, '0')}</p>
                         </div>
                     </div>
                 ))}
