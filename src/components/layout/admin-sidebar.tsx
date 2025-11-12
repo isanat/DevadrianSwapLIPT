@@ -28,10 +28,12 @@ import {
 import { DevAdrianSwapIcon } from '@/components/icons/devadrian-swap-icon';
 import { Button } from '../ui/button';
 import { useI18n } from '@/context/i18n-context';
+import { usePathname } from 'next/navigation';
 
 export function AdminSidebar() {
   const { state } = useSidebar();
   const { t } = useI18n();
+  const pathname = usePathname();
 
   return (
     <>
@@ -60,7 +62,7 @@ export function AdminSidebar() {
             <SidebarMenuButton
               href="/admin"
               tooltip={{ children: 'Dashboard' }}
-              isActive
+              isActive={pathname === '/admin'}
             >
               <BarChart2 />
               <span>Dashboard</span>
@@ -83,7 +85,7 @@ export function AdminSidebar() {
             </SidebarMenuSubTrigger>
             <SidebarMenuSubContent>
                 <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="#">
+                    <SidebarMenuSubButton href="/admin/staking" isActive={pathname === '/admin/staking'}>
                         <Archive />
                         Staking Pools
                     </SidebarMenuSubButton>
