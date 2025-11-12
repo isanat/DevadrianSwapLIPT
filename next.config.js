@@ -30,7 +30,6 @@ const nextConfig = {
     ],
   },
    webpack: (config, { isServer }) => {
-    // Adicione um alias para ignorar o módulo problemático do lado do cliente
     if (!isServer) {
       config.resolve.alias['@react-native-async-storage/async-storage'] = false;
     }
