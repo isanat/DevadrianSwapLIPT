@@ -1172,12 +1172,22 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const [locale, setLocale] = useState<Locale>('pt-BR');
 
   const t = (key: string, vars?: { [key: string]: string | number }) => {
-    let translation = get(translations[locale], key, key) as string;
+    let translation = get(translations[locale], key);
+
+    if (translation === undefined) {
+      // Fallback to the last part of the key if not found
+      return key.split('.').pop() || key;
+    }
+    
+    if (typeof translation !== 'string') {
+        // If the key points to an object, return the last part of the key as a fallback
+        return key.split('.').pop() || key;
+    }
+
     if (vars) {
       for (const [varKey, varValue] of Object.entries(vars)) {
-        // Use a regex to replace all occurrences of the placeholder
         const regex = new RegExp(`\\{${varKey}\\}`, 'g');
-        translation = translation.replace(regex, String(varValue));
+        translation = (translation as string).replace(regex, String(varValue));
       }
     }
     return translation;
