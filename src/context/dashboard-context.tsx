@@ -291,7 +291,6 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
 
     setLiptBalance(prev => prev - cost);
     setLottery(prev => {
-      const newTickets = Array.from({ length: quantity }, () => prev.totalTickets + Math.random());
       const newTicketNumbers = Array.from({length: quantity}, (_, i) => prev.totalTickets + i + 1);
 
       return {
@@ -321,34 +320,47 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   
   const _triggerLotteryDraw = () => {
     setLottery(prev => {
-      const { currentDraw, totalTickets } = prev;
-      if (currentDraw.status !== 'OPEN') return prev;
+      const { currentDraw, totalTickets, userTickets } = prev;
+      if (currentDraw.status !== 'OPEN' || Date.now() < currentDraw.endTime) {
+        return prev;
+      }
 
       // Simulate drawing a winner
       const winningTicket = Math.floor(Math.random() * totalTickets) + 1;
-      const isUserWinner = prev.userTickets.includes(winningTicket);
+      const isUserWinner = userTickets.includes(winningTicket);
       
       const closedDraw: LotteryDraw = {
         ...currentDraw,
         status: 'CLOSED',
-        winningTicket: winningTicket,
+        winningTicket,
         winnerAddress: isUserWinner ? 'user123' : `0x${[...Array(10)].map(() => Math.floor(Math.random() * 16).toString(16)).join('')}...`,
-        prizeClaimed: false,
+        prizeClaimed: !isUserWinner, // If user is not the winner, mark as claimed to not show banner
       };
+      
+      // Start a new draw after a delay, first show the results
+      setTimeout(() => {
+        setLottery(currentLotteryState => {
+           const newDraw: LotteryDraw = {
+            id: currentLotteryState.currentDraw.id + 1,
+            prizePool: 1000, // Base prize
+            endTime: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+            status: 'OPEN',
+          };
+          
+          return {
+            ...currentLotteryState,
+            userTickets: [],
+            totalTickets: 0,
+            currentDraw: newDraw,
+            previousDraws: [closedDraw, ...currentLotteryState.previousDraws].slice(0, 5),
+          }
+        });
+      }, 10000); // Wait 10 seconds before starting the new draw
 
-      const newDraw: LotteryDraw = {
-        id: currentDraw.id + 1,
-        prizePool: 1000, // Base prize
-        endTime: Date.now() + 24 * 60 * 60 * 1000,
-        status: 'OPEN',
-      };
 
       return {
         ...prev,
-        userTickets: [],
-        totalTickets: 0,
-        currentDraw: newDraw,
-        previousDraws: [closedDraw, ...prev.previousDraws].slice(0, 5), // Keep last 5
+        currentDraw: closedDraw, // First, update the current draw to be closed
       };
     });
   };
@@ -376,7 +388,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   }, [stakes, liptPrice, lpTokens, poolShare, feesEarned, unclaimedRewards, miners]);
 
 
-  // Simulate reward accumulation & lottery countdown
+  // Simulate reward accumulation
   useEffect(() => {
     const interval = setInterval(() => {
         // Staking rewards
@@ -410,15 +422,24 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
           setMinedRewards(prev => prev + newMined);
           return updatedMiners;
         });
-
-        // Lottery Draw
-        if (lottery.currentDraw.endTime <= Date.now()) {
-            _triggerLotteryDraw();
-        }
-
     }, 5000); 
     return () => clearInterval(interval);
-  }, [stakes, lpTokens, lottery.currentDraw.endTime]);
+  }, [stakes, lpTokens]);
+
+  // Lottery countdown and trigger
+  useEffect(() => {
+    if (lottery.currentDraw.status === 'OPEN' && Date.now() >= lottery.currentDraw.endTime) {
+      _triggerLotteryDraw();
+    }
+    
+    const timer = setInterval(() => {
+      if (lottery.currentDraw.status === 'OPEN' && Date.now() >= lottery.currentDraw.endTime) {
+        _triggerLotteryDraw();
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lottery.currentDraw.endTime, lottery.currentDraw.status]);
 
   // Simulate real-time LIPT price change
   useEffect(() => {
@@ -482,3 +503,5 @@ export const useDashboard = () => {
   }
   return context;
 };
+
+    
