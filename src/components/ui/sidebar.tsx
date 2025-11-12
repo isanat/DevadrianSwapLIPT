@@ -691,7 +691,7 @@ SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 const SidebarMenuSub = React.forwardRef<
   React.ElementRef<typeof Collapsible.Root>,
   React.ComponentPropsWithoutRef<typeof Collapsible.Root>
->((props, ref) => <Collapsible.Root ref={ref} asChild {...props} />)
+>((props, ref) => <Collapsible.Root ref={ref} className="group/submenu" asChild {...props} />)
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
 
@@ -705,16 +705,16 @@ const SidebarMenuSubTrigger = React.forwardRef<
 
   const trigger = (
     <Collapsible.Trigger ref={ref} asChild {...props}>
-      <button className={cn(sidebarMenuButtonVariants({ variant, size }), className)}>
+        <button className={cn(sidebarMenuButtonVariants({ variant, size }), className)}>
         {children}
         <ChevronDown
-          data-sidebar="submenu-indicator"
-          className={cn(
+            data-sidebar="submenu-indicator"
+            className={cn(
             "ml-auto size-4 group-data-[collapsible=icon]:hidden",
-            "transition-transform ease-in-out group-data-[state=open]:rotate-180"
-          )}
+            "transition-transform ease-in-out group-data-[state=open]/submenu:rotate-180"
+            )}
         />
-      </button>
+        </button>
     </Collapsible.Trigger>
   )
 
@@ -752,7 +752,7 @@ const SidebarMenuSubContent = React.forwardRef<
     ref={ref}
     data-sidebar="menu-sub"
     className={cn(
-      "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-1",
+      "mx-3.5 flex min-w-0 -translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-1",
       "group-data-[collapsible=icon]:hidden",
       className
     )}
