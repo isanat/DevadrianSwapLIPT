@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
-import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
 import * as PIXI from 'pixi.js';
+import useSWR, { useSWRConfig } from 'swr';
+import { getWalletData, placeRocketBet, cashOutRocket } from '@/services/mock-api';
+import { Skeleton } from '../ui/skeleton';
 
 type Star = PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number };
 type SmokeParticle = PIXI.Graphics & { vx: number; vy: number; life: number };
@@ -110,13 +112,16 @@ const createExplosion = (app: PIXI.Application, x: number, y: number) => {
 export function LiptRocket() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { liptBalance, updateLiptBalance } = useDashboard();
+  const { mutate } = useSWRConfig();
+
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
 
   const [betAmount, setBetAmount] = useState('');
   const [displayMultiplier, setDisplayMultiplier] = useState(1.0);
   const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
   const [crashHistory, setCrashHistory] = useState<number[]>([]);
+  const [isLoadingAction, setIsLoadingAction] = useState(false);
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
@@ -180,67 +185,68 @@ export function LiptRocket() {
     crashPointRef.current = generateCrashPoint();
 
     const animate = () => {
-      if (gameStatus === 'in_progress' || gameStatus === 'waiting') {
-        const currentMultiplier = multiplierRef.current;
-        multiplierRef.current += 0.001 + 0.0008 * currentMultiplier;
-        setDisplayMultiplier(multiplierRef.current);
-        
-        const progress = Math.min(0.95, (currentMultiplier - 1) / (crashPointRef.current - 1));
-        rocket.y = app.screen.height - 80 - progress * (app.screen.height - 100);
-        rocket.flame.scale.y = 1 + progress * 2.5;
-
-        // FUMAÇA
-        const smoke = rocket.smoke;
-        const emitRate = currentMultiplier > 1.1 ? Math.min(3, Math.floor((currentMultiplier - 1) * 6)) : 0;
-        for (let i = 0; i < emitRate; i++) {
-          if (smoke.length > 60) {
-            const old = smoke.shift()!;
-            if (old && !old.destroyed) old.destroy();
-          }
-          const p = new PIXI.Graphics() as SmokeParticle;
-          p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
-          p.x = rocket.x + (Math.random() - 0.5) * 18;
-          p.y = rocket.y + 30;
-          p.vx = (Math.random() - 0.5) * 2;
-          p.vy = 1.5 + Math.random();
-          app.stage.addChild(p);
-          smoke.push(p);
-        }
-        for (let i = smoke.length - 1; i >= 0; i--) {
-          const p = smoke[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.06;
-          p.alpha -= 0.02;
-          if (p.alpha > 0) p.scale.set(p.alpha);
-          if (p.alpha <= 0) {
-            p.destroy();
-            smoke.splice(i, 1);
-          }
-        }
-
-        // ESTRELAS
-        const starSpeedMultiplier = 1 + progress * 50;
-        starsRef.current.forEach(star => {
-          star.y += star.speed * starSpeedMultiplier;
-          star.twinkle += 0.15;
-          star.alpha = 0.4 + (Math.sin(star.twinkle) * 0.4);
-          if (star.y > app.screen.height + star.size) {
-            star.y = -star.size * 2;
-            star.x = Math.random() * app.screen.width;
-          }
-        });
-
-        if (currentMultiplier >= crashPointRef.current) {
+        if (multiplierRef.current >= crashPointRef.current) {
           setGameStatus('crashed');
           setCrashHistory(prev => [crashPointRef.current, ...prev].slice(0, 10));
-          rocket.alpha = 0;
-          rocket.flame.visible = false;
+          if (rocketRef.current) {
+            rocketRef.current.alpha = 0;
+            rocketRef.current.flame.visible = false;
+          }
           createExplosion(app, rocket.x, rocket.y);
+          setIsLoadingAction(false); // Enable "Play Again" button
         } else {
-          animationFrameId.current = requestAnimationFrame(animate);
+           multiplierRef.current += 0.001 + 0.0008 * multiplierRef.current;
+           setDisplayMultiplier(multiplierRef.current);
+           
+           const progress = Math.min(0.95, (multiplierRef.current - 1) / (crashPointRef.current - 1));
+           rocket.y = app.screen.height - 80 - progress * (app.screen.height - 100);
+           rocket.flame.scale.y = 1 + progress * 2.5;
+
+           // FUMAÇA
+            const smoke = rocket.smoke;
+            const emitRate = multiplierRef.current > 1.1 ? Math.min(3, Math.floor((multiplierRef.current - 1) * 6)) : 0;
+            for (let i = 0; i < emitRate; i++) {
+                if (smoke.length > 60) {
+                    const old = smoke.shift()!;
+                    if (old && !old.destroyed) old.destroy();
+                }
+                const p = new PIXI.Graphics() as SmokeParticle;
+                p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
+                p.x = rocket.x + (Math.random() - 0.5) * 18;
+                p.y = rocket.y + 30;
+                p.vx = (Math.random() - 0.5) * 2;
+                p.vy = 1.5 + Math.random();
+                app.stage.addChild(p);
+                smoke.push(p);
+            }
+            for (let i = smoke.length - 1; i >= 0; i--) {
+                const p = smoke[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.06;
+                p.alpha -= 0.02;
+                if (p.alpha > 0) p.scale.set(p.alpha);
+                if (p.alpha <= 0) {
+                    p.destroy();
+                    smoke.splice(i, 1);
+                }
+            }
+
+
+           // ESTRELAS
+           const starSpeedMultiplier = 1 + progress * 50;
+           starsRef.current.forEach(star => {
+             star.y += star.speed * starSpeedMultiplier;
+             star.twinkle += 0.15;
+             star.alpha = 0.4 + (Math.sin(star.twinkle) * 0.4);
+             if (star.y > app.screen.height + star.size) {
+               star.y = -star.size * 2;
+               star.x = Math.random() * app.screen.width;
+             }
+           });
+           
+           animationFrameId.current = requestAnimationFrame(animate);
         }
-      }
     };
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
@@ -253,29 +259,46 @@ export function LiptRocket() {
     }
   }, [gameStatus]);
 
-  const handleBet = () => {
+  const handleBet = async () => {
     const bet = parseFloat(betAmount);
-    if (isNaN(bet) || bet <= 0 || bet > liptBalance) {
+    if (isNaN(bet) || bet <= 0 || !wallet || bet > wallet.liptBalance) {
       toast({ variant: 'destructive', title: 'Aposta inválida' });
       return;
     }
-    updateLiptBalance(-bet);
-    setGameStatus('waiting');
-    toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
+    
+    setIsLoadingAction(true);
+    try {
+        await placeRocketBet(bet);
+        mutate('wallet');
+        setGameStatus('waiting');
+        toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: e.message });
+        setIsLoadingAction(false);
+    }
   };
 
-  const handleCashOut = () => {
+  const handleCashOut = async () => {
     if (gameStatus !== 'in_progress' || !animationFrameId.current) return;
+    
+    setIsLoadingAction(true);
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = null;
 
-    const winnings = parseFloat(betAmount) * multiplierRef.current;
-    updateLiptBalance(winnings);
-    setCashedOutMultiplier(multiplierRef.current);
-    setGameStatus('cashed_out');
-
-    if (rocketRef.current) rocketRef.current.flame.visible = false;
-    toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: multiplierRef.current.toFixed(2) }) });
+    try {
+        const { winnings } = await cashOutRocket(parseFloat(betAmount), multiplierRef.current);
+        mutate('wallet');
+        setCashedOutMultiplier(multiplierRef.current);
+        setGameStatus('cashed_out');
+        if (rocketRef.current) rocketRef.current.flame.visible = false;
+        toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: multiplierRef.current.toFixed(2) }) });
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: e.message });
+        // Resume animation if cash out fails
+        animationFrameId.current = requestAnimationFrame(startGame);
+    } finally {
+        setIsLoadingAction(false);
+    }
   };
 
   const handleReset = () => {
@@ -295,18 +318,19 @@ export function LiptRocket() {
     setGameStatus('idle');
     setCashedOutMultiplier(null);
     setBetAmount('');
+    setIsLoadingAction(false);
   };
 
   const getButton = () => {
     switch (gameStatus) {
       case 'idle':
-        return <Button onClick={handleBet} className="w-full py-6 text-lg">{t('gameZone.rocket.placeBet')}</Button>;
+        return <Button onClick={handleBet} disabled={isLoadingAction} className="w-full py-6 text-lg">{isLoadingAction ? "Placing Bet..." : t('gameZone.rocket.placeBet')}</Button>;
       case 'waiting':
         return <Button disabled className="w-full py-6 text-lg">{t('gameZone.rocket.waitingForNextRound')}</Button>;
       case 'in_progress':
         return (
-          <Button onClick={handleCashOut} className="w-full py-6 text-lg bg-green-500 hover:bg-green-600">
-            {t('gameZone.rocket.cashOut')} @ {displayMultiplier.toFixed(2)}x
+          <Button onClick={handleCashOut} disabled={isLoadingAction} className="w-full py-6 text-lg bg-green-500 hover:bg-green-600">
+            {isLoadingAction ? 'Cashing out...' : `${t('gameZone.rocket.cashOut')} @ ${displayMultiplier.toFixed(2)}x`}
           </Button>
         );
       case 'cashed_out':
@@ -316,6 +340,23 @@ export function LiptRocket() {
         return null;
     }
   };
+  
+    if (isLoadingWallet || !wallet) {
+      return (
+        <div className="flex flex-col items-center space-y-4 p-4 rounded-lg bg-background/50 border">
+            <div className="flex gap-1 flex-wrap justify-center h-6"></div>
+            <Skeleton className="w-full h-72 md:h-80 rounded-lg" />
+            <div className="w-full max-w-xs space-y-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-32 mx-auto" />
+            </div>
+            <div className="w-full max-w-xs">
+                <Skeleton className="h-12 w-full" />
+            </div>
+        </div>
+      )
+  }
 
   return (
     <div className="flex flex-col items-center space-y-4 p-4 rounded-lg bg-background/50 border">
@@ -334,7 +375,7 @@ export function LiptRocket() {
           {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
             <div className='flex flex-col items-center'>
               <span className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
-                {(cashedOutMultiplier ?? multiplierRef.current).toFixed(2)}x
+                {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
               </span>
               <span className="text-lg md:text-xl text-white/80 font-semibold mt-2">
                 {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
@@ -360,7 +401,7 @@ export function LiptRocket() {
           className="text-center text-lg"
         />
         <p className="text-xs text-muted-foreground text-center">
-          {t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} LIPT
+          {t('stakingPool.walletBalance')}: {wallet.liptBalance.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} LIPT
         </p>
       </div>
 

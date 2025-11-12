@@ -6,23 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Copy, Gift, Users, Award, Star } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { useDashboard } from '@/context/dashboard-context';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
-
-const mockReferrals = [
-    { id: 1, level: 1, members: 5, commission: 120.50 },
-    { id: 2, level: 2, members: 12, commission: 250.75 },
-    { id: 3, level: 3, members: 25, commission: 480.00 },
-    { id: 4, level: 4, members: 40, commission: 750.20 },
-    { id: 5, level: 5, members: 60, commission: 1100.00 },
-];
+import useSWR from 'swr';
+import { getReferralData } from '@/services/mock-api';
+import { Skeleton } from '../ui/skeleton';
 
 export function ReferralDashboard() {
   const { toast } = useToast();
-  const { referrals, referralRewards } = useDashboard();
   const { t } = useI18n();
   const referralLink = "https://devadrianswap.com/invite?ref=user123";
+
+  const { data: referralData, isLoading } = useSWR('referral', getReferralData);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
@@ -32,7 +27,7 @@ export function ReferralDashboard() {
     });
   };
 
-  const totalTeamMembers = mockReferrals.reduce((sum, ref) => sum + ref.members, 0);
+  const totalTeamMembers = referralData?.network.reduce((sum, ref) => sum + ref.members, 0) || 0;
 
   return (
     <div className="space-y-8 h-full">
@@ -62,20 +57,28 @@ export function ReferralDashboard() {
                   </Button>
               </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pt-4">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pt-4">
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pt-4">
               <div className="p-4 bg-background/50 rounded-lg">
                   <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> {t('referralProgram.totalReferrals')}</p>
-                  <p className="text-2xl font-bold">{referrals}</p>
+                  <p className="text-2xl font-bold">{referralData?.totalReferrals}</p>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
                   <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Award size={16}/> {t('referralProgram.totalRewards')}</p>
-                  <p className="text-2xl font-bold">{referralRewards.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</p>
+                  <p className="text-2xl font-bold">{referralData?.totalRewards.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</p>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
                   <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> {t('referralProgram.totalTeam')}</p>
                   <p className="text-2xl font-bold">{totalTeamMembers}</p>
               </div>
           </div>
+          )}
         </CardContent>
       </Card>
 
@@ -85,8 +88,13 @@ export function ReferralDashboard() {
             <CardDescription>{t('referralProgram.networkDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
+            {isLoading ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-32" />)}
+                 </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {mockReferrals.map((referral) => (
+                {referralData?.network.map((referral) => (
                     <div key={referral.id} className="p-4 bg-background/50 rounded-lg flex flex-col items-center justify-center text-center space-y-3">
                         <div className="flex items-center gap-2">
                             <Star className="h-5 w-5 text-yellow-400" />
@@ -105,6 +113,7 @@ export function ReferralDashboard() {
                     </div>
                 ))}
             </div>
+            )}
         </CardContent>
       </Card>
     </div>

@@ -7,19 +7,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Crown } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
-
-const mockLeaderboardData = [
-  { rank: 1, name: 'CryptoKing', commission: 2500.75, avatar: '1' },
-  { rank: 2, name: 'DiamondHands', commission: 2210.50, avatar: '2' },
-  { rank: 3, name: 'SatoshiJr', commission: 1980.20, avatar: '3' },
-  { rank: 4, name: 'MoonLambo', commission: 1850.00, avatar: '4' },
-  { rank: 5, name: 'ShibaInuFan', commission: 1600.90, avatar: '5' },
-  { rank: 6, name: ' DeFiWhale', commission: 1450.60, avatar: '6' },
-  { rank: 7, name: 'EtherChad', commission: 1200.00, avatar: '7' },
-  { rank: 8, name: 'YieldFarmer', commission: 1100.45, avatar: '8' },
-  { rank: 9, name: 'ApeInvestor', commission: 980.30, avatar: '9' },
-  { rank: 10, name: 'ToTheMoon', commission: 850.10, avatar: '10' },
-].sort((a, b) => b.commission - a.commission);
+import useSWR from 'swr';
+import { getLeaderboardData } from '@/services/mock-api';
+import { Skeleton } from '../ui/skeleton';
 
 const getRankColor = (rank: number) => {
   if (rank === 1) return 'text-yellow-400';
@@ -30,6 +20,7 @@ const getRankColor = (rank: number) => {
 
 export function Leaderboard() {
   const { t } = useI18n();
+  const { data: leaderboardData, isLoading } = useSWR('leaderboard', getLeaderboardData);
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
@@ -58,25 +49,40 @@ export function Leaderboard() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockLeaderboardData.map((user, index) => (
-              <TableRow key={user.rank}>
-                <TableCell className={`text-center font-bold text-lg ${getRankColor(index + 1)}`}>
-                  {index + 1}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={`https://picsum.photos/seed/${user.avatar}/40/40`} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{user.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right font-semibold">
-                  {user.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </TableCell>
-              </TableRow>
-            ))}
+            {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell className="text-center"><Skeleton className="h-6 w-6 rounded-full mx-auto" /></TableCell>
+                        <TableCell>
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-9 w-9 rounded-full" />
+                                <Skeleton className="h-5 w-24" />
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                    </TableRow>
+                ))
+            ) : (
+                leaderboardData?.map((user, index) => (
+                <TableRow key={user.rank}>
+                    <TableCell className={`text-center font-bold text-lg ${getRankColor(index + 1)}`}>
+                    {index + 1}
+                    </TableCell>
+                    <TableCell>
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                        <AvatarImage src={`https://picsum.photos/seed/${user.avatar}/40/40`} alt={user.name} />
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{user.name}</span>
+                    </div>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                    {user.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </TableCell>
+                </TableRow>
+                ))
+            )}
           </TableBody>
         </Table>
       </CardContent>

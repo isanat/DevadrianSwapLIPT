@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/context/i18n-context';
 import { useToast } from '@/hooks/use-toast';
-import { useDashboard } from '@/context/dashboard-context';
 import { cn } from '@/lib/utils';
+import useSWR, { useSWRConfig } from 'swr';
+import { getWalletData, spinWheel } from '@/services/mock-api';
+import { Skeleton } from '../ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 // Pesos ajustados para que a soma seja 100 e a vantagem seja da casa.
 const segments = [
@@ -128,14 +131,16 @@ type WheelOfFortuneProps = {
 export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { liptBalance, updateLiptBalance } = useDashboard();
+  const { mutate } = useSWRConfig();
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
 
-  const handleSpin = () => {
+  const handleSpin = async () => {
     const bet = parseFloat(betAmount);
-    if (isNaN(bet) || bet <= 0 || bet > liptBalance) {
+    if (isNaN(bet) || bet <= 0 || !wallet || bet > wallet.liptBalance) {
       toast({
         variant: 'destructive',
         title: t('gameZone.wheelOfFortune.toast.invalidBet.title'),
@@ -145,23 +150,18 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     }
 
     setIsSpinning(true);
-    updateLiptBalance(-bet);
+    mutate('wallet', { ...wallet, liptBalance: wallet.liptBalance - bet }, false);
 
     const winningSeg = getWeightedRandomSegment();
     
-    // Encontra a posição do segmento vencedor
     let cumulativeWeight = 0;
-    let winningSegmentIndex = -1;
-    
-    // Encontra um índice aleatório para o segmento vencedor se houver duplicados
     const matchingIndices = segments.reduce((acc, segment, index) => {
         if (segment.label === winningSeg.label && segment.color === winningSeg.color) {
             acc.push(index);
         }
         return acc;
     }, [] as number[]);
-
-    winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
+    const winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
 
     for(let i = 0; i < winningSegmentIndex; i++) {
         cumulativeWeight += segments[i].weight;
@@ -169,86 +169,89 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     
     const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
     const segmentAngle = (winningSeg.weight / totalWeight) * 360;
-    // Ponto aleatório dentro do segmento vencedor
     const randomAngleInSegment = Math.random() * segmentAngle;
-    
     const targetAngle = segmentStartAngle + randomAngleInSegment;
-
-    // A rotação final deve apontar o ponteiro para o targetAngle
-    const randomSpins = Math.floor(Math.random() * 4) + 8; // 8 a 11 voltas
+    const randomSpins = Math.floor(Math.random() * 4) + 8;
     const finalRotation = (randomSpins * 360) - targetAngle;
     
     setRotation(finalRotation);
 
-    setTimeout(() => {
-      const winnings = parseFloat((bet * winningSeg.value).toFixed(2));
-      const net = winnings - bet;
-      
-      onSpinResult({
-        id: Date.now(),
-        bet,
-        multiplier: winningSeg.label,
-        winnings,
-        net,
-      });
+    try {
+        const result = await spinWheel(bet, winningSeg);
+        setTimeout(() => {
+            mutate('wallet');
+            onSpinResult({
+                id: Date.now(),
+                bet,
+                multiplier: result.multiplier,
+                winnings: result.winnings,
+                net: result.winnings - bet,
+            });
 
-      if (winnings > 0) {
-        updateLiptBalance(winnings);
-        toast({
-          title: t('gameZone.wheelOfFortune.toast.win.title'),
-          description: t('gameZone.wheelOfFortune.toast.win.description', {
-            amount: winnings.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-          }),
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: t('gameZone.wheelOfFortune.toast.lose.title'),
-          description: t('gameZone.wheelOfFortune.toast.lose.description'),
-        });
-      }
-
-      setIsSpinning(false);
-      setBetAmount('');
-      // Mantém a posição visual final para a próxima rodada
-      setRotation(finalRotation % 360);
-    }, 8000); 
+            if (result.winnings > 0) {
+                toast({
+                    title: t('gameZone.wheelOfFortune.toast.win.title'),
+                    description: t('gameZone.wheelOfFortune.toast.win.description', {
+                        amount: result.winnings.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    }),
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: t('gameZone.wheelOfFortune.toast.lose.title'),
+                    description: t('gameZone.wheelOfFortune.toast.lose.description'),
+                });
+            }
+            setIsSpinning(false);
+            setBetAmount('');
+            setRotation(finalRotation % 360);
+        }, 8000); 
+    } catch(e: any) {
+        toast({ variant: 'destructive', title: "Spin failed", description: e.message });
+        mutate('wallet');
+        setIsSpinning(false);
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
       <Wheel rotation={rotation} isSpinning={isSpinning} />
 
-      <div className="w-full max-w-xs space-y-2">
-        <Label htmlFor="bet-amount">{t('gameZone.wheelOfFortune.betAmount')}</Label>
-        <Input
-          id="bet-amount"
-          type="number"
-          placeholder="0.0"
-          value={betAmount}
-          onChange={(e) => setBetAmount(e.target.value)}
-          disabled={isSpinning}
-        />
-        <p className="text-xs text-muted-foreground">
-          {t('stakingPool.walletBalance')}: {liptBalance.toLocaleString('en-US', { maximumFractionDigits: 0 })} LIPT
-        </p>
-      </div>
+      {isLoadingWallet ? (
+        <div className="w-full max-w-xs space-y-2">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-32" />
+        </div>
+      ) : (
+        <div className="w-full max-w-xs space-y-2">
+            <Label htmlFor="bet-amount">{t('gameZone.wheelOfFortune.betAmount')}</Label>
+            <Input
+            id="bet-amount"
+            type="number"
+            placeholder="0.0"
+            value={betAmount}
+            onChange={(e) => setBetAmount(e.target.value)}
+            disabled={isSpinning}
+            />
+            <p className="text-xs text-muted-foreground">
+            {t('stakingPool.walletBalance')}: {wallet?.liptBalance.toLocaleString('en-US', { maximumFractionDigits: 0 })} LIPT
+            </p>
+        </div>
+      )}
+
 
       <Button
         className="w-full max-w-xs font-bold text-lg py-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
         onClick={handleSpin}
-        disabled={isSpinning}
+        disabled={isSpinning || isLoadingWallet}
       >
+        {isSpinning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isSpinning
           ? t('gameZone.wheelOfFortune.spinning')
           : t('gameZone.wheelOfFortune.spinButton')}
       </Button>
 
-      {isSpinning && (
-        <p className="text-sm text-muted-foreground animate-pulse">
-          {t('gameZone.wheelOfFortune.spinning')}...
-        </p>
-      )}
     </div>
   );
 }

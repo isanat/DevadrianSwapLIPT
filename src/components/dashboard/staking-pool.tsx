@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Archive, Download, Clock, AlertTriangle } from 'lucide-react';
-import { useDashboard, STAKING_PLANS } from '@/context/dashboard-context';
+import { Archive, Download, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
@@ -16,16 +15,30 @@ import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
+import useSWR, { useSWRConfig } from 'swr';
+import { getStakingData, getWalletData, stakeLipt, unstakeLipt, claimStakingRewards, Stake, STAKING_PLANS } from '@/services/mock-api';
+import { Skeleton } from '../ui/skeleton';
 
-const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: string, penalty: number) => void; }) => {
-  const { unstakeLipt } = useDashboard();
+const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: string, penalty: number) => void; }) => {
+  const { t } = useI18n();
+  const { mutate } = useSWRConfig();
+  const [isUnstaking, setIsUnstaking] = useState(false);
+
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-  const { t } = useI18n();
 
-  const handleUnstake = () => {
-    const { penalty } = unstakeLipt(stake.id);
-    onUnstake(stake.id, penalty);
+  const handleUnstake = async () => {
+    setIsUnstaking(true);
+    try {
+        const { penalty } = await unstakeLipt(stake.id);
+        mutate('staking');
+        mutate('wallet');
+        onUnstake(stake.id, penalty);
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+        setIsUnstaking(false);
+    }
   };
   
   const isMature = progress >= 100;
@@ -45,7 +58,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
     };
 
     calculateProgress();
-    const interval = setInterval(calculateProgress, 1000 * 60); // Update every minute
+    const interval = setInterval(calculateProgress, 1000 * 60);
 
     return () => clearInterval(interval);
   }, [stake.startDate, stake.plan.duration]);
@@ -62,7 +75,10 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant={isMature ? "outline" : "destructive"} size="sm">{t('stakingPool.unstakeButton')}</Button>
+            <Button variant={isMature ? "outline" : "destructive"} size="sm" disabled={isUnstaking}>
+              {isUnstaking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('stakingPool.unstakeButton')}
+            </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -101,23 +117,33 @@ const StakedPosition = ({ stake, onUnstake }: { stake: any; onUnstake: (id: stri
 
 
 export function StakingPool() {
-  const { stakedBalance, unclaimedRewards, liptBalance, stakeLipt, claimRewards, stakes } = useDashboard();
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const { mutate } = useSWRConfig();
+  
+  const { data: stakingData, isLoading: isLoadingStaking } = useSWR('staking', getStakingData);
+  const { data: walletData, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+
   const [stakeAmount, setStakeAmount] = useState('');
   const [selectedPlan, setSelectedPlan] = useState(STAKING_PLANS[0]);
-  const { toast } = useToast();
-  const [displayLiptBalance, setDisplayLiptBalance] = React.useState('0');
-  const { t } = useI18n();
-
-  React.useEffect(() => {
-    setDisplayLiptBalance(liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
-  }, [liptBalance]);
-
-  const handleStake = () => {
+  const [isStaking, setIsStaking] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
+  
+  const handleStake = async () => {
     const amount = parseFloat(stakeAmount);
-    if(amount > 0 && amount <= liptBalance) {
-      stakeLipt(amount, selectedPlan);
-      toast({ title: t('stakingPool.toast.staked.title'), description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration }) });
-      setStakeAmount('');
+    if(walletData && amount > 0 && amount <= walletData.liptBalance) {
+      setIsStaking(true);
+      try {
+        await stakeLipt(amount, selectedPlan);
+        mutate('staking');
+        mutate('wallet');
+        toast({ title: t('stakingPool.toast.staked.title'), description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration }) });
+        setStakeAmount('');
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+      } finally {
+        setIsStaking(false);
+      }
     } else {
       toast({ variant: 'destructive', title: t('stakingPool.toast.invalidAmount.title'), description: t('stakingPool.toast.invalidAmount.description') });
     }
@@ -130,15 +156,26 @@ export function StakingPool() {
       });
   };
 
-  const handleClaim = () => {
-    if(unclaimedRewards > 0) {
-      const amount = unclaimedRewards.toFixed(2);
-      claimRewards();
-      toast({ title: t('stakingPool.toast.rewardsClaimed.title'), description: t('stakingPool.toast.rewardsClaimed.description', { amount }) });
+  const handleClaim = async () => {
+    if(stakingData && stakingData.unclaimedRewards > 0) {
+      setIsClaiming(true);
+      const amount = stakingData.unclaimedRewards.toFixed(2);
+      try {
+        await claimStakingRewards();
+        mutate('staking');
+        mutate('wallet');
+        toast({ title: t('stakingPool.toast.rewardsClaimed.title'), description: t('stakingPool.toast.rewardsClaimed.description', { amount }) });
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+      } finally {
+        setIsClaiming(false);
+      }
     } else {
       toast({ variant: 'destructive', title: t('stakingPool.toast.noRewards.title'), description: t('stakingPool.toast.noRewards.description') });
     }
   };
+  
+  const isLoading = isLoadingStaking || isLoadingWallet;
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
@@ -158,77 +195,104 @@ export function StakingPool() {
         <CardDescription>{t('stakingPool.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
-          <div>
-            <p className="text-sm text-muted-foreground">{t('stakingPool.totalStaked')}</p>
-            <p className="text-2xl font-bold">{stakedBalance.toLocaleString('en-US')} LIPT</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t('stakingPool.unclaimedRewards')}</p>
-            <p className="text-2xl font-bold">{unclaimedRewards.toFixed(2)} LIPT</p>
-          </div>
-        </div>
-        <Separator className="my-4" />
-        <Tabs defaultValue="stake" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="stake">{t('stakingPool.stakeTab')}</TabsTrigger>
-            <TabsTrigger value="unstake">{t('stakingPool.manageTab')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="stake" className="mt-4">
-            <div className="space-y-4">
-              <div>
-                  <Label>{t('stakingPool.selectPlan')}</Label>
-                  <RadioGroup defaultValue={String(selectedPlan.duration)} onValueChange={(val) => setSelectedPlan(STAKING_PLANS.find(p => p.duration === parseInt(val))!)} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-                      {STAKING_PLANS.map(plan => (
-                          <Label 
-                            key={plan.duration} 
-                            htmlFor={`plan-${plan.duration}`} 
-                            className={cn(
-                              "flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all cursor-pointer",
-                              "hover:border-primary/50 hover:bg-accent/50",
-                              selectedPlan.duration === plan.duration ? "border-primary bg-accent/20" : "border-muted bg-background/50"
-                            )}>
-                              <RadioGroupItem value={String(plan.duration)} id={`plan-${plan.duration}`} className="sr-only" />
-                              <div className="flex items-center gap-2 font-semibold text-sm">
-                                <Clock size={14} /> 
-                                {plan.duration} {t('stakingPool.days')}
-                              </div>
-                              <div className="text-lg font-bold text-primary">{plan.apy.toFixed(1)}%</div>
-                              <div className="text-xs text-muted-foreground">{t('stakingPool.apy')}</div>
-                          </Label>
-                      ))}
-                  </RadioGroup>
+        {isLoading ? (
+          <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
+                  <div>
+                      <Skeleton className="h-4 w-28 mx-auto" />
+                      <Skeleton className="h-8 w-24 mx-auto mt-2" />
+                  </div>
+                  <div>
+                      <Skeleton className="h-4 w-32 mx-auto" />
+                      <Skeleton className="h-8 w-20 mx-auto mt-2" />
+                  </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="stake-amount">{t('stakingPool.amountToStake')}</Label>
-                <div className="flex gap-2">
-                  <Input id="stake-amount" type="number" placeholder="0.0" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} />
-                  <Button variant="default" onClick={handleStake}>{t('stakingPool.stakeButton')}</Button>
-                </div>
-                <p className="text-xs text-muted-foreground">{t('stakingPool.walletBalance')}: {displayLiptBalance} LIPT</p>
-              </div>
+              <Skeleton className="h-px w-full" />
+              <Skeleton className="h-40 w-full" />
+          </div>
+        ) : (
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-center">
+            <div>
+                <p className="text-sm text-muted-foreground">{t('stakingPool.totalStaked')}</p>
+                <p className="text-2xl font-bold">{stakingData?.stakedBalance.toLocaleString('en-US')} LIPT</p>
             </div>
-          </TabsContent>
-          <TabsContent value="unstake" className="mt-4">
-            <div className="space-y-3">
-              <Label>{t('stakingPool.yourActiveStakes')}</Label>
-              {stakes.length > 0 ? (
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                  {stakes.map(stake => (
-                    <StakedPosition key={stake.id} stake={stake} onUnstake={handleUnstake} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">{t('stakingPool.noActiveStakes')}</p>
-              )}
+            <div>
+                <p className="text-sm text-muted-foreground">{t('stakingPool.unclaimedRewards')}</p>
+                <p className="text-2xl font-bold">{stakingData?.unclaimedRewards.toFixed(2)} LIPT</p>
             </div>
-          </TabsContent>
-        </Tabs>
+            </div>
+            <Separator className="my-4" />
+            <Tabs defaultValue="stake" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="stake">{t('stakingPool.stakeTab')}</TabsTrigger>
+                <TabsTrigger value="unstake">{t('stakingPool.manageTab')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="stake" className="mt-4">
+                <div className="space-y-4">
+                <div>
+                    <Label>{t('stakingPool.selectPlan')}</Label>
+                    <RadioGroup defaultValue={String(selectedPlan.duration)} onValueChange={(val) => setSelectedPlan(STAKING_PLANS.find(p => p.duration === parseInt(val))!)} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                        {STAKING_PLANS.map(plan => (
+                            <Label 
+                                key={plan.duration} 
+                                htmlFor={`plan-${plan.duration}`} 
+                                className={cn(
+                                "flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all cursor-pointer",
+                                "hover:border-primary/50 hover:bg-accent/50",
+                                selectedPlan.duration === plan.duration ? "border-primary bg-accent/20" : "border-muted bg-background/50"
+                                )}>
+                                <RadioGroupItem value={String(plan.duration)} id={`plan-${plan.duration}`} className="sr-only" />
+                                <div className="flex items-center gap-2 font-semibold text-sm">
+                                    <Clock size={14} /> 
+                                    {plan.duration} {t('stakingPool.days')}
+                                </div>
+                                <div className="text-lg font-bold text-primary">{plan.apy.toFixed(1)}%</div>
+                                <div className="text-xs text-muted-foreground">{t('stakingPool.apy')}</div>
+                            </Label>
+                        ))}
+                    </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="stake-amount">{t('stakingPool.amountToStake')}</Label>
+                    <div className="flex gap-2">
+                    <Input id="stake-amount" type="number" placeholder="0.0" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} disabled={isStaking}/>
+                    <Button variant="default" onClick={handleStake} disabled={isStaking}>
+                        {isStaking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isStaking ? 'Staking...' : t('stakingPool.stakeButton')}
+                    </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{t('stakingPool.walletBalance')}: {walletData?.liptBalance.toLocaleString('en-US')} LIPT</p>
+                </div>
+                </div>
+            </TabsContent>
+            <TabsContent value="unstake" className="mt-4">
+                <div className="space-y-3">
+                <Label>{t('stakingPool.yourActiveStakes')}</Label>
+                {stakingData && stakingData.stakes.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                    {stakingData.stakes.map(stake => (
+                        <StakedPosition key={stake.id} stake={stake} onUnstake={handleUnstake} />
+                    ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">{t('stakingPool.noActiveStakes')}</p>
+                )}
+                </div>
+            </TabsContent>
+            </Tabs>
+        </>
+        )}
       </CardContent>
       <CardFooter>
-        <Button variant="outline" className="w-full" onClick={handleClaim}>
-            <Download className="mr-2 h-4 w-4" />
-            {t('stakingPool.claimRewardsButton')}
+        <Button variant="outline" className="w-full" onClick={handleClaim} disabled={isClaiming}>
+            {isClaiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isClaiming ? 'Claiming...' : (
+                <>
+                    <Download className="mr-2 h-4 w-4" />
+                    {t('stakingPool.claimRewardsButton')}
+                </>
+            )}
         </Button>
       </CardFooter>
     </Card>

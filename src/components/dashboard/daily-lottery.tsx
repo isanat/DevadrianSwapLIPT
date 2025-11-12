@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/context/i18n-context';
-import { useDashboard } from '@/context/dashboard-context';
-import { Ticket, Clock, Trophy, Hash } from 'lucide-react';
+import { Ticket, Clock, Trophy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+import useSWR, { useSWRConfig } from 'swr';
+import { buyLotteryTickets, claimLotteryPrize, getLotteryData, getWalletData, LotteryState } from '@/services/mock-api';
+import { Skeleton } from '../ui/skeleton';
 
 const CountdownTimer = ({ endTime }: { endTime: number }) => {
   const { t } = useI18n();
@@ -56,36 +58,80 @@ const CountdownTimer = ({ endTime }: { endTime: number }) => {
 
 export function DailyLottery() {
   const { t } = useI18n();
-  const { liptBalance, lottery, buyLotteryTickets, claimLotteryPrize } = useDashboard();
   const { toast } = useToast();
-  const [ticketAmount, setTicketAmount] = useState('1');
+  const { mutate } = useSWRConfig();
   
-  const isWinner = lottery.currentDraw.status === 'CLOSED' && lottery.currentDraw.winnerAddress === 'user123';
-  const canClaim = isWinner && !lottery.currentDraw.prizeClaimed;
+  const { data: lottery, isLoading: isLoadingLottery } = useSWR<LotteryState>('lottery', getLotteryData);
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
 
-  const handleBuyTickets = () => {
+  const [ticketAmount, setTicketAmount] = useState('1');
+  const [isBuying, setIsBuying] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
+
+  // Trigger a re-fetch when the draw ends
+  useEffect(() => {
+    if (lottery && lottery.currentDraw.status === 'OPEN') {
+      const timeUntilEnd = lottery.currentDraw.endTime - Date.now();
+      if (timeUntilEnd > 0) {
+        const timer = setTimeout(() => {
+          mutate('lottery');
+        }, timeUntilEnd + 2000); // add a 2s buffer
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [lottery, mutate]);
+  
+  const isWinner = lottery?.currentDraw.status === 'CLOSED' && lottery?.currentDraw.winnerAddress === 'user123';
+  const canClaim = isWinner && !lottery?.currentDraw.prizeClaimed;
+
+  const handleBuyTickets = async () => {
     const amount = parseInt(ticketAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({ variant: 'destructive', title: t('gameZone.lottery.toast.invalidAmount.title') });
       return;
     }
+    
+    setIsBuying(true);
     try {
-      buyLotteryTickets(amount);
+      await buyLotteryTickets(amount);
+      mutate('lottery');
+      mutate('wallet');
       toast({ title: t('gameZone.lottery.toast.success.title'), description: t('gameZone.lottery.toast.success.description', { amount }) });
       setTicketAmount('1');
     } catch (error: any) {
       toast({ variant: 'destructive', title: error.message });
+    } finally {
+      setIsBuying(false);
     }
   };
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
+    if (!lottery) return;
+    setIsClaiming(true);
     const prizeAmount = lottery.currentDraw.prizePool;
-    claimLotteryPrize();
-    toast({ 
-        title: t('gameZone.lottery.toast.claimed.title'), 
-        description: t('gameZone.lottery.toast.claimed.description', { amount: prizeAmount.toLocaleString() }) 
-    });
+    try {
+        await claimLotteryPrize();
+        mutate('lottery');
+        mutate('wallet');
+        toast({ 
+            title: t('gameZone.lottery.toast.claimed.title'), 
+            description: t('gameZone.lottery.toast.claimed.description', { amount: prizeAmount.toLocaleString() }) 
+        });
+    } catch (error: any) {
+         toast({ variant: 'destructive', title: error.message });
+    } finally {
+        setIsClaiming(false);
+    }
   };
+
+  if (isLoadingLottery || isLoadingWallet || !lottery || !wallet) {
+     return (
+      <div className="space-y-6">
+        <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-40 w-full" /></CardContent></Card>
+        <Card><CardHeader><Skeleton className="h-8 w-1/3" /></CardHeader><CardContent><Skeleton className="h-24 w-full" /></CardContent></Card>
+      </div>
+    );
+  }
 
 
   return (
@@ -97,9 +143,9 @@ export function DailyLottery() {
                 <CardDescription>{t('gameZone.lottery.winner.description', { amount: lottery.currentDraw.prizePool.toLocaleString() })}</CardDescription>
             </CardHeader>
             <CardContent>
-                <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold" onClick={handleClaim}>
+                <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold" onClick={handleClaim} disabled={isClaiming}>
                     <Trophy className="mr-2 h-4 w-4" />
-                    {t('gameZone.lottery.winner.claimButton')}
+                    {isClaiming ? 'Claiming...' : t('gameZone.lottery.winner.claimButton')}
                 </Button>
             </CardContent>
         </Card>
@@ -116,19 +162,25 @@ export function DailyLottery() {
           <div className="w-full p-4 rounded-lg bg-background/50">
              <h3 className="text-center text-lg font-semibold mb-2 flex items-center justify-center gap-2">
                 <Clock className="h-5 w-5"/>
-                {t('gameZone.lottery.drawInProgress')}
+                {lottery.currentDraw.status === 'OPEN' ? t('gameZone.lottery.drawInProgress') : 'Draw Closed'}
              </h3>
-             <CountdownTimer endTime={lottery.currentDraw.endTime} />
+             {lottery.currentDraw.status === 'OPEN' ? (
+                <CountdownTimer endTime={lottery.currentDraw.endTime} />
+             ) : (
+                <div className="text-center font-bold text-xl py-4">Waiting for next draw...</div>
+             )}
           </div>
 
           <div className="w-full max-w-sm space-y-4">
             <div className="space-y-2">
                 <label htmlFor="ticket-amount" className="font-medium">{t('gameZone.lottery.buyTickets')}</label>
                 <div className="flex items-center gap-2">
-                    <Input id="ticket-amount" type="number" value={ticketAmount} onChange={e => setTicketAmount(e.target.value)} min="1" className="text-center" />
-                    <Button onClick={handleBuyTickets}>{t('gameZone.lottery.buyButton')}</Button>
+                    <Input id="ticket-amount" type="number" value={ticketAmount} onChange={e => setTicketAmount(e.target.value)} min="1" className="text-center" disabled={isBuying} />
+                    <Button onClick={handleBuyTickets} disabled={isBuying || lottery.currentDraw.status !== 'OPEN'}>
+                        {isBuying ? 'Buying...' : t('gameZone.lottery.buyButton')}
+                    </Button>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">{t('gameZone.lottery.ticketCost')}: {lottery.ticketPrice} LIPT. {t('stakingPool.walletBalance')}: {liptBalance.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground text-center">{t('gameZone.lottery.ticketCost')}: {lottery.ticketPrice} LIPT. {t('stakingPool.walletBalance')}: {wallet.liptBalance.toLocaleString()}</p>
             </div>
             
             <Card className='bg-background/50'>
