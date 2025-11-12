@@ -73,7 +73,7 @@ export function AdminSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
             
-            <SidebarMenuSub asChild>
+          <SidebarMenuSub asChild>
               <SidebarMenuItem>
                 <SidebarMenuSubTrigger tooltip={{ children: 'DeFi Management' }} isSubmenu>
                     <Shield />
