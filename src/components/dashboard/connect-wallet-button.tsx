@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { copy } from 'fs-extra';
 import { useToast } from '@/hooks/use-toast';
 
 
