@@ -61,19 +61,48 @@ export default function AdminDashboardPage() {
         setIsClient(true);
     }, []);
 
-    const statsCards = [
-        { title: 'Total Value Locked (TVL)', value: `$${stats?.totalValueLocked.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <Wallet className="h-6 w-6 text-muted-foreground" />, change: '+2.5%' },
-        { title: 'Total Trading Volume', value: `$${stats?.totalVolume.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />, change: '+5.2%' },
-        { title: 'Total Users', value: `${stats?.totalUsers.toLocaleString() || '0'}`, icon: <Users className="h-6 w-6 text-muted-foreground" />, change: '+15' },
-        { title: 'Protocol Revenue', value: `$${stats?.protocolRevenue.toLocaleString('en-US', {maximumFractionDigits: 2}) || '0'}`, icon: <Banknote className="h-6 w-6 text-muted-foreground" />, change: '+8.1%' },
-    ];
-
     return (
         <div className="flex flex-1 flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-                {statsCards.map((stat) => (
-                    <StatCard key={stat.title} {...stat} isLoading={isLoading} />
-                ))}
+                {isLoading || !stats ? (
+                    <>
+                        <Skeleton className="h-[120px]" />
+                        <Skeleton className="h-[120px]" />
+                        <Skeleton className="h-[120px]" />
+                        <Skeleton className="h-[120px]" />
+                    </>
+                ) : (
+                    <>
+                        <StatCard 
+                            title='Total Value Locked (TVL)' 
+                            value={`$${stats.totalValueLocked.toLocaleString('en-US', {maximumFractionDigits: 2})}`} 
+                            icon={<Wallet className="h-6 w-6 text-muted-foreground" />} 
+                            change='+2.5%' 
+                            isLoading={isLoading} 
+                        />
+                        <StatCard 
+                            title='Total Trading Volume' 
+                            value={`$${stats.totalVolume.toLocaleString('en-US', {maximumFractionDigits: 2})}`} 
+                            icon={<TrendingUp className="h-6 w-6 text-muted-foreground" />} 
+                            change='+5.2%' 
+                            isLoading={isLoading} 
+                        />
+                        <StatCard 
+                            title='Total Users' 
+                            value={`${stats.totalUsers.toLocaleString()}`} 
+                            icon={<Users className="h-6 w-6 text-muted-foreground" />} 
+                            change='+15' 
+                            isLoading={isLoading} 
+                        />
+                        <StatCard 
+                            title='Protocol Revenue' 
+                            value={`$${stats.protocolRevenue.toLocaleString('en-US', {maximumFractionDigits: 2})}`} 
+                            icon={<Banknote className="h-6 w-6 text-muted-foreground" />} 
+                            change='+8.1%' 
+                            isLoading={isLoading} 
+                        />
+                    </>
+                )}
             </div>
 
             <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
