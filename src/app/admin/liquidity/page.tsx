@@ -9,10 +9,10 @@ export default function AdminLiquidityPage() {
     const { data, isLoading } = useSWR('liquidity', getLiquidityData);
 
     const stats = [
-        { name: 'Total LIPT in Pool', value: data?.totalLipt.toLocaleString() || '0', unit: 'LIPT' },
-        { name: 'Total USDT in Pool', value: data?.totalUsdt.toLocaleString() || '0', unit: 'USDT' },
-        { name: 'Total LP Tokens Issued', value: data?.totalLpTokens.toLocaleString() || '0', unit: 'LP' },
-        { name: 'Pool Volume (24h)', value: `$${data?.volume24h.toLocaleString() || '0'}` },
+        { name: 'Total LIPT in Pool', value: data?.totalLipt?.toLocaleString() || '0', unit: 'LIPT' },
+        { name: 'Total USDT in Pool', value: data?.totalUsdt?.toLocaleString() || '0', unit: 'USDT' },
+        { name: 'Total LP Tokens Issued', value: data?.totalLpTokens?.toLocaleString() || '0', unit: 'LP' },
+        { name: 'Pool Volume (24h)', value: `$${data?.volume24h?.toLocaleString() || '0'}` },
     ]
 
     return (
