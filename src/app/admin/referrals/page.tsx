@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Award, Percent, Save } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const initialCommissionLevels = [
     { level: 1, percentage: 5.0 },
@@ -37,9 +38,9 @@ export default function AdminReferralsPage() {
 
     const totalTeamMembers = data?.network.reduce((sum, ref) => sum + ref.members, 0) || 0;
 
-    const stats = [
-        { name: 'Total Direct Referrals', value: data?.totalReferrals, icon: <Users /> },
-        { name: 'Total Commission Paid', value: `${data?.totalRewards.toLocaleString()} LIPT`, icon: <Award /> },
+    const stats = !data ? [] : [
+        { name: 'Total Direct Referrals', value: data.totalReferrals, icon: <Users /> },
+        { name: 'Total Commission Paid', value: `${data.totalRewards.toLocaleString()} LIPT`, icon: <Award /> },
         { name: 'Total Network Members', value: totalTeamMembers, icon: <Users /> },
     ]
 
@@ -77,7 +78,7 @@ export default function AdminReferralsPage() {
                     </CardHeader>
                     <CardContent className='space-y-4'>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                           {commissionLevels.map(level => (
+                           {isClient && commissionLevels.map(level => (
                                 <div key={level.level} className='space-y-2'>
                                     <Label htmlFor={`level-${level.level}`}>Level {level.level} (%)</Label>
                                     <Input 
