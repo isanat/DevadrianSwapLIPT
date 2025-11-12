@@ -8,7 +8,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubContent,
-  SidebarMenuSubItem,
   SidebarMenuSubTrigger,
   SidebarTrigger,
   useSidebar,
@@ -75,11 +74,9 @@ export function AdminSidebar() {
 
             <SidebarMenuItem>
               <SidebarMenuSub>
-                <SidebarMenuSubTrigger>
-                    <SidebarMenuButton tooltip={{ children: 'DeFi Management' }} isSubmenu>
-                        <Shield />
-                        <span>DeFi Management</span>
-                    </SidebarMenuButton>
+                <SidebarMenuSubTrigger tooltip={{ children: 'DeFi Management' }} isSubmenu>
+                    <Shield />
+                    <span>DeFi Management</span>
                 </SidebarMenuSubTrigger>
                 <SidebarMenuSubContent>
                     <SidebarMenuSubItem>
@@ -100,12 +97,10 @@ export function AdminSidebar() {
 
            <SidebarMenuItem>
               <SidebarMenuSub>
-                  <SidebarMenuSubTrigger>
-                    <SidebarMenuButton tooltip={{ children: 'Game Zone' }} isSubmenu>
-                        <Gamepad2 />
-                        <span>Game Zone</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuSubTrigger>
+                <SidebarMenuSubTrigger tooltip={{ children: 'Game Zone' }} isSubmenu>
+                    <Gamepad2 />
+                    <span>Game Zone</span>
+                </SidebarMenuSubTrigger>
                 <SidebarMenuSubContent>
                     <SidebarMenuSubItem>
                         <SidebarMenuSubButton href="#">

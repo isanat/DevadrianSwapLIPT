@@ -689,6 +689,24 @@ const SidebarMenuSkeleton = React.forwardRef<
 })
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
+const SidebarMenuSub = Collapsible.Root;
+
+const SidebarMenuSubTrigger = React.forwardRef<
+  React.ElementRef<typeof SidebarMenuButton>,
+  React.ComponentProps<typeof SidebarMenuButton> & {
+    asChild?: boolean
+  }
+>(({ asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : Collapsible.Trigger
+  return (
+    <Comp ref={ref} asChild>
+      <SidebarMenuButton {...props} />
+    </Comp>
+  )
+})
+SidebarMenuSubTrigger.displayName = "SidebarMenuSubTrigger"
+
+
 const SidebarMenuSubContent = React.forwardRef<
   React.ElementRef<typeof CollapsibleContent>,
   React.ComponentProps<typeof CollapsibleContent>
@@ -750,9 +768,6 @@ const SidebarMenuSubButton = React.forwardRef<
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
-
-const SidebarMenuSub = Collapsible.Root;
-const SidebarMenuSubTrigger = Collapsible.Trigger;
 
 export {
   SidebarProvider,
