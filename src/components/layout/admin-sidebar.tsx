@@ -80,8 +80,10 @@ export function AdminSidebar() {
             
           <SidebarMenuSub>
             <SidebarMenuSubTrigger>
-                <Shield />
-                <span>DeFi Management</span>
+                <SidebarMenuButton isSubmenu tooltip={{ children: 'DeFi Management' }}>
+                    <Shield />
+                    <span>DeFi Management</span>
+                </SidebarMenuButton>
             </SidebarMenuSubTrigger>
             <SidebarMenuSubContent>
                 <SidebarMenuSubItem>
@@ -101,8 +103,10 @@ export function AdminSidebar() {
 
            <SidebarMenuSub>
              <SidebarMenuSubTrigger>
-                  <Gamepad2 />
-                  <span>Game Zone</span>
+                <SidebarMenuButton isSubmenu tooltip={{ children: 'Game Zone' }}>
+                    <Gamepad2 />
+                    <span>Game Zone</span>
+                </SidebarMenuButton>
               </SidebarMenuSubTrigger>
               <SidebarMenuSubContent>
                   <SidebarMenuSubItem>

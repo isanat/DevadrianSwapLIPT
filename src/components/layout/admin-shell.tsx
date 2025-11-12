@@ -1,6 +1,6 @@
 'use client';
 
-import { SidebarProvider, Sidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/layout/admin-sidebar';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -10,9 +10,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <AdminSidebar />
         </Sidebar>
-        <main className="flex-1">
+        <SidebarInset>
              {children}
-        </main>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );

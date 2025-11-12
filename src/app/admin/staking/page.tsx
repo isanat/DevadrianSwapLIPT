@@ -61,6 +61,10 @@ export default function AdminStakingPage() {
 
     return (
         <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+            <header>
+                <h1 className="text-2xl font-bold tracking-tight">Staking Management</h1>
+                <p className="text-muted-foreground">Monitor and manage all staking activities on the platform.</p>
+            </header>
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
                 <Card className="bg-card/50 backdrop-blur-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
