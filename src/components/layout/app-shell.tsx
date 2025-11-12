@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { MainSidebar } from './main-sidebar';
 import { Header } from './header';
 
 export function AppShell({ children }: { children: ReactNode }) {
