@@ -23,27 +23,14 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
   const { t } = useI18n();
   const { mutate } = useSWRConfig();
   const [isUnstaking, setIsUnstaking] = useState(false);
+  const { toast } = useToast();
 
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-
-  const handleUnstake = async () => {
-    setIsUnstaking(true);
-    try {
-        const { penalty } = await unstakeLipt(stake.id);
-        mutate('staking');
-        mutate('wallet');
-        onUnstake(stake.id, penalty);
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
-    } finally {
-        setIsUnstaking(false);
-    }
-  };
-  
-  const isMature = progress >= 100;
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const calculateProgress = () => {
       const now = Date.now();
       const endDate = stake.startDate + stake.plan.duration * 24 * 60 * 60 * 1000;
@@ -64,6 +51,22 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
   }, [stake.startDate, stake.plan.duration]);
 
 
+  const handleUnstake = async () => {
+    setIsUnstaking(true);
+    try {
+        const { penalty } = await unstakeLipt(stake.id);
+        mutate('staking');
+        mutate('wallet');
+        onUnstake(stake.id, penalty);
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+        setIsUnstaking(false);
+    }
+  };
+  
+  const isMature = progress >= 100;
+
   return (
     <div className="flex flex-col gap-3 p-3 rounded-lg border bg-background/50">
       <div className="flex justify-between items-start">
@@ -75,7 +78,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant={isMature ? "outline" : "destructive"} size="sm" disabled={isUnstaking}>
+            <Button variant={isClient && isMature ? "outline" : "destructive"} size="sm" disabled={isUnstaking}>
               {isUnstaking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('stakingPool.unstakeButton')}
             </Button>
@@ -84,7 +87,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
             <AlertDialogHeader>
               <AlertDialogTitle>{t('stakingPool.unstakeModal.title')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {!isMature ? (
+                {isClient && !isMature ? (
                   <span className="text-destructive font-semibold flex items-center gap-2">
                     <AlertTriangle/> {t('stakingPool.unstakeModal.descriptionPenalty')}
                   </span>
@@ -93,7 +96,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{t('stakingPool.unstakeModal.cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleUnstake} className={!isMature ? "bg-destructive hover:bg-destructive/90" : ""}>
+              <AlertDialogAction onClick={handleUnstake} className={isClient && !isMature ? "bg-destructive hover:bg-destructive/90" : ""}>
                 {t('stakingPool.unstakeModal.confirm')}
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -101,14 +104,16 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
         </AlertDialog>
       </div>
       <div>
-        <Progress value={progress} className="h-2" />
+        <Progress value={isClient ? progress : 0} className="h-2" />
         <div className="flex justify-between items-center mt-1">
-            <p className="text-xs text-muted-foreground">{progress.toFixed(1)}% {t('stakingPool.complete')}</p>
-            {isMature ? (
-              <Badge variant="secondary" className="text-green-400 border-green-400 text-xs">{t('stakingPool.mature')}</Badge>
-            ) : (
-              <p className="text-xs text-muted-foreground">{timeLeft}d {t('stakingPool.remaining')}</p>
-            )}
+            <p className="text-xs text-muted-foreground">{isClient ? `${progress.toFixed(1)}% ${t('stakingPool.complete')}`: <Skeleton className="h-4 w-20" />}</p>
+            {isClient ? (
+                isMature ? (
+                <Badge variant="secondary" className="text-green-400 border-green-400 text-xs">{t('stakingPool.mature')}</Badge>
+                ) : (
+                <p className="text-xs text-muted-foreground">{timeLeft}d {t('stakingPool.remaining')}</p>
+                )
+            ) : <Skeleton className="h-4 w-16" />}
         </div>
       </div>
     </div>
