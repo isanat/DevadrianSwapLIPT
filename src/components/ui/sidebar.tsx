@@ -751,7 +751,7 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
-const SidebarMenuSub = Collapsible;
+const SidebarMenuSub = Collapsible.Root;
 const SidebarMenuSubTrigger = Collapsible.Trigger;
 
 export {

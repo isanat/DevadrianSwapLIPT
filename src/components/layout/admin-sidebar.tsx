@@ -74,11 +74,14 @@ export function AdminSidebar() {
           </SidebarMenuItem>
 
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{ children: 'DeFi Management' }} isSubmenu>
-                    <Shield />
-                    <span>DeFi Management</span>
-                </SidebarMenuButton>
-                <SidebarMenuSub>
+              <SidebarMenuSub>
+                <SidebarMenuSubTrigger asChild>
+                    <SidebarMenuButton tooltip={{ children: 'DeFi Management' }} isSubmenu>
+                        <Shield />
+                        <span>DeFi Management</span>
+                    </SidebarMenuButton>
+                </SidebarMenuSubTrigger>
+                <SidebarMenuSubContent>
                     <SidebarMenuSubItem>
                         <SidebarMenuSubButton href="#">
                             <Archive />
@@ -91,15 +94,19 @@ export function AdminSidebar() {
                             Mining Room
                         </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
-                </SidebarMenuSub>
+                </SidebarMenuSubContent>
+              </SidebarMenuSub>
             </SidebarMenuItem>
 
            <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{ children: 'Game Zone' }} isSubmenu>
-                    <Gamepad2 />
-                    <span>Game Zone</span>
-                </SidebarMenuButton>
-                <SidebarMenuSub>
+              <SidebarMenuSub>
+                  <SidebarMenuSubTrigger asChild>
+                    <SidebarMenuButton tooltip={{ children: 'Game Zone' }} isSubmenu>
+                        <Gamepad2 />
+                        <span>Game Zone</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuSubTrigger>
+                <SidebarMenuSubContent>
                     <SidebarMenuSubItem>
                         <SidebarMenuSubButton href="#">
                             Wheel of Fortune
@@ -115,7 +122,8 @@ export function AdminSidebar() {
                             Daily Lottery
                         </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
-                </SidebarMenuSub>
+                </SidebarMenuSubContent>
+              </SidebarMenuSub>
             </SidebarMenuItem>
 
           <SidebarMenuItem>
