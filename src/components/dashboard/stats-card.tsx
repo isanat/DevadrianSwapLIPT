@@ -24,11 +24,13 @@ const chartConfig = {
 };
 
 export function StatsCard({ title, value, icon, description, className, chartData, chartKey }: StatsCardProps) {
-  const [displayValue, setDisplayValue] = useState<string | number>(value);
+  const [displayValue, setDisplayValue] = useState<string | number>('');
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     // This effect runs only on the client-side after hydration.
     // It's a safe place to format values that might differ between server and client.
+    setIsClient(true);
     if (typeof value === 'number') {
       setDisplayValue(value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else {
@@ -44,12 +46,12 @@ export function StatsCard({ title, value, icon, description, className, chartDat
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="text-2xl font-bold">{displayValue}</div>
+          <div className="text-2xl font-bold">{isClient ? displayValue : ''}</div>
           {description && (
             <p className="text-xs text-muted-foreground">{description}</p>
           )}
         </div>
-        {chartData && chartKey && (
+        {chartData && chartKey && isClient && (
           <div className="h-16 -ml-6 -mr-2 -mb-7 mt-4">
              <ChartContainer config={chartConfig} className="h-full w-full">
               <AreaChart
