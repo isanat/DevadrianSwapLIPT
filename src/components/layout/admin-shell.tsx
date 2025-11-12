@@ -1,7 +1,7 @@
 'use client';
 
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { AdminSidebar } from './admin-sidebar';
+import { AdminSidebar } from '@/components/layout/admin-sidebar';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
