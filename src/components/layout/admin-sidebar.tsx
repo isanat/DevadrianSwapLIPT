@@ -52,9 +52,9 @@ export function AdminSidebar() {
                     </Link>
                 </SidebarMenuItem>
 
-                <SidebarMenuSub open={checkActive('/admin/staking') || checkActive('/admin/liquidity') || checkActive('/admin/mining') || checkActive('/admin/referrals')}>
+                <SidebarMenuSub>
                     <SidebarMenuSubTrigger>
-                        <SidebarMenuButton>
+                        <SidebarMenuButton isActive={checkActive('/admin/staking') || checkActive('/admin/liquidity') || checkActive('/admin/mining') || checkActive('/admin/referrals')}>
                             <Shield />
                             DeFi Management
                         </SidebarMenuButton>
@@ -83,9 +83,9 @@ export function AdminSidebar() {
                     </SidebarMenuSubContent>
                 </SidebarMenuSub>
 
-                <SidebarMenuSub open={checkActive('/admin/games')}>
+                <SidebarMenuSub>
                     <SidebarMenuSubTrigger>
-                        <SidebarMenuButton>
+                        <SidebarMenuButton isActive={checkActive('/admin/games')}>
                             <Gamepad2 />
                             Game Zone
                         </SidebarMenuButton>
