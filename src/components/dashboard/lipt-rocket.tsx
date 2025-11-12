@@ -154,7 +154,7 @@ export function LiptRocket() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
       if (appRef.current) {
-        appRef.current.destroy(true, { children: true, texture: true, baseTexture: true });
+        appRef.current.destroy(true, { children: true, texture: true });
         appRef.current = null;
       }
     };
