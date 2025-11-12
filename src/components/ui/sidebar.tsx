@@ -751,57 +751,30 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
-const Root = SidebarProvider
-const Trigger = SidebarTrigger
-const Content = SidebarContent
-const Header = SidebarHeader
-const Footer = SidebarFooter
-const Inset = SidebarInset
-const Group = SidebarGroup
-const GroupLabel = SidebarGroupLabel
-const GroupAction = SidebarGroupAction
-const GroupContent = SidebarGroupContent
-const Menu = SidebarMenu
-const Item = SidebarMenuItem
-const Sub = Collapsible
-const SubTrigger = React.forwardRef<
-  React.ElementRef<typeof SidebarMenuButton>,
-  React.ComponentProps<typeof SidebarMenuButton>
->((props, ref) => (
-  <Slot ref={ref}>
-    <Collapsible.Trigger asChild>
-      <SidebarMenuButton isSubmenu {...props} />
-    </Collapsible.Trigger>
-  </Slot>
-))
-SubTrigger.displayName = "SidebarMenuSubTrigger"
-const SubContent = SidebarMenuSub
-const SubItem = SidebarMenuSubItem
-const SubButton = SidebarMenuSubButton
 
 export {
-  Root as Sidebar,
-  Trigger as SidebarTrigger,
-  Content as SidebarContent,
-  Header as SidebarHeader,
-  Footer as SidebarFooter,
-  Inset as SidebarInset,
-  Group as SidebarGroup,
-  GroupLabel as SidebarGroupLabel,
-  GroupAction as SidebarGroupAction,
-  GroupContent as SidebarGroupContent,
-  Menu as SidebarMenu,
-  Item as SidebarMenuItem,
+  SidebarProvider,
+  Sidebar,
+  SidebarTrigger,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarInset,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuSkeleton,
-  Sub as SidebarMenuSub,
-  SubTrigger as SidebarMenuSubTrigger,
-  SubContent as SidebarMenuSubContent,
-  SubItem as SidebarMenuSubItem,
-  SubButton as SidebarMenuSubButton,
-  Separator as SidebarSeparator,
-  SidebarProvider,
+  Collapsible as SidebarMenuSub,
+  Collapsible.Trigger as SidebarMenuSubTrigger,
+  SidebarMenuSubContent,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarSeparator,
   useSidebar,
 }
