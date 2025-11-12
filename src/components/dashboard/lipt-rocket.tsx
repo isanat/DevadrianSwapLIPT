@@ -44,25 +44,29 @@ const createStars = (app: PIXI.Application): Star[] => {
     return stars;
 };
 
-// --- FOGUETE COM FUMAÇA ---
+// --- FOGUETE COM FUMAÇA E JANELA ---
 const createRocket = (app: PIXI.Application): Rocket => {
   const container = new PIXI.Container() as Rocket;
   container.x = app.screen.width / 2;
   container.y = app.screen.height - 80;
   container.pivot.set(0, -10);
 
-  const body = new PIXI.Graphics().roundRect(-12, -30, 24, 45, 5).fill(0x94a3b8);
-  const tip = new PIXI.Graphics().moveTo(0, -45).lineTo(-12, -30).lineTo(12, -30).closePath().fill(0xef4444);
+  const body = new PIXI.Graphics().roundRect(-12, -30, 24, 45, 5).fill(0xe2e8f0); // Corpo branco
+  const tip = new PIXI.Graphics().moveTo(0, -45).lineTo(-12, -30).lineTo(12, -30).closePath().fill(0xef4444); // Bico vermelho
   const leftWing = new PIXI.Graphics().moveTo(-12, 15).lineTo(-25, 25).lineTo(-12, 5).closePath().fill(0xdc2626);
   const rightWing = new PIXI.Graphics().moveTo(12, 15).lineTo(25, 25).lineTo(12, 5).closePath().fill(0xdc2626);
-
+  
+  // Janela
+  const windowFrame = new PIXI.Graphics().circle(0, -15, 8).fill(0x94a3b8);
+  const windowGlass = new PIXI.Graphics().circle(0, -15, 6).fill(0x38bdf8);
+  
   const flame = new PIXI.Graphics().ellipse(0, 30, 10, 20).fill({ color: 0xf97316, alpha: 0.9 });
   flame.visible = false;
   container.flame = flame;
 
   container.smoke = [];
 
-  container.addChild(leftWing, rightWing, body, tip, flame);
+  container.addChild(leftWing, rightWing, body, tip, windowFrame, windowGlass, flame);
   app.stage.addChild(container);
   return container;
 };
@@ -183,6 +187,7 @@ export function LiptRocket() {
     setGameStatus('in_progress');
     setCashedOutMultiplier(null);
     multiplierRef.current = 1.01;
+    setIsLoadingAction(false); // Enable cash out button
 
     rocket.x = app.screen.width / 2;
     rocket.y = app.screen.height - 80;
@@ -190,7 +195,9 @@ export function LiptRocket() {
     rocket.flame.visible = true;
 
     const animate = () => {
-        if (multiplierRef.current >= crashPointRef.current) {
+        const currentMultiplier = multiplierRef.current;
+
+        if (currentMultiplier >= crashPointRef.current) {
           setGameStatus('crashed');
           setCrashHistory(prev => [crashPointRef.current, ...prev].slice(0, 10));
           if (rocketRef.current) {
@@ -198,61 +205,66 @@ export function LiptRocket() {
             rocketRef.current.flame.visible = false;
           }
           createExplosion(app, rocket.x, rocket.y);
-          setIsLoadingAction(false); // Enable "Play Again" button
-        } else {
-           multiplierRef.current += 0.001 + 0.0008 * multiplierRef.current;
-           setDisplayMultiplier(multiplierRef.current);
-           
-           const progress = Math.min(0.95, (multiplierRef.current - 1) / (crashPointRef.current - 1));
-           rocket.y = app.screen.height - 80 - progress * (app.screen.height - 100);
-           rocket.flame.scale.y = 1 + progress * 2.5;
+          setIsLoadingAction(false);
+          return;
+        } 
+        
+        multiplierRef.current += 0.001 + 0.0008 * currentMultiplier;
+        setDisplayMultiplier(multiplierRef.current);
+        
+        // Limitar a subida vertical do foguete
+        const maxRocketY = app.screen.height * 0.3; // Sobe até 70% da altura da tela
+        const verticalProgress = Math.min(1, (currentMultiplier - 1) / 3); // A subida é mais rápida no início
+        const targetY = app.screen.height - 80 - (verticalProgress * (app.screen.height - 80 - maxRocketY));
+        
+        rocket.y = targetY;
+        rocket.flame.scale.y = 1 + verticalProgress * 2.5;
 
-           // FUMAÇA
-            const smoke = rocket.smoke;
-            const emitRate = multiplierRef.current > 1.1 ? Math.min(3, Math.floor((multiplierRef.current - 1) * 6)) : 0;
-            for (let i = 0; i < emitRate; i++) {
-                if (smoke.length > 60) {
-                    const old = smoke.shift()!;
-                    if (old && !old.destroyed) old.destroy();
-                }
-                const p = new PIXI.Graphics() as SmokeParticle;
-                p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
-                p.x = rocket.x + (Math.random() - 0.5) * 18;
-                p.y = rocket.y + 30;
-                p.vx = (Math.random() - 0.5) * 2;
-                p.vy = 1.5 + Math.random();
-                app.stage.addChild(p);
-                smoke.push(p);
+        // FUMAÇA
+        const smoke = rocket.smoke;
+        const emitRate = currentMultiplier > 1.1 ? Math.min(3, Math.floor((currentMultiplier - 1) * 6)) : 0;
+        for (let i = 0; i < emitRate; i++) {
+            if (smoke.length > 60) {
+                const old = smoke.shift()!;
+                if (old && !old.destroyed) old.destroy();
             }
-            for (let i = smoke.length - 1; i >= 0; i--) {
-                const p = smoke[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.06;
-                p.alpha -= 0.02;
-                if (p.alpha > 0) p.scale.set(p.alpha);
-                if (p.alpha <= 0) {
-                    p.destroy();
-                    smoke.splice(i, 1);
-                }
-            }
-
-
-           // ESTRELAS
-           const starSpeedMultiplier = 1 + progress * 50;
-           starsRef.current.forEach(star => {
-             star.y += star.speed * starSpeedMultiplier;
-             star.twinkle += 0.15;
-             star.alpha = 0.4 + (Math.sin(star.twinkle) * 0.4);
-             if (star.y > app.screen.height + star.size) {
-               star.y = -star.size * 2;
-               star.x = Math.random() * app.screen.width;
-             }
-           });
-           
-           animationFrameId.current = requestAnimationFrame(animate);
+            const p = new PIXI.Graphics() as SmokeParticle;
+            p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
+            p.x = rocket.x + (Math.random() - 0.5) * 18;
+            p.y = rocket.y + 30;
+            p.vx = (Math.random() - 0.5) * 2;
+            p.vy = 1.5 + Math.random();
+            app.stage.addChild(p);
+            smoke.push(p);
         }
+        for (let i = smoke.length - 1; i >= 0; i--) {
+            const p = smoke[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.06;
+            p.alpha -= 0.02;
+            if (p.alpha > 0) p.scale.set(p.alpha);
+            if (p.alpha <= 0) {
+                p.destroy();
+                smoke.splice(i, 1);
+            }
+        }
+
+        // ESTRELAS
+        const starSpeedMultiplier = 1 + verticalProgress * 30;
+        starsRef.current.forEach(star => {
+            star.y += star.speed * starSpeedMultiplier;
+            star.twinkle += 0.15;
+            star.alpha = 0.4 + (Math.sin(star.twinkle) * 0.4);
+            if (star.y > app.screen.height + star.size) {
+            star.y = -star.size * 2;
+            star.x = Math.random() * app.screen.width;
+            }
+        });
+        
+        animationFrameId.current = requestAnimationFrame(animate);
     };
+
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
   }, []);
@@ -272,7 +284,6 @@ export function LiptRocket() {
     }
     
     setIsLoadingAction(true);
-    // CRITICAL: Generate crash point BEFORE starting the game round.
     crashPointRef.current = generateCrashPoint();
     
     try {
@@ -292,18 +303,22 @@ export function LiptRocket() {
     setIsLoadingAction(true);
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = null;
+    
+    const finalMultiplier = multiplierRef.current;
 
     try {
-        const { winnings } = await cashOutRocket(parseFloat(betAmount), multiplierRef.current);
+        const { winnings } = await cashOutRocket(parseFloat(betAmount), finalMultiplier);
         mutate('wallet');
-        setCashedOutMultiplier(multiplierRef.current);
+        setCashedOutMultiplier(finalMultiplier);
         setGameStatus('cashed_out');
         if (rocketRef.current) rocketRef.current.flame.visible = false;
-        toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: multiplierRef.current.toFixed(2) }) });
+        toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: finalMultiplier.toFixed(2) }) });
     } catch (e: any) {
         toast({ variant: 'destructive', title: e.message });
-        // Resume animation if cash out fails
-        animationFrameId.current = requestAnimationFrame(startGame);
+        // Resume animation if cash out fails by calling start game again
+        if (gameStatus === 'in_progress') {
+           animationFrameId.current = requestAnimationFrame(startGame);
+        }
     } finally {
         setIsLoadingAction(false);
     }
@@ -353,6 +368,9 @@ export function LiptRocket() {
       return (
         <div className="flex flex-col items-center space-y-4 p-4 rounded-lg bg-background/50 border">
             <div className="flex gap-1 flex-wrap justify-center h-6"></div>
+             <div className="w-full text-center">
+                <Skeleton className="h-12 w-48 mx-auto" />
+            </div>
             <Skeleton className="w-full h-72 md:h-80 rounded-lg" />
             <div className="w-full max-w-xs space-y-2">
                 <Skeleton className="h-5 w-24" />
@@ -378,24 +396,28 @@ export function LiptRocket() {
         </div>
       )}
 
-      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
+      <div className="w-full text-center">
           {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
             <div className='flex flex-col items-center'>
               <span className={cn("text-4xl md:text-5xl font-bold drop-shadow-lg", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
                 {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
               </span>
-              <span className="text-lg md:text-xl text-white/80 font-semibold mt-2">
+              <span className="text-lg md:text-xl text-foreground/80 font-semibold mt-1">
                 {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
               </span>
             </div>
           ) : (
-            <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+            <h2 className={cn(
+                "text-4xl md:text-5xl font-bold drop-shadow-lg transition-colors",
+                displayMultiplier < 2 ? 'text-foreground' : displayMultiplier < 5 ? 'text-yellow-400' : 'text-green-400'
+            )}>
               {gameStatus === 'waiting' ? '...' : `${displayMultiplier.toFixed(2)}x`}
             </h2>
           )}
         </div>
-      </div>
+
+
+      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20" />
 
       <div className="w-full max-w-xs space-y-2">
         <Label htmlFor="bet-amount-rocket">{t('gameZone.wheelOfFortune.betAmount')}</Label>
