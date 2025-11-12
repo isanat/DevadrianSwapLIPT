@@ -83,24 +83,42 @@ const createExplosion = (app: PIXI.Application, x: number, y: number) => {
   }
 };
 
-// --- EFEITO DE ESTRELAS ---
+// --- ESTRELAS TURBINADAS (3 CAMADAS) ---
 const createStars = (app: PIXI.Application) => {
-  const starContainer = new PIXI.Container();
-  app.stage.addChildAt(starContainer, 0); // Adiciona atrás de tudo
-  const stars: (PIXI.Graphics & { speed: number })[] = [];
+  const stars: (PIXI.Graphics & { speed: number; layer: number; twinkle: number })[] = [];
   
-  for (let i = 0; i < 100; i++) {
-    const star = new PIXI.Graphics() as PIXI.Graphics & { speed: number };
-    const size = Math.random() * 2 + 0.5;
-    star.circle(0, 0, size).fill(0xffffff);
-    star.x = Math.random() * app.screen.width;
-    star.y = Math.random() * app.screen.height;
-    star.speed = Math.random() * 0.5 + 0.2; // Velocidade individual
-    stars.push(star);
-    starContainer.addChild(star);
+  for (let layer = 0; layer < 3; layer++) { // 3 camadas de profundidade
+    const layerCount = layer === 0 ? 40 : layer === 1 ? 60 : 80; // Mais estrelas nas camadas rápidas
+    const baseSpeed = layer === 0 ? 0.8 : layer === 1 ? 3 : 8; // Camada lenta/rápida
+    
+    for (let i = 0; i < layerCount; i++) {
+      const star = new PIXI.Graphics() as PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number };
+      
+      // Tamanho variável por camada
+      const size = (layer === 0 ? Math.random() * 1.5 + 0.8 : Math.random() * 2 + 1.2);
+      star.size = size;
+      
+      // GRADIENTE AMARELO-DOURADO (não branco!)
+      const colors = [0xfef08a, 0xfcd34d, 0xfbb41c, 0xf97316];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      star.circle(0, 0, size).fill(color);
+      star.alpha = layer === 0 ? 0.9 : 0.7; // Camada lenta mais brilhante
+      
+      star.x = Math.random() * app.screen.width;
+      star.y = Math.random() * app.screen.height;
+      star.speed = baseSpeed + Math.random() * (layer === 2 ? 5 : 2); // Velocidade variável
+      star.layer = layer;
+      star.twinkle = Math.random() * Math.PI * 2; // Pro efeito piscar
+      
+      stars.push(star);
+      app.stage.addChildAt(star, 0);
+    }
   }
+  
   return stars;
 };
+
 
 export function LiptRocket() {
   const { t } = useI18n();
@@ -113,10 +131,10 @@ export function LiptRocket() {
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
   const [crashHistory, setCrashHistory] = useState<number[]>([]);
 
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const rocketRef = useRef<PIXI.Container & { smoke: (PIXI.Graphics & { vx: number, vy: number, life: number })[], flame: PIXI.Graphics } | null>(null);
-  const starsRef = useRef<(PIXI.Graphics & { speed: number })[]>([]);
+  const starsRef = useRef<(PIXI.Graphics & { speed: number; layer: number; twinkle: number; size: number })[] | null>([]);
   const animationFrameId = useRef<number | null>(null);
   const crashPointRef = useRef(1.0);
   const audioRef = useRef<{ launch?: HTMLAudioElement; crash?: HTMLAudioElement; smokePlayed?: boolean }>({});
@@ -124,19 +142,19 @@ export function LiptRocket() {
   // --- INICIALIZA PIXI ---
   useEffect(() => {
     const setupPixi = async () => {
-      if (canvasRef.current && !appRef.current) {
+      if (canvasContainerRef.current && !appRef.current) {
         const app = new PIXI.Application();
         await app.init({
-          width: canvasRef.current.clientWidth,
+          width: canvasContainerRef.current.clientWidth,
           height: 320,
           backgroundColor: 0x0f172a,
           backgroundAlpha: 1,
           antialias: true,
-          resizeTo: canvasRef.current,
+          resizeTo: canvasContainerRef.current,
         });
 
-        if (canvasRef.current && !canvasRef.current.querySelector('canvas')) {
-          canvasRef.current.appendChild(app.canvas);
+        if (canvasContainerRef.current && !canvasContainerRef.current.querySelector('canvas')) {
+          canvasContainerRef.current.appendChild(app.canvas);
         }
 
         appRef.current = app;
@@ -230,15 +248,22 @@ export function LiptRocket() {
         }
       }
       
-      // ANIMAÇÃO DAS ESTRELAS
-      const starSpeedMultiplier = 1 + progress * 15;
-      starsRef.current.forEach(star => {
+      // ANIMAÇÃO DAS ESTRELAS TURBINADAS
+      const starSpeedMultiplier = 1 + progress * 20; // 20x mais rápido no final!
+        starsRef.current!.forEach(star => {
+        // Velocidade por camada + multiplicador
         star.y += star.speed * starSpeedMultiplier;
+        
+        // TWINKLE EFFECT (piscar)
+        star.twinkle += 0.15;
+        star.alpha = 0.4 + (Math.sin(star.twinkle) * 0.4);
+        
+        // Reposiciona quando sai da tela
         if (star.y > app.screen.height) {
-          star.y = -5;
-          star.x = Math.random() * app.screen.width;
+            star.y = -star.size * 2;
+            star.x = Math.random() * app.screen.width;
         }
-      });
+    });
 
 
       if (current < crashPoint) {
@@ -363,7 +388,7 @@ export function LiptRocket() {
       )}
 
       {/* CANVAS */}
-      <div ref={canvasRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
+      <div ref={canvasContainerRef} className="w-full h-72 md:h-80 rounded-lg overflow-hidden relative border-b-2 border-primary/20">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
           {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
             <div className='flex flex-col items-center'>
