@@ -690,15 +690,14 @@ const SidebarMenuSkeleton = React.forwardRef<
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
 const SidebarMenuSub = Collapsible.Root;
+SidebarMenuSub.displayName = "SidebarMenuSub";
 
 const SidebarMenuSubTrigger = React.forwardRef<
-  React.ElementRef<typeof SidebarMenuButton>,
-  React.ComponentProps<typeof SidebarMenuButton>
->(({ asChild, ...props }, ref) => {
+  React.ElementRef<typeof Collapsible.Trigger>,
+  React.ComponentProps<typeof Collapsible.Trigger> & { asChild?: boolean }
+>(({ asChild = true, ...props }, ref) => {
     return (
-        <Collapsible.Trigger asChild>
-            <SidebarMenuButton {...props} ref={ref} />
-        </Collapsible.Trigger>
+        <Collapsible.Trigger ref={ref} asChild={asChild} className={cn(sidebarMenuButtonVariants(), "justify-between")} {...props}/>
     )
 })
 SidebarMenuSubTrigger.displayName = "SidebarMenuSubTrigger"

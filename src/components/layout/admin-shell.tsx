@@ -10,9 +10,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <AdminSidebar />
         </Sidebar>
-        <SidebarInset>
-            {children}
-        </SidebarInset>
+        <main className="flex-1">
+             {children}
+        </main>
       </div>
     </SidebarProvider>
   );

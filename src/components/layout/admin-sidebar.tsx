@@ -21,6 +21,10 @@ import {
   Gamepad2,
   Pickaxe,
   Archive,
+  ChevronDown,
+  RotateCw,
+  Rocket,
+  Ticket,
 } from 'lucide-react';
 import { DevAdrianSwapIcon } from '@/components/icons/devadrian-swap-icon';
 import { Button } from '../ui/button';
@@ -75,9 +79,12 @@ export function AdminSidebar() {
             
           <SidebarMenuSub asChild>
               <SidebarMenuItem>
-                <SidebarMenuSubTrigger tooltip={{ children: 'DeFi Management' }} isSubmenu>
-                    <Shield />
-                    <span>DeFi Management</span>
+                <SidebarMenuSubTrigger>
+                    <div className="flex items-center gap-3">
+                        <Shield />
+                        <span className="group-data-[collapsible=icon]:hidden">DeFi Management</span>
+                    </div>
+                    <ChevronDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden"/>
                 </SidebarMenuSubTrigger>
                 <SidebarMenuSubContent>
                     <SidebarMenuSubItem>
@@ -98,23 +105,29 @@ export function AdminSidebar() {
 
            <SidebarMenuSub asChild>
              <SidebarMenuItem>
-                <SidebarMenuSubTrigger tooltip={{ children: 'Game Zone' }} isSubmenu>
-                    <Gamepad2 />
-                    <span>Game Zone</span>
+                <SidebarMenuSubTrigger>
+                    <div className="flex items-center gap-3">
+                        <Gamepad2 />
+                        <span className="group-data-[collapsible=icon]:hidden">Game Zone</span>
+                    </div>
+                    <ChevronDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden"/>
                 </SidebarMenuSubTrigger>
                 <SidebarMenuSubContent>
                     <SidebarMenuSubItem>
                         <SidebarMenuSubButton href="#">
+                           <RotateCw/>
                             Wheel of Fortune
                         </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                         <SidebarMenuSubButton href="#">
+                            <Rocket />
                             LIPT Rocket
                         </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                         <SidebarMenuSubButton href="#">
+                            <Ticket />
                             Daily Lottery
                         </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
