@@ -197,6 +197,7 @@ export function LiptRocket() {
     const animate = () => {
         const currentMultiplier = multiplierRef.current;
 
+        // PARTE 1 - Lógica do Jogo (Crash ou Continua)
         if (currentMultiplier >= crashPointRef.current) {
           setGameStatus('crashed');
           setCrashHistory(prev => [crashPointRef.current, ...prev].slice(0, 10));
@@ -212,12 +213,14 @@ export function LiptRocket() {
         multiplierRef.current += 0.001 + 0.0008 * currentMultiplier;
         setDisplayMultiplier(multiplierRef.current);
         
-        // Limitar a subida vertical do foguete
-        const maxRocketY = app.screen.height * 0.3; // Sobe até 70% da altura da tela
-        const verticalProgress = Math.min(1, (currentMultiplier - 1) / 3); // A subida é mais rápida no início
+        // PARTE 2 - Lógica da Animação (Movimento)
+
+        // Limitar a subida vertical do foguete até 20% da altura da tela
+        const maxRocketY = app.screen.height * 0.2; // Não sobe mais que isso
+        const verticalProgress = Math.min(1, (currentMultiplier - 1) / 3); // Atinge a altura máxima rápido (ex: quando o multiplicador é 4x)
         const targetY = app.screen.height - 80 - (verticalProgress * (app.screen.height - 80 - maxRocketY));
         
-        rocket.y = targetY;
+        rocket.y = targetY; // A posição Y para de mudar após atingir o limite
         rocket.flame.scale.y = 1 + verticalProgress * 2.5;
 
         // FUMAÇA
@@ -251,7 +254,7 @@ export function LiptRocket() {
         }
 
         // ESTRELAS
-        const starSpeedMultiplier = 1 + verticalProgress * 30;
+        const starSpeedMultiplier = 1 + verticalProgress * 30; // Aceleração das estrelas continua, mesmo com o foguete parado
         starsRef.current.forEach(star => {
             star.y += star.speed * starSpeedMultiplier;
             star.twinkle += 0.15;
@@ -274,7 +277,8 @@ export function LiptRocket() {
       const timer = setTimeout(startGame, 3000);
       return () => clearTimeout(timer);
     }
-  }, [gameStatus, startGame]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStatus]);
 
   const handleBet = async () => {
     const bet = parseFloat(betAmount);
@@ -315,8 +319,8 @@ export function LiptRocket() {
         toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: finalMultiplier.toFixed(2) }) });
     } catch (e: any) {
         toast({ variant: 'destructive', title: e.message });
-        // Resume animation if cash out fails by calling start game again
-        if (gameStatus === 'in_progress') {
+        // Se a retirada falhar, a animação continua de onde parou
+        if (gameStatus === 'in_progress' && !animationFrameId.current) {
            animationFrameId.current = requestAnimationFrame(startGame);
         }
     } finally {
