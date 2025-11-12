@@ -273,9 +273,6 @@ const translations = {
         previousDraws: 'Previous Draws',
         previousDrawsDesc: 'See the results of recent lotteries.',
         draw: 'Draw',
-        winner: 'Winner',
-        winnerTitle: 'Congratulations!',
-        winnerDesc: 'You won the lottery!',
         winner: {
           title: 'Congratulations!',
           description: 'You won the grand prize of {amount} LIPT!',
@@ -564,9 +561,6 @@ const translations = {
         previousDraws: 'Sorteios Anteriores',
         previousDrawsDesc: 'Veja os resultados das loterias recentes.',
         draw: 'Sorteio',
-        winner: 'Vencedor',
-        winnerTitle: 'Parabéns!',
-        winnerDesc: 'Você ganhou na loteria!',
         winner: {
           title: 'Parabéns!',
           description: 'Você ganhou o grande prêmio de {amount} LIPT!',
@@ -855,9 +849,6 @@ const translations = {
         previousDraws: 'Sorteos Anteriores',
         previousDrawsDesc: 'Ver los resultados de las loterías recientes.',
         draw: 'Sorteo',
-        winner: 'Ganador',
-        winnerTitle: '¡Felicidades!',
-        winnerDesc: '¡Ganaste la lotería!',
         winner: {
           title: '¡Felicidades!',
           description: '¡Has ganado el gran premio de {amount} LIPT!',
@@ -1146,9 +1137,6 @@ const translations = {
         previousDraws: 'Estrazioni Precedenti',
         previousDrawsDesc: 'Guarda i risultati delle lotterie recenti.',
         draw: 'Estrazione',
-        winner: 'Vincitore',
-        winnerTitle: 'Congratulazioni!',
-        winnerDesc: 'Hai vinto alla lotteria!',
         winner: {
             title: 'Congratulazioni!',
             description: 'Hai vinto il primo premio di {amount} LIPT!',
