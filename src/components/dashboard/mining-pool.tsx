@@ -19,8 +19,10 @@ const ActiveMiner = ({ miner }: { miner: Miner }) => {
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const { t } = useI18n();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const calculateProgress = () => {
       const now = Date.now();
       const endDate = miner.startDate + miner.plan.duration * 24 * 60 * 60 * 1000;
@@ -39,6 +41,24 @@ const ActiveMiner = ({ miner }: { miner: Miner }) => {
 
     return () => clearInterval(interval);
   }, [miner.startDate, miner.plan.duration]);
+
+  if (!isClient) {
+    return (
+      <div className="flex flex-col gap-3 p-3 rounded-lg border bg-background/50">
+        <div className="flex justify-between items-start">
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-16" />
+        </div>
+        <div>
+          <Skeleton className="h-2 w-full" />
+          <div className="flex justify-between items-center mt-1">
+             <Skeleton className="h-3 w-16" />
+             <Skeleton className="h-3 w-12" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isComplete = progress >= 100;
 

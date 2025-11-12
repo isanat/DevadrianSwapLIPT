@@ -122,6 +122,7 @@ export function LiptRocket() {
   const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
   const [crashHistory, setCrashHistory] = useState<number[]>([]);
   const [isLoadingAction, setIsLoadingAction] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
@@ -131,8 +132,14 @@ export function LiptRocket() {
   const crashPointRef = useRef(1.0);
   const multiplierRef = useRef(1.0);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // --- INICIALIZA PIXI ---
   useEffect(() => {
+    if (!isClient) return;
+
     let app: PIXI.Application;
 
     const setup = async () => {
@@ -166,7 +173,7 @@ export function LiptRocket() {
             appRef.current = null;
         }
     };
-  }, []);
+  }, [isClient]);
 
   const startGame = () => {
     const app = appRef.current;
@@ -341,7 +348,7 @@ export function LiptRocket() {
     }
   };
   
-    if (isLoadingWallet || !wallet) {
+    if (!isClient || isLoadingWallet || !wallet) {
       return (
         <div className="flex flex-col items-center space-y-4 p-4 rounded-lg bg-background/50 border">
             <div className="flex gap-1 flex-wrap justify-center h-6"></div>

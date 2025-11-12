@@ -16,8 +16,10 @@ import { Skeleton } from '../ui/skeleton';
 const CountdownTimer = ({ endTime }: { endTime: number }) => {
   const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState(endTime - Date.now());
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const interval = setInterval(() => {
       const remaining = endTime - Date.now();
       if (remaining <= 0) {
@@ -30,6 +32,27 @@ const CountdownTimer = ({ endTime }: { endTime: number }) => {
 
     return () => clearInterval(interval);
   }, [endTime]);
+
+  if (!isClient) {
+    return (
+      <div className="flex justify-center items-center gap-4">
+        <div className="text-center">
+          <div className="text-4xl font-bold">--</div>
+          <div className="text-sm text-muted-foreground">{t('gameZone.lottery.hours')}</div>
+        </div>
+        <div className="text-4xl font-bold">:</div>
+        <div className="text-center">
+          <div className="text-4xl font-bold">--</div>
+          <div className="text-sm text-muted-foreground">{t('gameZone.lottery.minutes')}</div>
+        </div>
+        <div className="text-4xl font-bold">:</div>
+        <div className="text-center">
+          <div className="text-4xl font-bold">--</div>
+          <div className="text-sm text-muted-foreground">{t('gameZone.lottery.seconds')}</div>
+        </div>
+      </div>
+    );
+  }
 
   const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((timeLeft / 1000 / 60) % 60);

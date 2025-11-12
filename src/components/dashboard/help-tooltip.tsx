@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HelpCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type HelpTooltipProps = {
   title: string;
@@ -23,6 +23,19 @@ type HelpTooltipProps = {
 export function HelpTooltip({ title, content }: HelpTooltipProps) {
   const isMobile = useIsMobile();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+          <HelpCircle size={18} className="text-muted-foreground" />
+        </Button>
+    );
+  }
 
   if (isMobile) {
     return (
