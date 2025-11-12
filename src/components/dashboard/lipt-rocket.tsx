@@ -303,15 +303,25 @@ export function LiptRocket() {
   };
 
   const handleReset = () => {
+    if (rocketRef.current && appRef.current) {
+        // Limpa fumaça restante
+        rocketRef.current.smoke.forEach(p => {
+            appRef.current!.stage.removeChild(p);
+            p.destroy();
+        });
+        rocketRef.current.smoke = [];
+
+        // Reseta posição e estado do foguete
+        rocketRef.current.alpha = 1;
+        rocketRef.current.y = appRef.current.screen.height - 80;
+        rocketRef.current.flame.visible = false;
+    }
     setMultiplier(1.0);
     setGameStatus('idle');
     setCashedOutMultiplier(null);
     setBetAmount('');
-    if (rocketRef.current && appRef.current) {
-      rocketRef.current.alpha = 1;
-      rocketRef.current.y = appRef.current.screen.height - 80;
-    }
-  };
+};
+
 
   const getButton = () => {
     switch (gameStatus) {
