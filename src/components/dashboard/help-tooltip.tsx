@@ -30,6 +30,7 @@ export function HelpTooltip({ title, content }: HelpTooltipProps) {
   }, []);
 
   if (!isClient) {
+    // Render a placeholder or null on the server
     return (
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
           <HelpCircle size={18} className="text-muted-foreground" />
