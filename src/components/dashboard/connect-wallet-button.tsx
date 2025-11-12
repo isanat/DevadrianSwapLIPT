@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 
 
 export function ConnectWalletButton() {
@@ -23,6 +24,11 @@ export function ConnectWalletButton() {
   const { address, isConnected, isConnecting } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const copyToClipboard = () => {
     if(!address) return;
@@ -31,6 +37,10 @@ export function ConnectWalletButton() {
       title: t('referralProgram.copied'),
     });
   };
+
+  if (!isClient) {
+    return null;
+  }
 
   if (isConnecting) {
     return (
