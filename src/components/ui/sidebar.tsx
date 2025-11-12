@@ -300,14 +300,13 @@ SidebarRail.displayName = "SidebarRail"
 
 const SidebarInset = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"main">
->(({ className, ...props }, ref) => {
+  React.ComponentProps<"div">
+>(( { className, ...props }, ref) => {
   return (
-    <main
+    <div
       ref={ref}
       className={cn(
-        "relative flex min-h-svh flex-1 flex-col bg-background",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        "flex-1",
         className
       )}
       {...props}
@@ -689,16 +688,28 @@ const SidebarMenuSkeleton = React.forwardRef<
 })
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
-const SidebarMenuSub = Collapsible.Root;
-SidebarMenuSub.displayName = "SidebarMenuSub";
+const SidebarMenuSub = Collapsible.Root
+SidebarMenuSub.displayName = "SidebarMenuSub"
 
 const SidebarMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof Collapsible.Trigger>,
   React.ComponentProps<typeof Collapsible.Trigger> & { asChild?: boolean }
->(({ asChild = true, ...props }, ref) => {
-    return (
-        <Collapsible.Trigger ref={ref} asChild={asChild} className={cn(sidebarMenuButtonVariants(), "justify-between")} {...props}/>
-    )
+>(({ asChild, className, children, ...props }, ref) => {
+  return (
+    <Collapsible.Trigger
+      ref={ref}
+      asChild={asChild}
+      className={cn(
+        buttonVariants({ variant: "default", size: "default" }),
+        sidebarMenuButtonVariants(),
+        "justify-between",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </Collapsible.Trigger>
+  )
 })
 SidebarMenuSubTrigger.displayName = "SidebarMenuSubTrigger"
 
