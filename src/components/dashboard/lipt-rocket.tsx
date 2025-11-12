@@ -172,7 +172,7 @@ export function LiptRocket() {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
       if (appRef.current) {
-        appRef.current.destroy(true, { children: true, texture: true, baseTexture: false });
+        appRef.current.destroy(true, { children: true, texture: true });
         appRef.current = null;
       }
     };
@@ -249,7 +249,7 @@ export function LiptRocket() {
       }
       
       // ANIMAÇÃO DAS ESTRELAS TURBINADAS
-      const starSpeedMultiplier = 1 + progress * 20; // 20x mais rápido no final!
+      const starSpeedMultiplier = 1 + progress * 50; // 50x mais rápido no final!
         starsRef.current!.forEach(star => {
         // Velocidade por camada + multiplicador
         star.y += star.speed * starSpeedMultiplier;
