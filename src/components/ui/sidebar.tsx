@@ -689,7 +689,7 @@ const SidebarMenuSkeleton = React.forwardRef<
 })
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
-const SidebarMenuSub = React.forwardRef<
+const SidebarMenuSubContent = React.forwardRef<
   React.ElementRef<typeof CollapsibleContent>,
   React.ComponentProps<typeof CollapsibleContent>
 >(({ className, ...props }, ref) => (
@@ -704,7 +704,7 @@ const SidebarMenuSub = React.forwardRef<
     {...props}
   />
 ))
-SidebarMenuSub.displayName = "SidebarMenuSub"
+SidebarMenuSubContent.displayName = "SidebarMenuSubContent"
 
 const SidebarMenuSubItem = React.forwardRef<
   HTMLLIElement,
@@ -751,6 +751,8 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
+const SidebarMenuSub = Collapsible;
+const SidebarMenuSubTrigger = Collapsible.Trigger;
 
 export {
   SidebarProvider,
@@ -770,8 +772,8 @@ export {
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuSkeleton,
-  Collapsible as SidebarMenuSub,
-  Collapsible.Trigger as SidebarMenuSubTrigger,
+  SidebarMenuSub,
+  SidebarMenuSubTrigger,
   SidebarMenuSubContent,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
