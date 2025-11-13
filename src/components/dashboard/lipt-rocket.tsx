@@ -225,14 +225,14 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     const setup = async () => {
         if (!canvasContainerRef.current) return;
 
-        app = new PIXI.Application();
-        await app.init({
-          width: canvasContainerRef.current.clientWidth,
-          height: 320,
+        app = new PIXI.Application();
+        await app.init({
+          width: canvasContainerRef.current.clientWidth,
+          height: 224, // h-56 = 224px, md:h-60 = 240px (resizeTo ajusta automaticamente)
         //   backgroundColor: 0x0f172a, // REMOVIDO para usar o degradê
-          antialias: true,
-          resizeTo: canvasContainerRef.current,
-        });
+          antialias: true,
+          resizeTo: canvasContainerRef.current,
+        });
 
         if (canvasContainerRef.current) {
             canvasContainerRef.current.innerHTML = ''; // Limpa antes de adicionar
@@ -493,110 +493,104 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     setIsLoadingAction(false);
   };
 
-  const getButton = () => {
-    switch (gameStatus) {
-      case 'idle':
-        return <Button onClick={handleBet} disabled={isLoadingAction} className="w-full py-4 text-base font-semibold md:text-lg">{isLoadingAction ? "Placing Bet..." : t('gameZone.rocket.placeBet')}</Button>;
-      case 'waiting':
-        return <Button disabled className="w-full py-4 text-base font-semibold md:text-lg">{t('gameZone.rocket.waitingForNextRound')}</Button>;
-      case 'in_progress':
-        return (
-          <Button onClick={handleCashOut} disabled={isLoadingAction} className="w-full py-4 text-base font-semibold md:text-lg bg-green-500 hover:bg-green-600">
-            {isLoadingAction ? 'Cashing out...' : `${t('gameZone.rocket.cashOut')} @ ${displayMultiplier.toFixed(2)}x`}
-          </Button>
-        );
-      case 'cashed_out':
-      case 'crashed':
-        return <Button onClick={handleReset} className="w-full py-4 text-base font-semibold md:text-lg">{t('gameZone.rocket.playAgain')}</Button>;
-      default:
-        return null;
-    }
-  };
+  const getButton = () => {
+    switch (gameStatus) {
+      case 'idle':
+        return <Button onClick={handleBet} disabled={isLoadingAction} className="w-full font-bold text-lg py-6">{isLoadingAction ? "Placing Bet..." : t('gameZone.rocket.placeBet')}</Button>;
+      case 'waiting':
+        return <Button disabled className="w-full font-bold text-lg py-6">{t('gameZone.rocket.waitingForNextRound')}</Button>;
+      case 'in_progress':
+        return (
+          <Button onClick={handleCashOut} disabled={isLoadingAction} className="w-full font-bold text-lg py-6 bg-green-500 hover:bg-green-600">
+            {isLoadingAction ? 'Cashing out...' : `${t('gameZone.rocket.cashOut')} @ ${displayMultiplier.toFixed(2)}x`}
+          </Button>
+        );
+      case 'cashed_out':
+      case 'crashed':
+        return <Button onClick={handleReset} className="w-full font-bold text-lg py-6">{t('gameZone.rocket.playAgain')}</Button>;
+      default:
+        return null;
+    }
+  };
   
   // --- JSX (Skeleton e Layout - Sem alterações) ---
-    if (!isClient || isLoadingWallet || !wallet) {
-      return (
-        <div className="flex w-full flex-col items-center gap-3 rounded-lg border bg-background/50 p-4 md:p-5">
-            <div className="flex gap-1 flex-wrap justify-center h-6"></div>
-             <div className="w-full text-center">
-                <Skeleton className="h-12 w-48 mx-auto" />
-            </div>
-            <Skeleton className="h-56 w-full rounded-lg md:h-60" />
-            <div className="w-full max-w-sm space-y-2">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-4 w-32 mx-auto" />
-            </div>
-            <div className="w-full max-w-sm">
-                <Skeleton className="h-11 w-full" />
-            </div>
-        </div>
-      )
-  }
+    if (!isClient || isLoadingWallet || !wallet) {
+      return (
+        <div className="flex flex-col items-center justify-center space-y-4">
+            <Skeleton className="h-56 w-full max-w-md rounded-lg md:h-60" />
+            <div className="w-full max-w-xs space-y-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-32" />
+            </div>
+            <Skeleton className="h-12 w-full max-w-xs" />
+        </div>
+      )
+    }
 
-  return (
-    <div className="flex w-full flex-col items-center gap-3 rounded-lg border bg-background/50 p-4 md:p-5">
-      {crashHistory.length > 0 && (
-        <div className="flex w-full flex-wrap items-center justify-center gap-1">
-          {crashHistory.map((m, i) => (
-            <span key={i} className={cn("px-2 py-1 text-xs font-semibold rounded", m < 2 ? "bg-red-900/80 text-red-200" : m < 5 ? "bg-yellow-900/80 text-yellow-200" : "bg-green-900/80 text-green-200")}> 
-              {m.toFixed(2)}x
-            </span>
-          ))}
-        </div>
-      )}
+  return (
+    <div className="flex flex-col items-center justify-center space-y-4">
+      {crashHistory.length > 0 && (
+        <div className="flex flex-wrap items-center justify-center gap-1">
+          {crashHistory.map((m, i) => (
+            <span key={i} className={cn("px-2 py-1 text-xs font-semibold rounded", m < 2 ? "bg-red-900/80 text-red-200" : m < 5 ? "bg-yellow-900/80 text-yellow-200" : "bg-green-900/80 text-green-200")}> 
+              {m.toFixed(2)}x
+            </span>
+          ))}
+        </div>
+      )}
 
-      <div className="flex w-full flex-col items-center gap-1 rounded-md border border-primary/20 bg-background/60 px-3 py-4 text-center">
-        {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
-          <div className="flex flex-col items-center gap-1">
-            <span className={cn("text-3xl md:text-4xl font-semibold", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
-              {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
-            </span>
-            <span className="text-sm md:text-base text-foreground/80 font-medium">
-              {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
-            </span>
-          </div>
-        ) : (
-          <h2 className={cn(
-              "text-3xl md:text-4xl font-semibold transition-colors",
-              displayMultiplier < 2 ? 'text-foreground' : displayMultiplier < 5 ? 'text-yellow-400' : 'text-green-400'
-          )}
-          >
-            {gameStatus === 'waiting' ? '...' : `${displayMultiplier.toFixed(2)}x`}
-          </h2>
-        )}
-        <span className="text-xs uppercase tracking-wide text-muted-foreground/80">
-          {gameStatus === 'in_progress' ? t('gameZone.rocket.cashOut') : t('gameZone.rocket.placeBet')}
-        </span>
-      </div>
+      {/* Multiplicador simples acima do canvas */}
+      <div className="text-center">
+        {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
+          <div className="flex flex-col items-center gap-1">
+            <span className={cn("text-2xl md:text-3xl font-bold", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
+              {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
+            </span>
+            <span className="text-sm text-foreground/70">
+              {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
+            </span>
+          </div>
+        ) : (
+          <h2 className={cn(
+              "text-2xl md:text-3xl font-bold transition-colors",
+              displayMultiplier < 2 ? 'text-foreground' : displayMultiplier < 5 ? 'text-yellow-400' : 'text-green-400'
+          )}>
+            {gameStatus === 'waiting' ? '...' : `${displayMultiplier.toFixed(2)}x`}
+          </h2>
+        )}
+      </div>
 
-      {/* O Canvas para o PIXI */}
-      <div ref={canvasContainerRef} className="relative h-56 w-full overflow-hidden rounded-lg border border-primary/15 md:h-60" />
+      {/* O Canvas para o PIXI */}
+      <div ref={canvasContainerRef} className="relative h-56 w-full max-w-md overflow-hidden rounded-lg md:h-60" />
 
-      {/* Controles da UI */}
-      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex-1 space-y-2">
-          <Label htmlFor="bet-amount-rocket" className="text-sm font-medium">
-            {t('gameZone.wheelOfFortune.betAmount')}
-          </Label>
-          <Input
-            id="bet-amount-rocket"
-            type="number"
-            placeholder="0.0"
-            value={betAmount}
-            onChange={(e) => setBetAmount(e.target.value)}
-            disabled={gameStatus !== 'idle'}
-            className="h-11 text-center text-base md:text-lg"
-          />
-          <p className="text-xs text-muted-foreground text-center sm:text-left">
-            {t('stakingPool.walletBalance')}: {wallet.liptBalance.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} LIPT
-          </p>
-        </div>
+      {/* Controles da UI */}
+      {isLoadingWallet ? (
+        <div className="w-full max-w-xs space-y-2">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-32" />
+        </div>
+      ) : (
+        <div className="w-full max-w-xs space-y-2">
+          <Label htmlFor="bet-amount-rocket">{t('gameZone.wheelOfFortune.betAmount')}</Label>
+          <Input
+            id="bet-amount-rocket"
+            type="number"
+            placeholder="0.0"
+            value={betAmount}
+            onChange={(e) => setBetAmount(e.target.value)}
+            disabled={gameStatus !== 'idle'}
+          />
+          <p className="text-xs text-muted-foreground">
+            {t('stakingPool.walletBalance')}: {wallet.liptBalance.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} LIPT
+          </p>
+        </div>
+      )}
 
-        <div className="w-full sm:w-auto">
-          {getButton()}
-        </div>
-      </div>
-    </div>
-  );
+      <div className="w-full max-w-xs">
+        {getButton()}
+      </div>
+    </div>
+  );
 }
