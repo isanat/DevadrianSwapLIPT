@@ -28,7 +28,7 @@ const ADDRESSES = {
   // Endereços para a rede principal (Polygon Mainnet)
   mainnet: {
     liptToken: '0x3113026cDdfE9145905003f5065A2BF815B82F91',
-    mockUsdt: '0xfF0B5B640e429DAd33d719262E39304E7c932b16', // Este é um mock, na Mainnet você usaria o endereço real do USDT: 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
+    mockUsdt: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', // Endereço real do USDT (Tether USD) na Polygon Mainnet
     protocolController: '0x6B99297aCc06a5b19387844864D0FbA79C3066a9',
     taxHandler: '0x0dC4576f6a77Bc27B2026d17828E521F734FEE39',
     swapPool: '0xF2d672c4985ba7F9bc8B4D7621D94f9fBE357197',
