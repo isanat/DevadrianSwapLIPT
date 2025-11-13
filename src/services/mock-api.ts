@@ -5,8 +5,8 @@
 import {
   getWalletBalances,
   getStakingPlans,
-  stakeLipt,
-  unstakeLipt,
+  stakeLipt as web3StakeLipt,
+  unstakeLipt as web3UnstakeLipt,
   purchaseLipt as web3PurchaseLipt,
 } from './web3-api';
 
@@ -75,13 +75,13 @@ export const stakeLipt = async (amount: number, plan: { duration: number; apy: n
   const amountBigInt = BigInt(amount * 10**18); // Assumindo 18 decimais
   // TODO: Obter o planId correto do Smart Contract
   const planId = 0; // MOCK
-  const hash = await stakeLipt(MOCK_USER_ADDRESS as any, amountBigInt, planId);
+  const hash = await web3StakeLipt(MOCK_USER_ADDRESS as any, amountBigInt, planId);
   return { hash };
 };
 
 export const unstakeLipt = async (stakeId: string) => {
   // Substituído pela chamada ao Smart Contract (Staking)
-  const hash = await unstakeLipt(MOCK_USER_ADDRESS as any, parseInt(stakeId));
+  const hash = await web3UnstakeLipt(MOCK_USER_ADDRESS as any, parseInt(stakeId));
   return { hash };
 };
 

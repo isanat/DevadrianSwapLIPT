@@ -59,3 +59,6 @@ const ADDRESSES = {
 const ACTIVE_NETWORK = process.env.NEXT_PUBLIC_ACTIVE_NETWORK as keyof typeof ADDRESSES || 'mainnet';
 
 export const CONTRACT_ADDRESSES = ADDRESSES[ACTIVE_NETWORK];
+
+// Exportar a configuração completa para compatibilidade
+export const contractConfig = ADDRESSES;

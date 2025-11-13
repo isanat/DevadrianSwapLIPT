@@ -20,8 +20,8 @@ const MOCK_PROTOCOL_PAUSED = false;
 export default function AdminSettingsPage() {
     const { toast } = useToast();
     const { chain } = useAccount();
-    const currentChainId = chain?.id === 1 ? 'mainnet' : 'sepolia';
-    const addresses = contractConfig.addresses[currentChainId];
+    const currentChainId = chain?.id === 137 ? 'mainnet' : 'amoy';
+    const addresses = (contractConfig as any)[currentChainId] || {};
     
     const [isPaused, setIsPaused] = useState(MOCK_PROTOCOL_PAUSED);
 
