@@ -351,8 +351,8 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
             }
             const p = new PIXI.Graphics() as SmokeParticle;
             p.circle(0, 0, Math.random() * 3 + 2).fill({ color: 0xdddddd, alpha: 0.8 });
-x           p.x = rocket.x + (Math.random() - 0.5) * 18;
-            p.y = rocket.y + 30;
+            p.x = rocket.x + (Math.random() - 0.5) * 18;
+            p.y = rocket.y + 30;
             p.vx = (Math.random() - 0.5) * 2;
             p.vy = 1.5 + Math.random();
             app.stage.addChild(p);
