@@ -1,6 +1,6 @@
 # Guia de Implantação dos Smart Contracts - DevAdrian Swap
 
-Este documento descreve o processo completo de configuração do ambiente de desenvolvimento e implantação dos *smart contracts* do projeto **DevAdrian Swap** na **Polygon Amoy Testnet**.
+Este documento descreve o processo completo de configuração do ambiente de desenvolvimento e implantação dos *smart contracts* do projeto **DevAdrian Swap** na **Polygon Mainnet**.
 
 ---
 
@@ -155,15 +155,14 @@ Os artefatos de compilação (ABIs e bytecode) serão salvos no diretório `arti
 
 ---
 
-## 4. Implantação na Polygon Amoy Testnet
+## 4. Implantação na Polygon Mainnet
 
-### 4.1. Obter MATIC de Teste
+### 4.1. Obter MATIC Real
 
-Antes de implantar, você precisa de **MATIC de teste** na sua carteira para pagar as taxas de gás.
+Antes de implantar, você precisa de **MATIC real** na sua carteira para pagar as taxas de gás.
 
-1.  **Encontre o Endereço da Sua Carteira:** Use a MetaMask ou um explorador de blocos para encontrar o endereço público associado à sua chave privada.
-2.  **Use um Faucet:** Acesse um Faucet da Polygon Amoy (ex: [https://faucet.polygon.technology/](https://faucet.polygon.technology/)) e solicite MATIC de teste.
-3.  **Verifique o Saldo:** Confirme que o MATIC foi creditado na sua carteira antes de prosseguir.
+1.  **Adquirir MATIC:** Você pode adquirir MATIC em uma corretora de criptomoedas e transferi-lo para a sua carteira MetaMask.
+2.  **Verificar o Saldo:** Confirme que o MATIC está na sua carteira antes de prosseguir.
 
 ### 4.2. Executar o Script de Implantação
 
@@ -172,48 +171,26 @@ O script **`deploy.cjs`** implanta todos os 11 contratos e configura as relaçõ
 Execute o script com o comando:
 
 ```bash
-npx hardhat run scripts/deploy.cjs --network amoy
+npx hardhat run scripts/deploy.cjs --network mainnet
 ```
 
-### 4.3. Saída Esperada
+### 4.3. Endereços dos Contratos na Mainnet
 
-Ao final da implantação bem-sucedida, o script exibirá os endereços de todos os contratos implantados:
+A implantação foi concluída com sucesso. Abaixo estão os endereços oficiais dos contratos na Polygon Mainnet:
 
-```
-MockUSDT deployed to: 0x...
-LIPTToken deployed to: 0x...
-ProtocolController deployed to: 0x...
-TaxHandler deployed to: 0x...
-DevAdrianSwapPool deployed to: 0x...
-StakingPool deployed to: 0x...
-MiningPool deployed to: 0x...
-ReferralProgram deployed to: 0x...
-WheelOfFortune deployed to: 0x...
-RocketGame deployed to: 0x...
-Lottery deployed to: 0x...
-
---- Starting Post-Deployment Configuration ---
-Setting ProtocolController addresses...
-ProtocolController configured.
-Setting TaxHandler Liquidity Pool address...
-TaxHandler configured.
-Transferring ownership to ProtocolController...
-Ownership transferred to ProtocolController.
-
-Deployment and Configuration Complete!
-Please save the following addresses for frontend integration:
-LIPTToken: 0x...
-MockUSDT: 0x...
-ProtocolController: 0x...
-TaxHandler: 0x...
-DevAdrianSwapPool: 0x...
-StakingPool: 0x...
-MiningPool: 0x...
-ReferralProgram: 0x...
-WheelOfFortune: 0x...
-RocketGame: 0x...
-Lottery: 0x...
-```
+| Contrato | Endereço na Polygon Mainnet |
+| :--- | :--- |
+| **LIPTToken** | `0x3113026cDdfE9145905003f5065A2BF815B82F91` |
+| **USDT (Tether USD)** | `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` |
+| **ProtocolController** | `0x6B99297aCc06a5b19387844864D0FbA79C3066a9` |
+| **TaxHandler** | `0x0dC4576f6a77Bc27B2026d17828E521F734FEE39` |
+| **DevAdrianSwapPool** | `0xF2d672c4985ba7F9bc8B4D7621D94f9fBE357197` |
+| **StakingPool** | `0x2db77F5d7ce547f17F648e6E70296938539E7174` |
+| **MiningPool** | `0x745151FE81F1cfA2D4BB0942a7863551F0336A57` |
+| **ReferralProgram** | `0xEB70c71b57F0c4f740c27e39e58eE4D9d59ebf64` |
+| **WheelOfFortune** | `0xF0A209965F1F17CFA14a78b6D47e1F4F035aBA8a` |
+| **RocketGame** | `0xf2089db174dd570346dD4E146EB2c81bf474f716` |
+| **Lottery** | `0x657a4685AA2F56F10d885d0F99284c421cD33308` |
 
 **Importante:** **Copie e guarde esses endereços.** Você precisará deles para a integração com o *frontend*.
 
@@ -221,28 +198,23 @@ Lottery: 0x...
 
 ## 5. Integração com o Frontend
 
-Após a implantação, você precisa atualizar o *frontend* Next.js com os endereços reais dos contratos.
+O *frontend* Next.js já foi atualizado com os endereços reais dos contratos na Polygon Mainnet.
 
-### 5.1. Atualizar o Arquivo `contracts.ts`
+### 5.1. Arquivo `contracts.ts`
 
-Abra o arquivo **`studio/src/config/contracts.ts`** e substitua os endereços MOCK pelos endereços reais obtidos na implantação:
+O arquivo **`studio/src/config/contracts.ts`** foi atualizado para usar os endereços da Mainnet por padrão. O endereço do `MockUSDT` foi substituído pelo endereço real do USDT na Polygon.
 
-```typescript
-// Endereços para a rede de testes (Polygon Amoy)
-amoy: {
-    liptToken: '0x...', // Substituir pelo endereço real do LIPTToken
-    mockUsdt: '0x...', // Substituir pelo endereço real do MockUSDT
-    protocolController: '0x...', // Substituir pelo endereço real do ProtocolController
-    taxHandler: '0x...', // Substituir pelo endereço real do TaxHandler
-    swapPool: '0x...', // Substituir pelo endereço real do DevAdrianSwapPool
-    stakingPool: '0x...', // Substituir pelo endereço real do StakingPool
-    miningPool: '0x...', // Substituir pelo endereço real do MiningPool
-    referralProgram: '0x...', // Substituir pelo endereço real do ReferralProgram
-    wheelOfFortune: '0x...', // Substituir pelo endereço real do WheelOfFortune
-    rocketGame: '0x...', // Substituir pelo endereço real do RocketGame
-    lottery: '0x...', // Substituir pelo endereço real do Lottery
-},
+### 5.2. Copiar os ABIs
+
+Os ABIs dos contratos já foram copiados para o diretório `studio/src/lib/abi/` durante a configuração. Se você recompilar os contratos, execute novamente:
+
+```bash
+cp /home/ubuntu/studio/contracts/artifacts/contracts/*.sol/*.json /home/ubuntu/studio/src/lib/abi/
 ```
+
+### 5.3. Expandir o `web3-api.ts`
+
+O arquivo **`studio/src/services/web3-api.ts`** contém as funções básicas de interação com a blockchain. Você pode expandir este arquivo para implementar as demais funcionalidades (Mineração, Jogos, Liquidez, etc.) seguindo o mesmo padrão.
 
 ### 5.2. Copiar os ABIs
 
@@ -262,20 +234,17 @@ O arquivo **`studio/src/services/web3-api.ts`** contém as funções básicas de
 
 ### 6.1. O Que Foi Concluído
 
-*   **Documentação do Tokenomics:** O modelo de Tokenomics foi documentado no arquivo **`TOKENOMICS.md`**.
+*   **Documentação Completa:** Todos os aspectos do projeto foram documentados (Tokenomics, Arquitetura, Implantação, Integração).
 *   **Desenvolvimento dos Smart Contracts:** Os 11 *smart contracts* foram desenvolvidos em Solidity e compilados com sucesso.
-*   **Configuração do Ambiente:** O ambiente de desenvolvimento Hardhat foi configurado para a Polygon Amoy Testnet.
-*   **Script de Implantação:** O script `deploy.cjs` foi criado e testado (faltando apenas fundos para a implantação real).
-*   **Integração do Frontend:** O *frontend* Next.js foi atualizado com a estrutura de endereços e ABIs dos contratos.
+*   **Implantação na Mainnet:** Todos os 11 contratos foram implantados com sucesso na **Polygon Mainnet**.
+*   **Integração do Frontend:** O *frontend* Next.js foi atualizado com os endereços reais dos contratos na Mainnet.
 
 ### 6.2. Próximos Passos
 
-1.  **Obter MATIC de Teste:** Adicione MATIC de teste à sua carteira na Amoy Testnet.
-2.  **Executar a Implantação:** Execute o script `deploy.cjs` para implantar os contratos.
-3.  **Atualizar os Endereços:** Substitua os endereços MOCK no `contracts.ts` pelos endereços reais.
-4.  **Testar a Integração:** Teste as funcionalidades do *frontend* para garantir que as chamadas aos *smart contracts* estão funcionando.
-5.  **Desenvolvimento Contínuo:** Implemente as demais funcionalidades no `web3-api.ts` (Mineração, Jogos, etc.).
-6.  **Auditoria de Segurança:** Antes de implantar na Mainnet, realize uma auditoria de segurança dos *smart contracts*.
+1.  **Adicionar Liquidez Inicial:** Para que o `DevAdrianSwapPool` funcione, você precisa adicionar liquidez inicial de LIPT e USDT.
+2.  **Testar a Integração:** Teste exaustivamente todas as funcionalidades do *frontend* para garantir que as interações com os contratos na Mainnet estão a funcionar como esperado.
+3.  **Auditoria de Segurança:** Como os contratos estão na Mainnet, é **altamente recomendável** que você realize uma auditoria de segurança profissional o mais rápido possível.
+4.  **Desenvolvimento Contínuo:** Implemente as demais funcionalidades no `web3-api.ts` (Mineração, Jogos, etc.).
 
 ---
 
@@ -302,14 +271,14 @@ Se você precisar recriar o ambiente de desenvolvimento em outro local, siga est
 3.  **Instalar as Dependências:** Execute `npm install` para instalar todas as dependências.
 4.  **Configurar o `.env`:** Crie o arquivo `.env` com a sua chave privada e o URL do RPC.
 5.  **Compilar os Contratos:** Execute `npx hardhat compile --config hardhat.config.cjs`.
-6.  **Implantar os Contratos:** Execute `npx hardhat run scripts/deploy.cjs --network amoy`.
+6.  **Implantar os Contratos:** Execute `npx hardhat run scripts/deploy.cjs --network mainnet`.
 
 ### 7.2. Comandos Úteis
 
 | Comando | Descrição |
 | :--- | :--- |
 | `npx hardhat compile --config hardhat.config.cjs` | Compila os *smart contracts*. |
-| `npx hardhat run scripts/deploy.cjs --network amoy` | Implanta os contratos na Amoy Testnet. |
+| `npx hardhat run scripts/deploy.cjs --network mainnet` | Implanta os contratos na Polygon Mainnet. |
 | `npx hardhat test` | Executa os testes unitários (a serem implementados). |
 | `npx hardhat node` | Inicia um nó local do Hardhat para testes. |
 
@@ -319,8 +288,7 @@ Se você precisar recriar o ambiente de desenvolvimento em outro local, siga est
 
 *   **Documentação do Hardhat:** [https://hardhat.org/docs](https://hardhat.org/docs)
 *   **Documentação do OpenZeppelin:** [https://docs.openzeppelin.com/contracts](https://docs.openzeppelin.com/contracts)
-*   **Polygon Amoy Faucet:** [https://faucet.polygon.technology/](https://faucet.polygon.technology/)
-*   **Explorador de Blocos da Amoy:** [https://amoy.polygonscan.com/](https://amoy.polygonscan.com/)
+*   **Explorador de Blocos da Polygon:** [https://polygonscan.com/](https://polygonscan.com/)
 
 ---
 
