@@ -548,14 +548,14 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
 
       <div className="flex w-full flex-col items-center gap-1 rounded-md border border-primary/20 bg-background/60 px-3 py-4 text-center">
         {gameStatus === 'crashed' || gameStatus === 'cashed_out' ? (
-          <div className="flex flex-col items-center gap-1">
+          /*<div className="flex flex-col items-center gap-1">
             <span className={cn("text-3xl md:text-4xl font-semibold", gameStatus === 'crashed' ? "text-red-500" : "text-green-500")}>
               {(cashedOutMultiplier ?? crashPointRef.current).toFixed(2)}x
-            </span>
+            </span>-->
             <span className="text-sm md:text-base text-foreground/80 font-medium">
               {gameStatus === 'crashed' ? t('gameZone.rocket.crashed') : t('gameZone.rocket.youCashedOut')}
             </span>
-          </div>
+          </div>*/
         ) : (
           <h2 className={cn(
               "text-3xl md:text-4xl font-semibold transition-colors",
