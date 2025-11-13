@@ -1,99 +1,61 @@
-'use client';
+import LIPTTokenABI from '../lib/abi/LIPTToken.json';
+import MockUSDTABI from '../lib/abi/MockUSDT.json';
+import ProtocolControllerABI from '../lib/abi/ProtocolController.json';
+import TaxHandlerABI from '../lib/abi/TaxHandler.json';
+import DevAdrianSwapPoolABI from '../lib/abi/DevAdrianSwapPool.json';
+import StakingPoolABI from '../lib/abi/StakingPool.json';
+import MiningPoolABI from '../lib/abi/MiningPool.json';
+import ReferralProgramABI from '../lib/abi/ReferralProgram.json';
+import WheelOfFortuneABI from '../lib/abi/WheelOfFortune.json';
+import RocketGameABI from '../lib/abi/RocketGame.json';
+import LotteryABI from '../lib/abi/Lottery.json';
 
-import { Address } from 'viem';
-
-// Exemplo de ABIs - você substituirá estes pelos JSONs reais dos seus contratos
-import LIPTTokenAbi from '@/lib/abi/LIPTToken.json';
-import MockUSDTAbi from '@/lib/abi/MockUSDT.json';
-import ProtocolControllerAbi from '@/lib/abi/ProtocolController.json';
-import TaxHandlerAbi from '@/lib/abi/TaxHandler.json';
-import DevAdrianSwapPoolAbi from '@/lib/abi/DevAdrianSwapPool.json';
-import StakingPoolAbi from '@/lib/abi/StakingPool.json';
-import MiningPoolAbi from '@/lib/abi/MiningPool.json';
-import ReferralProgramAbi from '@/lib/abi/ReferralProgram.json';
-import WheelOfFortuneAbi from '@/lib/abi/WheelOfFortune.json';
-import RocketGameAbi from '@/lib/abi/RocketGame.json';
-import LotteryAbi from '@/lib/abi/Lottery.json';
-
-// Chains suportadas (pode adicionar mais, como 'polygon', 'bsc', etc.)
-type SupportedChainId = 'mainnet' | 'sepolia' | 'mumbai';
-
-// Estrutura para os endereços dos contratos
-interface ContractAddresses {
-    liptToken: Address;
-    mockUsdt: Address;
-    protocolController: Address;
-    taxHandler: Address;
-    swapPool: Address;
-    stakingPool: Address;
-    miningPool: Address;
-    referralProgram: Address;
-    wheelOfFortune: Address;
-    rocketGame: Address;
-    lottery: Address;
-}
-
-// Mapeamento dos endereços por chain
-const contractAddresses: Record<SupportedChainId, ContractAddresses> = {
-    // Endereços para a rede de testes (Polygon Mumbai)
-    mumbai: {
-        liptToken: '0x0000000000000000000000000000000000000001', // MOCK
-        mockUsdt: '0x0000000000000000000000000000000000000002', // MOCK
-        protocolController: '0x0000000000000000000000000000000000000003', // MOCK
-        taxHandler: '0x0000000000000000000000000000000000000004', // MOCK
-        swapPool: '0x0000000000000000000000000000000000000005', // MOCK
-        stakingPool: '0x0000000000000000000000000000000000000006', // MOCK
-        miningPool: '0x0000000000000000000000000000000000000007', // MOCK
-        referralProgram: '0x0000000000000000000000000000000000000008', // MOCK
-        wheelOfFortune: '0x0000000000000000000000000000000000000009', // MOCK
-        rocketGame: '0x000000000000000000000000000000000000000A', // MOCK
-        lottery: '0x000000000000000000000000000000000000000B', // MOCK
-    },
-    // Endereços para a rede principal (Mainnet)
-    mainnet: {
-        liptToken: '0x...', // TODO: Substituir pelo endereço real
-        mockUsdt: '0x...', // TODO: Substituir pelo endereço real do USDT
-        protocolController: '0x...', // TODO: Substituir pelo endereço real
-        taxHandler: '0x...', // TODO: Substituir pelo endereço real
-        swapPool: '0x...', // TODO: Substituir pelo endereço real
-        stakingPool: '0x...', // TODO: Substituir pelo endereço real
-        miningPool: '0x...', // TODO: Substituir pelo endereço real
-        referralProgram: '0x...', // TODO: Substituir pelo endereço real
-        wheelOfFortune: '0x...', // TODO: Substituir pelo endereço real
-        rocketGame: '0x...', // TODO: Substituir pelo endereço real
-        lottery: '0x...', // TODO: Substituir pelo endereço real
-    },
-    // Endereços para a rede de testes (Sepolia)
-    sepolia: {
-        liptToken: '0x...', // TODO: Substituir pelo endereço de teste
-        mockUsdt: '0x...', // TODO: Substituir pelo endereço de teste do USDT
-        protocolController: '0x...', // TODO: Substituir pelo endereço de teste
-        taxHandler: '0x...', // TODO: Substituir pelo endereço de teste
-        swapPool: '0x...', // TODO: Substituir pelo endereço de teste
-        stakingPool: '0x...', // TODO: Substituir pelo endereço de teste
-        miningPool: '0x...', // TODO: Substituir pelo endereço de teste
-        referralProgram: '0x...', // TODO: Substituir pelo endereço de teste
-        wheelOfFortune: '0x...', // TODO: Substituir pelo endereço de teste
-        rocketGame: '0x...', // TODO: Substituir pelo endereço de teste
-        lottery: '0x...', // TODO: Substituir pelo endereço de teste
-    },
+export const CONTRACT_ABIS = {
+  liptToken: LIPTTokenABI.abi,
+  mockUsdt: MockUSDTABI.abi,
+  protocolController: ProtocolControllerABI.abi,
+  taxHandler: TaxHandlerABI.abi,
+  swapPool: DevAdrianSwapPoolABI.abi,
+  stakingPool: StakingPoolABI.abi,
+  miningPool: MiningPoolABI.abi,
+  referralProgram: ReferralProgramABI.abi,
+  wheelOfFortune: WheelOfFortuneABI.abi,
+  rocketGame: RocketGameABI.abi,
+  lottery: LotteryABI.abi,
 };
 
+const ADDRESSES = {
+  // Endereços para a rede principal (Polygon Mainnet)
+  mainnet: {
+    liptToken: '0x3113026cDdfE9145905003f5065A2BF815B82F91',
+    mockUsdt: '0xfF0B5B640e429DAd33d719262E39304E7c932b16', // Este é um mock, na Mainnet você usaria o endereço real do USDT: 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
+    protocolController: '0x6B99297aCc06a5b19387844864D0FbA79C3066a9',
+    taxHandler: '0x0dC4576f6a77Bc27B2026d17828E521F734FEE39',
+    swapPool: '0xF2d672c4985ba7F9bc8B4D7621D94f9fBE357197',
+    stakingPool: '0x2db77F5d7ce547f17F648e6E70296938539E7174',
+    miningPool: '0x745151FE81F1cfA2D4BB0942a7863551F0336A57',
+    referralProgram: '0xEB70c71b57F0c4f740c27e39e58eE4D9d59ebf64',
+    wheelOfFortune: '0xF0A209965F1F17CFA14a78b6D47e1F4F035aBA8a',
+    rocketGame: '0xf2089db174dd570346dD4E146EB2c81bf474f716',
+    lottery: '0x657a4685AA2F56F10d885d0F99284c421cD33308',
+  },
+  // Endereços para a rede de testes (Polygon Amoy)
+  amoy: {
+    liptToken: '0x...', // Preencher após implantação na Amoy
+    mockUsdt: '0x...',
+    protocolController: '0x...',
+    taxHandler: '0x...',
+    swapPool: '0x...',
+    stakingPool: '0x...',
+    miningPool: '0x...',
+    referralProgram: '0x...',
+    wheelOfFortune: '0x...',
+    rocketGame: '0x...',
+    lottery: '0x...',
+  },
+};
 
-// Objeto de configuração que será usado na aplicação
-export const contractConfig = {
-    addresses: contractAddresses,
-    abi: {
-        liptToken: LIPTTokenAbi.abi,
-        mockUsdt: MockUSDTAbi.abi,
-        protocolController: ProtocolControllerAbi.abi,
-        taxHandler: TaxHandlerAbi.abi,
-        swapPool: DevAdrianSwapPoolAbi.abi,
-        stakingPool: StakingPoolAbi.abi,
-        miningPool: MiningPoolAbi.abi,
-        referralProgram: ReferralProgramAbi.abi,
-        wheelOfFortune: WheelOfFortuneAbi.abi,
-        rocketGame: RocketGameAbi.abi,
-        lottery: LotteryAbi.abi,
-    }
-}
+// Lógica para selecionar os endereços corretos com base na rede ativa
+const ACTIVE_NETWORK = process.env.NEXT_PUBLIC_ACTIVE_NETWORK as keyof typeof ADDRESSES || 'mainnet';
+
+export const CONTRACT_ADDRESSES = ADDRESSES[ACTIVE_NETWORK];
