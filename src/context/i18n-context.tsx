@@ -240,6 +240,7 @@ const translations = {
       },
       rocket: {
         title: 'LIPT Rocket',
+        playTab: 'Play',
         placeBet: 'Place Bet',
         cashOut: 'Cash Out',
         playAgain: 'Play Again',
@@ -259,6 +260,15 @@ const translations = {
             title: 'Crashed!',
             description: 'The rocket crashed at {multiplier}x. Better luck next time.',
           },
+        },
+        report: {
+            bet: 'Bet',
+            crashPoint: 'Crash Point',
+            cashedOutAt: 'Cashed Out At',
+            netReturn: 'Net Return',
+            noPlays: 'No rocket plays recorded yet. Play a round to start!',
+            last5Plays: 'Last 5 Rounds',
+            last5PlaysDesc: 'Here are the results of your last five rounds.',
         },
       },
       lottery: {
@@ -531,6 +541,7 @@ const translations = {
       },
       rocket: {
         title: 'Foguete LIPT',
+        playTab: 'Jogar',
         placeBet: 'Apostar',
         cashOut: 'Retirar',
         playAgain: 'Jogar Novamente',
@@ -550,6 +561,15 @@ const translations = {
             title: 'Explodiu!',
             description: 'O foguete explodiu em {multiplier}x. Mais sorte na próxima vez.',
           },
+        },
+        report: {
+            bet: 'Aposta',
+            crashPoint: 'Ponto de Crash',
+            cashedOutAt: 'Retirado em',
+            netReturn: 'Retorno Líquido',
+            noPlays: 'Nenhuma jogada do foguete registada. Jogue uma ronda para começar!',
+            last5Plays: 'Últimas 5 Rondas',
+            last5PlaysDesc: 'Aqui estão os resultados das suas últimas cinco rondas.',
         },
       },
       lottery: {
@@ -822,6 +842,7 @@ const translations = {
       },
       rocket: {
         title: 'Cohete LIPT',
+        playTab: 'Jugar',
         placeBet: 'Apostar',
         cashOut: 'Retirar',
         playAgain: 'Jugar de Nuevo',
@@ -841,6 +862,15 @@ const translations = {
             title: '¡Explotó!',
             description: 'El cohete explotó a {multiplier}x. Mejor suerte la próxima vez.',
           },
+        },
+        report: {
+            bet: 'Apuesta',
+            crashPoint: 'Punto de Explosión',
+            cashedOutAt: 'Retirado en',
+            netReturn: 'Retorno Neto',
+            noPlays: 'No hay jugadas de cohete registradas. ¡Juega una ronda para empezar!',
+            last5Plays: 'Últimas 5 Rondas',
+            last5PlaysDesc: 'Aquí están los resultados de tus últimas cinco rondas.',
         },
       },
       lottery: {
@@ -1113,6 +1143,7 @@ const translations = {
       },
       rocket: {
         title: 'Razzo LIPT',
+        playTab: 'Gioca',
         placeBet: 'Scommetti',
         cashOut: 'Incassa',
         playAgain: 'Gioca Ancora',
@@ -1132,6 +1163,15 @@ const translations = {
             title: 'Esploso!',
             description: 'Il razzo è esploso a {multiplier}x. Meglio fortuna la prossima volta.',
           },
+        },
+        report: {
+            bet: 'Scommessa',
+            crashPoint: 'Punto di Esplosione',
+            cashedOutAt: 'Incassato a',
+            netReturn: 'Ritorno Netto',
+            noPlays: 'Nessuna giocata del razzo registrata. Gioca un round per iniziare!',
+            last5Plays: 'Ultimi 5 Round',
+            last5PlaysDesc: 'Ecco i risultati dei tuoi ultimi cinque round.',
         },
       },
       lottery: {

@@ -113,7 +113,12 @@ const createExplosion = (app: PIXI.Application, x: number, y: number) => {
   app.ticker.add(explosionTicker);
 };
 
-export function LiptRocket() {
+type LiptRocketProps = {
+  onGameEnd: (result: any) => void;
+};
+
+
+export function LiptRocket({ onGameEnd }: LiptRocketProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
@@ -196,6 +201,7 @@ export function LiptRocket() {
 
     const animate = () => {
         const currentMultiplier = multiplierRef.current;
+        animationFrameId.current = requestAnimationFrame(animate);
 
         // PARTE 1 - Lógica do Jogo (Crash ou Continua)
         if (currentMultiplier >= crashPointRef.current) {
@@ -207,6 +213,14 @@ export function LiptRocket() {
           }
           createExplosion(app, rocket.x, rocket.y);
           setIsLoadingAction(false);
+          onGameEnd({
+            id: Date.now(),
+            bet: parseFloat(betAmount),
+            crashPoint: crashPointRef.current,
+            cashedOutAt: null,
+            net: -parseFloat(betAmount),
+          });
+          if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
           return;
         } 
         
@@ -264,13 +278,11 @@ export function LiptRocket() {
             star.x = Math.random() * app.screen.width;
             }
         });
-        
-        animationFrameId.current = requestAnimationFrame(animate);
     };
 
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     animationFrameId.current = requestAnimationFrame(animate);
-  }, []);
+  }, [onGameEnd, betAmount]);
 
   useEffect(() => {
     if (gameStatus === 'waiting') {
@@ -311,12 +323,20 @@ export function LiptRocket() {
     const finalMultiplier = multiplierRef.current;
 
     try {
-        const { winnings } = await cashOutRocket(parseFloat(betAmount), finalMultiplier);
+        const bet = parseFloat(betAmount);
+        const { winnings } = await cashOutRocket(bet, finalMultiplier);
         mutate('wallet');
         setCashedOutMultiplier(finalMultiplier);
         setGameStatus('cashed_out');
         if (rocketRef.current) rocketRef.current.flame.visible = false;
         toast({ title: t('gameZone.rocket.toast.cashedOut.title'), description: t('gameZone.rocket.toast.cashedOut.description', { amount: winnings.toFixed(2), multiplier: finalMultiplier.toFixed(2) }) });
+        onGameEnd({
+          id: Date.now(),
+          bet,
+          crashPoint: crashPointRef.current,
+          cashedOutAt: finalMultiplier,
+          net: winnings - bet,
+        });
     } catch (e: any) {
         toast({ variant: 'destructive', title: e.message });
         // Se a retirada falhar, a animação continua de onde parou

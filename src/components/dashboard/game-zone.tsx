@@ -3,22 +3,27 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Gamepad2, Rocket, Ticket, History, RotateCw } from 'lucide-react';
+import { Gamepad2, Rocket, Ticket, History, RotateCw, Play } from 'lucide-react';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import { WheelOfFortune } from './wheel-of-fortune';
 import { GameReport } from './game-report';
 import { LiptRocket } from './lipt-rocket';
 import { DailyLottery } from './daily-lottery';
+import { RocketReport } from './rocket-report';
 
 export function GameZone() {
   const { t } = useI18n();
   const [spinHistory, setSpinHistory] = React.useState<any[]>([]);
+  const [rocketHistory, setRocketHistory] = React.useState<any[]>([]);
 
   const handleSpinResult = (result: any) => {
     setSpinHistory(prev => [result, ...prev]);
   };
 
+  const handleRocketResult = (result: any) => {
+    setRocketHistory(prev => [result, ...prev]);
+  };
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
@@ -71,7 +76,24 @@ export function GameZone() {
              </Tabs>
           </TabsContent>
           <TabsContent value="rocket" className="mt-4">
-            <LiptRocket />
+             <Tabs defaultValue="game" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="game">
+                        <Play className="h-4 w-4 mr-2"/>
+                        {t('gameZone.rocket.playTab', {defaultValue: 'Play'})}
+                    </TabsTrigger>
+                    <TabsTrigger value="report">
+                        <History className="h-4 w-4 mr-2"/>
+                        {t('gameZone.report.title')}
+                    </TabsTrigger>
+                </TabsList>
+                <TabsContent value="game" className="mt-4">
+                  <LiptRocket onGameEnd={handleRocketResult} />
+                </TabsContent>
+                <TabsContent value="report" className="mt-4">
+                    <RocketReport history={rocketHistory} />
+                </TabsContent>
+             </Tabs>
           </TabsContent>
           <TabsContent value="lottery" className="mt-4">
             <DailyLottery />
