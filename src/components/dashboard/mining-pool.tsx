@@ -115,7 +115,7 @@ export function MiningPool() {
 
   const handleActivateMiner = async () => {
     if (!selectedPlan) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a mining plan' });
+      toast({ variant: 'destructive', title: t('miningPool.toast.selectPlan.title'), description: t('miningPool.toast.selectPlan.description') });
       return;
     }
     
@@ -127,7 +127,7 @@ export function MiningPool() {
         mutate(['wallet', userAddress]);
         toast({ title: t('miningPool.toast.activated.title'), description: t('miningPool.toast.activated.description', { name: selectedPlan.name }) });
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsActivating(false);
       }
@@ -146,7 +146,7 @@ export function MiningPool() {
         mutate(['wallet', userAddress]);
         toast({ title: t('miningPool.toast.rewardsClaimed.title'), description: t('miningPool.toast.rewardsClaimed.description', { amount }) });
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsClaiming(false);
       }

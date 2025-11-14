@@ -199,6 +199,10 @@ const translations = {
           title: 'Mined Rewards Claimed',
           description: 'You have claimed {amount} LIPT from mining.',
         },
+        selectPlan: {
+          title: 'Error',
+          description: 'Please select a mining plan',
+        },
       },
     },
     leaderboard: {
@@ -219,24 +223,24 @@ const translations = {
         betAmount: 'Bet Amount',
         spinButton: 'Spin the Wheel!',
         spinning: 'Spinning...',
-        toast: {
-          win: {
-            title: 'You Won!',
-            description: 'You won {amount} LIPT!',
-          },
-          lose: {
-            title: 'You Lost',
-            description: 'Better luck next time!',
-          },
-          invalidBet: {
-            title: 'Invalid Bet',
-            description: 'Please check your balance and bet amount.',
-          },
-          spinFailed: {
-            title: 'Spin Failed',
-            description: 'An error occurred while spinning the wheel. Please try again.',
-          },
+      toast: {
+        win: {
+          title: 'You Won!',
+          description: 'You won {amount} LIPT!',
         },
+        lose: {
+          title: 'You Lost',
+          description: 'Better luck next time!',
+        },
+        invalidBet: {
+          title: 'Invalid Bet',
+          description: 'Please check your balance and bet amount.',
+        },
+        spinFailed: {
+          title: 'Spin Failed',
+          description: 'An error occurred while spinning the wheel. Please try again.',
+        },
+      },
       },
       report: {
         title: 'Report',
@@ -271,6 +275,10 @@ const translations = {
           crashed: {
             title: 'Crashed!',
             description: 'The rocket crashed at {multiplier}x. Better luck next time.',
+          },
+          invalidBet: {
+            title: 'Invalid Bet',
+            description: 'Please check your balance and bet amount.',
           },
         },
         report: {
@@ -512,6 +520,10 @@ const translations = {
           title: 'Recompensas Mineradas Reivindicadas',
           description: 'Você reivindicou {amount} LIPT da mineração.',
         },
+        selectPlan: {
+          title: 'Erro',
+          description: 'Por favor, selecione um plano de mineração',
+        },
       },
     },
     leaderboard: {
@@ -584,6 +596,10 @@ const translations = {
           crashed: {
             title: 'Explodiu!',
             description: 'O foguete explodiu em {multiplier}x. Mais sorte na próxima vez.',
+          },
+          invalidBet: {
+            title: 'Aposta Inválida',
+            description: 'Por favor, verifique seu saldo e o valor da aposta.',
           },
         },
         report: {
@@ -825,6 +841,10 @@ const translations = {
           title: 'Recompensas Minadas Reclamadas',
           description: 'Has reclamado {amount} LIPT de la minería.',
         },
+        selectPlan: {
+          title: 'Error',
+          description: 'Por favor, selecciona un plan de minería',
+        },
       },
     },
     leaderboard: {
@@ -897,6 +917,10 @@ const translations = {
           crashed: {
             title: '¡Explotó!',
             description: 'El cohete explotó a {multiplier}x. Mejor suerte la próxima vez.',
+          },
+          invalidBet: {
+            title: 'Apuesta Inválida',
+            description: 'Por favor, verifica tu saldo y el monto de la apuesta.',
           },
         },
         report: {
@@ -1138,6 +1162,10 @@ const translations = {
           title: 'Ricompense Estratte Riscattate',
           description: 'Hai riscattato {amount} LIPT dall\'estrazione.',
         },
+        selectPlan: {
+          title: 'Errore',
+          description: 'Per favore, seleziona un piano di estrazione',
+        },
       },
     },
     leaderboard: {
@@ -1210,6 +1238,10 @@ const translations = {
           crashed: {
             title: 'Esploso!',
             description: 'Il razzo è esploso a {multiplier}x. Meglio fortuna la prossima volta.',
+          },
+          invalidBet: {
+            title: 'Scommessa Non Valida',
+            description: 'Per favore, controlla il tuo saldo e l\'importo della scommessa.',
           },
         },
         report: {

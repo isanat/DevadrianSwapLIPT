@@ -1,6 +1,8 @@
 // This file mocks a backend API.
 // In a real application, this would be making network requests to a real server.
 
+import { CONTRACT_ADDRESSES } from '../config/contracts';
+
 let isDataInitialized = false;
 
 export const STAKING_PLANS = [
@@ -313,6 +315,28 @@ export const getMiningData = async (userAddress: string) => {
 };
 
 export const getLiquidityData = async (userAddress: string) => {
+  // Tentar usar o contrato real
+  try {
+    const { getLiquidityPoolData, getTokenDecimals } = await import('./web3-api');
+    const poolData = await getLiquidityPoolData(userAddress as any);
+    
+    if (poolData) {
+      const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+      const usdtDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any);
+      
+      return {
+        totalLipt: Number(poolData.reserveLipt) / 10**liptDecimals,
+        totalUsdt: Number(poolData.reserveUsdt) / 10**usdtDecimals,
+        userLpTokens: Number(poolData.userLpBalance) / 10**18, // LP tokens geralmente têm 18 decimais
+        poolShare: poolData.poolShare,
+        userFeesEarned: 0, // TODO: Calcular fees do usuário
+      };
+    }
+  } catch (error) {
+    console.error('Error getting liquidity data from contract:', error);
+  }
+  
+  // Fallback para mock
   await wait(400);
   const liquidity = getFromStorage('liquidity', initialLiquidity);
   liquidity.userFeesEarned += Math.random() * 0.01;
@@ -321,11 +345,54 @@ export const getLiquidityData = async (userAddress: string) => {
 };
 
 export const getLotteryData = async (userAddress: string) => {
+    // Tentar usar o contrato real
+    try {
+        const { getLotteryViewData, getTokenDecimals } = await import('./web3-api');
+        const lotteryData = await getLotteryViewData();
+        
+        if (lotteryData) {
+            const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+            
+            return {
+                currentDraw: lotteryData.currentDrawId,
+                ticketPrice: lotteryData.ticketPrice / 10**decimals,
+                prizePool: lotteryData.prizePool / 10**decimals,
+                drawTime: new Date(lotteryData.drawTime * 1000).toISOString(),
+                userTickets: 0, // TODO: Buscar tickets do usuário
+            };
+        }
+    } catch (error) {
+        console.error('Error getting lottery data from contract:', error);
+    }
+    
+    // Fallback para mock
     await wait(500);
     return getFromStorage('lottery', initialLottery);
 };
 
 export const getReferralData = async (userAddress: string) => {
+    // Tentar usar o contrato real
+    try {
+        const { getReferralViewData, getTokenDecimals } = await import('./web3-api');
+        const referralData = await getReferralViewData(userAddress as any);
+        
+        if (referralData) {
+            const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+            
+            return {
+                referrer: referralData.referrer,
+                referralCount: referralData.referralCount,
+                totalCommissions: referralData.totalCommissions / 10**decimals,
+                referralLink: `https://devadrian.com?ref=${userAddress}`,
+                // TODO: Buscar lista de referidos do backend
+                referrals: [],
+            };
+        }
+    } catch (error) {
+        console.error('Error getting referral data from contract:', error);
+    }
+    
+    // Fallback para mock
     await wait(800);
     return getFromStorage('referral', initialReferralData);
 };
@@ -577,35 +644,61 @@ export const claimStakingRewards = async (userAddress: string) => {
 };
 
 export const addLiquidity = async (userAddress: string, liptAmount: number, usdtAmount: number) => {
-    await wait(1800);
-    const wallet = getFromStorage('wallet', initialWallet);
-    if (wallet.liptBalance < liptAmount || wallet.usdtBalance < usdtAmount) {
-        throw new Error('Insufficient balance');
+    // Tentar usar o contrato real
+    try {
+        const { addLiquidity: web3AddLiquidity, getTokenDecimals } = await import('./web3-api');
+        const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const usdtDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any);
+        
+        const liptAmountBigInt = BigInt(Math.floor(liptAmount * 10**liptDecimals));
+        const usdtAmountBigInt = BigInt(Math.floor(usdtAmount * 10**usdtDecimals));
+        
+        const hash = await web3AddLiquidity(userAddress as any, liptAmountBigInt, usdtAmountBigInt);
+        return { success: true, hash };
+    } catch (error) {
+        console.error('Error calling addLiquidity contract:', error);
+        // Fallback para mock
+        await wait(1800);
+        const wallet = getFromStorage('wallet', initialWallet);
+        if (wallet.liptBalance < liptAmount || wallet.usdtBalance < usdtAmount) {
+            throw new Error('Insufficient balance');
+        }
+        wallet.liptBalance -= liptAmount;
+        wallet.usdtBalance -= usdtAmount;
+        const liquidity = getFromStorage('liquidity', initialLiquidity);
+        liquidity.userLpTokens += (liptAmount + usdtAmount) / 100;
+        saveToStorage('wallet', wallet);
+        saveToStorage('liquidity', liquidity);
+        return { success: true };
     }
-    wallet.liptBalance -= liptAmount;
-    wallet.usdtBalance -= usdtAmount;
-    const liquidity = getFromStorage('liquidity', initialLiquidity);
-    // Dummy calculation for new LP tokens
-    liquidity.userLpTokens += (liptAmount + usdtAmount) / 100;
-    saveToStorage('wallet', wallet);
-    saveToStorage('liquidity', liquidity);
-    return { success: true };
 };
 
 export const removeLiquidity = async (userAddress: string, lpAmount: number) => {
-    await wait(1600);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const liquidity = getFromStorage('liquidity', initialLiquidity);
-    if (liquidity.userLpTokens < lpAmount) {
-        throw new Error('Insufficient LP tokens');
+    // Tentar usar o contrato real
+    try {
+        const { removeLiquidity: web3RemoveLiquidity } = await import('./web3-api');
+        
+        // LP tokens geralmente têm 18 decimais
+        const lpAmountBigInt = BigInt(Math.floor(lpAmount * 10**18));
+        
+        const hash = await web3RemoveLiquidity(userAddress as any, lpAmountBigInt);
+        return { success: true, hash };
+    } catch (error) {
+        console.error('Error calling removeLiquidity contract:', error);
+        // Fallback para mock
+        await wait(1600);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const liquidity = getFromStorage('liquidity', initialLiquidity);
+        if (liquidity.userLpTokens < lpAmount) {
+            throw new Error('Insufficient LP tokens');
+        }
+        liquidity.userLpTokens -= lpAmount;
+        wallet.liptBalance += lpAmount * 50;
+        wallet.usdtBalance += lpAmount * 60;
+        saveToStorage('wallet', wallet);
+        saveToStorage('liquidity', liquidity);
+        return { success: true };
     }
-    liquidity.userLpTokens -= lpAmount;
-    // Dummy calculation for returned assets
-    wallet.liptBalance += lpAmount * 50;
-    wallet.usdtBalance += lpAmount * 60;
-    saveToStorage('wallet', wallet);
-    saveToStorage('liquidity', liquidity);
-    return { success: true };
 };
 
 export const activateMiner = async (userAddress: string, plan: { name: string; cost: number; power: number; duration: number; }) => {
@@ -644,38 +737,88 @@ export const claimMinedRewards = async (userAddress: string) => {
 };
 
 // Game Actions
-export const spinWheel = async (userAddress: string, bet: number, winningSegment: {value: number}) => {
-    await wait(500); // Server-side validation
-    const wallet = getFromStorage('wallet', initialWallet);
-    if (wallet.liptBalance < bet) {
-        throw new Error('Insufficient LIPT balance for bet');
+export const spinWheel = async (userAddress: string, bet: number) => {
+    // Tentar usar o contrato real
+    try {
+        const { getTokenDecimals, spinWheel as web3SpinWheel } = await import('./web3-api');
+        const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const betAmount = BigInt(Math.floor(bet * 10**decimals));
+        
+        // Chamar o contrato (ele decide o resultado)
+        const hash = await web3SpinWheel(userAddress as any, betAmount);
+        
+        // Aguardar a transação ser minerada
+        // TODO: Escutar evento WheelSpun para obter o resultado real
+        // Por enquanto, retornar hash da transação
+        return { hash, winnings: 0, multiplier: 0 }; // O frontend deve aguardar o evento
+    } catch (error) {
+        console.error('Error calling spinWheel contract:', error);
+        // Fallback para mock se o contrato falhar
+        await wait(500);
+        const wallet = getFromStorage('wallet', initialWallet);
+        if (wallet.liptBalance < bet) {
+            throw new Error('Insufficient LIPT balance for bet');
+        }
+        // Mock: resultado aleatório
+        const mockMultipliers = [0, 0.5, 1, 1.5, 2, 3];
+        const multiplier = mockMultipliers[Math.floor(Math.random() * mockMultipliers.length)];
+        const winnings = bet * multiplier;
+        wallet.liptBalance = wallet.liptBalance - bet + winnings;
+        saveToStorage('wallet', wallet);
+        return { winnings, multiplier };
     }
-    const winnings = bet * winningSegment.value;
-    wallet.liptBalance = wallet.liptBalance - bet + winnings;
-    saveToStorage('wallet', wallet);
-    return { winnings, multiplier: winningSegment.value };
 }
 
 export const placeRocketBet = async (userAddress: string, bet: number) => {
-    await wait(400);
-    const wallet = getFromStorage('wallet', initialWallet);
-    if (wallet.liptBalance < bet) {
-        throw new Error('Insufficient LIPT balance for bet');
+    // Tentar usar o contrato real
+    try {
+        const { getTokenDecimals, playRocket } = await import('./web3-api');
+        const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const betAmount = BigInt(Math.floor(bet * 10**decimals));
+        
+        // Chamar o contrato (ele decide o crash point)
+        const hash = await playRocket(userAddress as any, betAmount);
+        
+        // TODO: Escutar evento RocketPlayed para obter o betIndex
+        return { success: true, hash };
+    } catch (error) {
+        console.error('Error calling playRocket contract:', error);
+        // Fallback para mock
+        await wait(400);
+        const wallet = getFromStorage('wallet', initialWallet);
+        if (wallet.liptBalance < bet) {
+            throw new Error('Insufficient LIPT balance for bet');
+        }
+        wallet.liptBalance -= bet;
+        saveToStorage('wallet', wallet);
+        return { success: true };
     }
-    // Bet is "removed" from balance until cashout or crash
-    wallet.liptBalance -= bet;
-    saveToStorage('wallet', wallet);
-    return { success: true };
 }
 
 export const cashOutRocket = async (userAddress: string, bet: number, multiplier: number) => {
-    await wait(200);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const winnings = bet * multiplier;
-    wallet.liptBalance += winnings; // Return winnings to balance
-    saveToStorage('wallet', wallet);
-
-    return { winnings };
+    // Tentar usar o contrato real
+    try {
+        const { cashOutRocket: web3CashOut } = await import('./web3-api');
+        
+        // TODO: Obter betIndex correto do evento RocketPlayed
+        const betIndex = 0; // Mock por enquanto
+        const multiplierBasisPoints = Math.floor(multiplier * 100); // Converter para basis points
+        
+        const hash = await web3CashOut(userAddress as any, betIndex, multiplierBasisPoints);
+        
+        // Calcular winnings
+        const winnings = bet * multiplier;
+        return { winnings, hash };
+    } catch (error) {
+        console.error('Error calling cashOutRocket contract:', error);
+        // Fallback para mock
+        await wait(200);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const winnings = bet * multiplier;
+        wallet.liptBalance += winnings;
+        saveToStorage('wallet', wallet);
+        return { winnings };
+    }
 }
 
 export const buyLotteryTickets = async (userAddress: string, quantity: number) => {

@@ -45,7 +45,7 @@ export function LiquidityPool() {
         setAddLiptAmount('');
         setAddUsdtAmount('');
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsAdding(false);
       }
@@ -65,7 +65,7 @@ export function LiquidityPool() {
         toast({ title: t('liquidityPool.toast.removed.title'), description: t('liquidityPool.toast.removed.description', { amount }) });
         setRemoveLpAmount('');
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsRemoving(false);
       }

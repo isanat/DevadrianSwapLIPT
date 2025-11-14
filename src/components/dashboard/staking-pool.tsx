@@ -149,7 +149,7 @@ export function StakingPool() {
   
   const handleStake = async () => {
     if (!selectedPlan) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a staking plan' });
+      toast({ variant: 'destructive', title: t('errors.generic'), description: t('stakingPool.selectPlan') });
       return;
     }
     
@@ -163,7 +163,7 @@ export function StakingPool() {
         toast({ title: t('stakingPool.toast.staked.title'), description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration }) });
         setStakeAmount('');
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsStaking(false);
       }
@@ -189,7 +189,7 @@ export function StakingPool() {
         mutate(['wallet', userAddress]);
         toast({ title: t('stakingPool.toast.rewardsClaimed.title'), description: t('stakingPool.toast.rewardsClaimed.description', { amount }) });
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsClaiming(false);
       }

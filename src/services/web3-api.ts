@@ -444,3 +444,213 @@ export async function claimLotteryPrize(userAddress: Address, drawId: number) {
   const hash = await walletClient.writeContract(request);
   return hash;
 }
+
+// --- FUNÇÕES DE LIQUIDEZ ---
+
+export async function getLiquidityPoolData(userAddress: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) return null;
+
+  try {
+    const swapContract = getContract({
+      address: SWAP_ADDRESS,
+      abi: CONTRACT_ABIS.swapPool,
+      client: publicClient,
+    });
+
+    // Buscar reservas da pool
+    const reserves = await swapContract.read.getReserves();
+    const totalSupply = await swapContract.read.totalSupply();
+    const userLpBalance = await swapContract.read.balanceOf([userAddress]);
+
+    // Calcular pool share do usuário
+    const poolShare = totalSupply > 0n ? (Number(userLpBalance) / Number(totalSupply)) * 100 : 0;
+
+    return {
+      reserveLipt: reserves[0],
+      reserveUsdt: reserves[1],
+      totalSupply,
+      userLpBalance,
+      poolShare,
+    };
+  } catch (error) {
+    console.error('Error getting liquidity pool data:', error);
+    return null;
+  }
+}
+
+export async function addLiquidity(userAddress: Address, liptAmount: bigint, usdtAmount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  // 1. Aprovar LIPT
+  const liptContract = getContract({
+    address: LIPT_ADDRESS,
+    abi: CONTRACT_ABIS.liptToken,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request: approveLiptRequest } = await liptContract.simulate.approve([SWAP_ADDRESS, liptAmount], { account: userAddress });
+  await walletClient.writeContract(approveLiptRequest);
+
+  // 2. Aprovar USDT
+  const usdtContract = getContract({
+    address: USDT_ADDRESS,
+    abi: CONTRACT_ABIS.mockUsdt,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request: approveUsdtRequest } = await usdtContract.simulate.approve([SWAP_ADDRESS, usdtAmount], { account: userAddress });
+  await walletClient.writeContract(approveUsdtRequest);
+
+  // 3. Adicionar liquidez
+  const swapContract = getContract({
+    address: SWAP_ADDRESS,
+    abi: CONTRACT_ABIS.swapPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await swapContract.simulate.addLiquidity([liptAmount, usdtAmount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function removeLiquidity(userAddress: Address, lpTokenAmount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const swapContract = getContract({
+    address: SWAP_ADDRESS,
+    abi: CONTRACT_ABIS.swapPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await swapContract.simulate.removeLiquidity([lpTokenAmount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+// --- FUNÇÕES VIEW ADICIONAIS ---
+
+export async function getSwapFee() {
+  const { publicClient } = getClients();
+  if (!publicClient) return 30; // Default 0.3% (30 basis points)
+
+  try {
+    const swapContract = getContract({
+      address: SWAP_ADDRESS,
+      abi: CONTRACT_ABIS.swapPool,
+      client: publicClient,
+    });
+
+    const feeBasisPoints = await swapContract.read.swapFeeBasisPoints();
+    return Number(feeBasisPoints);
+  } catch (error) {
+    console.error('Error getting swap fee:', error);
+    return 30; // Fallback
+  }
+}
+
+export async function getCommissionRates() {
+  const { publicClient } = getClients();
+  if (!publicClient) return [10, 5, 3]; // Default rates
+
+  try {
+    const referralContract = getContract({
+      address: CONTRACT_ADDRESSES.referralProgram as Address,
+      abi: CONTRACT_ABIS.referralProgram,
+      client: publicClient,
+    });
+
+    // Buscar taxas de comissão para cada nível
+    const level1 = await referralContract.read.commissionRates([0]);
+    const level2 = await referralContract.read.commissionRates([1]);
+    const level3 = await referralContract.read.commissionRates([2]);
+
+    return [Number(level1), Number(level2), Number(level3)];
+  } catch (error) {
+    console.error('Error getting commission rates:', error);
+    return [10, 5, 3]; // Fallback
+  }
+}
+
+export async function getHouseEdge(gameType: 'wheel' | 'rocket') {
+  const { publicClient } = getClients();
+  if (!publicClient) return 200; // Default 2% (200 basis points)
+
+  try {
+    const contractAddress = gameType === 'wheel' 
+      ? CONTRACT_ADDRESSES.wheelOfFortune 
+      : CONTRACT_ADDRESSES.rocketGame;
+    
+    const contractAbi = gameType === 'wheel'
+      ? CONTRACT_ABIS.wheelOfFortune
+      : CONTRACT_ABIS.rocketGame;
+
+    const gameContract = getContract({
+      address: contractAddress as Address,
+      abi: contractAbi,
+      client: publicClient,
+    });
+
+    const houseEdgeBasisPoints = await gameContract.read.houseEdgeBasisPoints();
+    return Number(houseEdgeBasisPoints);
+  } catch (error) {
+    console.error(`Error getting house edge for ${gameType}:`, error);
+    return 200; // Fallback
+  }
+}
+
+export async function getLotteryViewData() {
+  const { publicClient } = getClients();
+  if (!publicClient) return null;
+
+  try {
+    const lotteryContract = getContract({
+      address: CONTRACT_ADDRESSES.lottery as Address,
+      abi: CONTRACT_ABIS.lottery,
+      client: publicClient,
+    });
+
+    const currentDrawId = await lotteryContract.read.currentDrawId();
+    const ticketPrice = await lotteryContract.read.ticketPrice();
+    const prizePool = await lotteryContract.read.prizePool();
+    const drawTime = await lotteryContract.read.drawTime();
+
+    return {
+      currentDrawId: Number(currentDrawId),
+      ticketPrice: Number(ticketPrice),
+      prizePool: Number(prizePool),
+      drawTime: Number(drawTime),
+    };
+  } catch (error) {
+    console.error('Error getting lottery data:', error);
+    return null;
+  }
+}
+
+export async function getReferralViewData(userAddress: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) return null;
+
+  try {
+    const referralContract = getContract({
+      address: CONTRACT_ADDRESSES.referralProgram as Address,
+      abi: CONTRACT_ABIS.referralProgram,
+      client: publicClient,
+    });
+
+    const referrer = await referralContract.read.getReferrer([userAddress]);
+    const totalCommissions = await referralContract.read.getTotalCommissions([userAddress]);
+    const referralCount = await referralContract.read.getReferralCount([userAddress]);
+
+    return {
+      referrer: referrer as string,
+      totalCommissions: Number(totalCommissions),
+      referralCount: Number(referralCount),
+    };
+  } catch (error) {
+    console.error('Error getting referral data:', error);
+    return null;
+  }
+}

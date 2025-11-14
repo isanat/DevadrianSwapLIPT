@@ -42,16 +42,8 @@ const getConicGradient = (segments: typeof defaultSegments) => {
   return gradient;
 };
 
-// 📊 Sorteio ponderado por peso
-const getWeightedRandomSegment = (segments: typeof defaultSegments) => {
-  const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
-  let r = Math.random() * totalWeight;
-  for (const seg of segments) {
-    if (r < seg.weight) return seg;
-    r -= seg.weight;
-  }
-  return segments[segments.length - 1];
-};
+// REMOVIDO: getWeightedRandomSegment - O contrato decide o resultado
+// O frontend não deve calcular qual segmento ganha
 
 
 const Wheel = ({ rotation, isSpinning, segments }: { rotation: number; isSpinning: boolean; segments: typeof defaultSegments }) => {
@@ -161,33 +153,15 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     setIsSpinning(true);
     mutate(['wallet', userAddress], { ...wallet, liptBalance: wallet.liptBalance - bet }, false);
 
-    const winningSeg = getWeightedRandomSegment(currentSegments);
-    const totalWeight = currentSegments.reduce((sum, s) => sum + s.weight, 0);
-    
-    let cumulativeWeight = 0;
-    const matchingIndices = currentSegments.reduce((acc, segment, index) => {
-        if (segment.label === winningSeg.label && segment.color === winningSeg.color) {
-            acc.push(index);
-        }
-        return acc;
-    }, [] as number[]);
-    const winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
-
-    for(let i = 0; i < winningSegmentIndex; i++) {
-        cumulativeWeight += currentSegments[i].weight;
-    }
-    
-    const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
-    const segmentAngle = (winningSeg.weight / totalWeight) * 360;
-    const randomAngleInSegment = Math.random() * segmentAngle;
-    const targetAngle = segmentStartAngle + randomAngleInSegment;
+    // Animação visual enquanto aguarda o contrato
     const randomSpins = Math.floor(Math.random() * 4) + 8;
-    const finalRotation = (randomSpins * 360) - targetAngle;
-    
+    const randomAngle = Math.random() * 360;
+    const finalRotation = (randomSpins * 360) + randomAngle;
     setRotation(finalRotation);
 
     try {
-        const result = await spinWheel(userAddress!, bet, winningSeg);
+        // O contrato decide o resultado
+        const result = await spinWheel(userAddress!, bet);
         setTimeout(() => {
             mutate(['wallet', userAddress]);
             onSpinResult({

@@ -92,17 +92,9 @@ const createRocket = (app: PIXI.Application): Rocket => {
   return container;
 };
 
-// --- CRASH POINT (Sem alteração) ---
-const generateCrashPoint = (): number => {
-  try {
-    const e = 2 ** 32;
-    const h = crypto.getRandomValues(new Uint32Array(1))[0];
-    const r = h / e;
-    return Math.max(1.01, Math.floor(100 / (1 - r)) / 100);
-  } catch {
-    return Math.max(1.01, 1 + Math.random() * 10);
-  }
-};
+// REMOVIDO: generateCrashPoint - O contrato decide o crash point
+// O frontend não deve calcular o resultado do jogo
+// O crash point será obtido do evento RocketPlayed emitido pelo contrato
 
 // --- EXPLOSÃO COM IMPACTO (FLASH, SHAKE, SHOCKWAVE) ---
 const createExplosion = (app: PIXI.Application, x: number, y: number) => {
@@ -403,12 +395,18 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
   const handleBet = async () => {
     const bet = parseFloat(betAmount);
     if (isNaN(bet) || bet <= 0 || !wallet || bet > wallet.liptBalance) {
-      toast({ variant: 'destructive', title: 'Aposta inválida' });
+      toast({ 
+        variant: 'destructive', 
+        title: t('gameZone.rocket.toast.invalidBet.title'),
+        description: t('gameZone.rocket.toast.invalidBet.description'),
+      });
       return;
     }
     
-    setIsLoadingAction(true);
-    crashPointRef.current = generateCrashPoint();
+    setIsLoadingAction(true);
+    // O contrato decide o crash point, não o frontend
+    // TODO: Obter crash point do evento RocketPlayed
+    crashPointRef.current = 2.0; // Valor temporário para animação
     
     try {
         await placeRocketBet(userAddress!, bet);
