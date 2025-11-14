@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import useSWR, { useSWRConfig } from 'swr';
 import { buyLotteryTickets, claimLotteryPrize, getLotteryData, getWalletData, LotteryState } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 const CountdownTimer = ({ endTime }: { endTime: number }) => {
@@ -85,7 +86,8 @@ export function DailyLottery() {
   const { mutate } = useSWRConfig();
   
   const { data: lottery, isLoading: isLoadingLottery } = useSWR<LotteryState>('lottery', getLotteryData);
-  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { address: userAddress } = useAccount();
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [ticketAmount, setTicketAmount] = useState('1');
   const [isBuying, setIsBuying] = useState(false);
@@ -116,7 +118,7 @@ export function DailyLottery() {
     
     setIsBuying(true);
     try {
-      await buyLotteryTickets(amount);
+      await buyLotteryTickets(userAddress!, amount);
       mutate('lottery');
       mutate('wallet');
       toast({ title: t('gameZone.lottery.toast.success.title'), description: t('gameZone.lottery.toast.success.description', { amount }) });

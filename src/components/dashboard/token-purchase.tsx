@@ -11,15 +11,17 @@ import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR, { useSWRConfig } from 'swr';
 import { getDashboardStats, getWalletData, purchaseLipt } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 export function TokenPurchase() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
+  const { address: userAddress } = useAccount();
 
-  const { data: stats, isLoading: isLoadingStats } = useSWR('stats', getDashboardStats);
-  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { data: stats, isLoading: isLoadingStats } = useSWR(userAddress ? ['stats', userAddress] : null, () => getDashboardStats(userAddress!));
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [usdtAmount, setUsdtAmount] = useState('');
   const [liptAmount, setLiptAmount] = useState('');
@@ -46,7 +48,7 @@ export function TokenPurchase() {
     if (wallet && amountToBuy > 0 && wallet.usdtBalance >= cost) {
         setIsPurchasing(true);
         try {
-            await purchaseLipt(amountToBuy);
+            await purchaseLipt(userAddress!, amountToBuy);
             mutate('wallet'); // Re-fetch wallet data
             toast({
                 title: t('tokenPurchase.toast.success.title'),

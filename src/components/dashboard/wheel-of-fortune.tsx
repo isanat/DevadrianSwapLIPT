@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import useSWR, { useSWRConfig } from 'swr';
 import { getWalletData, spinWheel } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
@@ -132,7 +133,8 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
-  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { address: userAddress } = useAccount();
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
   
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
@@ -177,7 +179,7 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     setRotation(finalRotation);
 
     try {
-        const result = await spinWheel(bet, winningSeg);
+        const result = await spinWheel(userAddress!, bet, winningSeg);
         setTimeout(() => {
             mutate('wallet');
             onSpinResult({

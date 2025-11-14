@@ -13,6 +13,7 @@ import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR, { useSWRConfig } from 'swr';
 import { getMiningData, getWalletData, activateMiner, claimMinedRewards, MINING_PLANS, Miner } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 const ActiveMiner = ({ miner }: { miner: Miner }) => {
@@ -96,9 +97,10 @@ export function MiningPool() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
+  const { address: userAddress } = useAccount();
 
-  const { data: miningData, isLoading: isLoadingMining } = useSWR('mining', getMiningData);
-  const { data: walletData, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { data: miningData, isLoading: isLoadingMining } = useSWR(userAddress ? ['mining', userAddress] : null, () => getMiningData(userAddress!));
+  const { data: walletData, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
   
   const [selectedPlan, setSelectedPlan] = useState(MINING_PLANS[0]);
   const [isActivating, setIsActivating] = useState(false);
@@ -108,7 +110,7 @@ export function MiningPool() {
     if(walletData && walletData.liptBalance >= selectedPlan.cost) {
       setIsActivating(true);
       try {
-        await activateMiner(selectedPlan);
+        await activateMiner(userAddress!, selectedPlan);
         mutate('mining');
         mutate('wallet');
         toast({ title: t('miningPool.toast.activated.title'), description: t('miningPool.toast.activated.description', { name: selectedPlan.name }) });
@@ -127,7 +129,7 @@ export function MiningPool() {
       setIsClaiming(true);
       const amount = miningData.minedRewards.toFixed(2);
       try {
-        await claimMinedRewards();
+        await claimMinedRewards(userAddress!);
         mutate('mining');
         mutate('wallet');
         toast({ title: t('miningPool.toast.rewardsClaimed.title'), description: t('miningPool.toast.rewardsClaimed.description', { amount }) });

@@ -148,3 +148,125 @@ export async function purchaseLipt(userAddress: Address, usdtAmount: bigint) {
   const hash = await walletClient.writeContract(swapRequest);
   return hash;
 }
+
+// --- FUNÇÕES DE AÇÃO (MUTATIONS) - CONTINUAÇÃO ---
+
+export async function claimStakingRewards(userAddress: Address, stakeId: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const stakingContract = getContract({
+    address: STAKING_ADDRESS,
+    abi: CONTRACT_ABIS.stakingPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await stakingContract.simulate.claimRewards([stakeId], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function activateMiner(userAddress: Address, planId: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const miningContract = getContract({
+    address: CONTRACT_ADDRESSES.miningPool as Address,
+    abi: CONTRACT_ABIS.miningPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await miningContract.simulate.activateMiner([planId], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function claimMinedRewards(userAddress: Address, minerId: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const miningContract = getContract({
+    address: CONTRACT_ADDRESSES.miningPool as Address,
+    abi: CONTRACT_ABIS.miningPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await miningContract.simulate.claimMinedRewards([minerId], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function spinWheel(userAddress: Address, betAmount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const wheelContract = getContract({
+    address: CONTRACT_ADDRESSES.wheelOfFortune as Address,
+    abi: CONTRACT_ABIS.wheelOfFortune,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await wheelContract.simulate.spinWheel([betAmount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function playRocket(userAddress: Address, betAmount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const rocketContract = getContract({
+    address: CONTRACT_ADDRESSES.rocketGame as Address,
+    abi: CONTRACT_ABIS.rocketGame,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await rocketContract.simulate.playRocket([betAmount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function cashOutRocket(userAddress: Address, betIndex: number, multiplier: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const rocketContract = getContract({
+    address: CONTRACT_ADDRESSES.rocketGame as Address,
+    abi: CONTRACT_ABIS.rocketGame,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await rocketContract.simulate.cashOutRocket([betIndex, multiplier], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function buyLotteryTickets(userAddress: Address, ticketQuantity: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const lotteryContract = getContract({
+    address: CONTRACT_ADDRESSES.lottery as Address,
+    abi: CONTRACT_ABIS.lottery,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await lotteryContract.simulate.buyTickets([ticketQuantity], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+export async function claimLotteryPrize(userAddress: Address, drawId: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const lotteryContract = getContract({
+    address: CONTRACT_ADDRESSES.lottery as Address,
+    abi: CONTRACT_ABIS.lottery,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await lotteryContract.simulate.claimLotteryPrize([drawId], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}

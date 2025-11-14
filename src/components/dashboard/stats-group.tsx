@@ -4,12 +4,14 @@ import { TrendingUp, Banknote, Coins, PiggyBank, Briefcase, ArrowUpRight } from 
 import { useI18n } from '@/context/i18n-context';
 import useSWR from 'swr';
 import { getDashboardStats, getWalletData, priceHistory } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 export function StatsGroup() {
     const { t } = useI18n();
-    const { data: stats, isLoading: isLoadingStats } = useSWR('stats', getDashboardStats);
-    const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+    const { address: userAddress } = useAccount();
+    const { data: stats, isLoading: isLoadingStats } = useSWR(userAddress ? ['stats', userAddress] : null, () => getDashboardStats(userAddress!));
+    const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
     const isLoading = isLoadingStats || isLoadingWallet;
 

@@ -10,14 +10,16 @@ import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR from 'swr';
 import { getReferralData } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 export function ReferralDashboard() {
   const { toast } = useToast();
   const { t } = useI18n();
-  const referralLink = "https://devadrianswap.com/invite?ref=user123";
+  const { address: userAddress } = useAccount();
+  const referralLink = userAddress ? `https://devadrianswap.com/invite?ref=${userAddress}` : "https://devadrianswap.com/invite?ref=...";
 
-  const { data: referralData, isLoading } = useSWR('referral', getReferralData);
+  const { data: referralData, isLoading } = useSWR(userAddress ? ['referral', userAddress] : null, () => getReferralData(userAddress!));
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);

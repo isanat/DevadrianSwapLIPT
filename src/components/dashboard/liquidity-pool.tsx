@@ -13,15 +13,17 @@ import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR, { useSWRConfig } from 'swr';
 import { getLiquidityData, getWalletData, addLiquidity, removeLiquidity } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 export function LiquidityPool() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
+  const { address: userAddress } = useAccount();
 
-  const { data: lpData, isLoading: isLoadingLp } = useSWR('liquidity', getLiquidityData);
-  const { data: walletData, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { data: lpData, isLoading: isLoadingLp } = useSWR(userAddress ? ['liquidity', userAddress] : null, () => getLiquidityData(userAddress!));
+  const { data: walletData, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [addLiptAmount, setAddLiptAmount] = useState('');
   const [addUsdtAmount, setAddUsdtAmount] = useState('');
@@ -36,7 +38,7 @@ export function LiquidityPool() {
     if (walletData && lipt > 0 && usdt > 0 && lipt <= walletData.liptBalance && usdt <= walletData.usdtBalance) {
       setIsAdding(true);
       try {
-        await addLiquidity(lipt, usdt);
+        await addLiquidity(userAddress!, lipt, usdt);
         mutate('liquidity');
         mutate('wallet');
         toast({ title: t('liquidityPool.toast.added.title'), description: t('liquidityPool.toast.added.description', { lipt, usdt }) });
@@ -57,7 +59,7 @@ export function LiquidityPool() {
     if (lpData && amount > 0 && amount <= lpData.lpTokens) {
       setIsRemoving(true);
       try {
-        await removeLiquidity(amount);
+        await removeLiquidity(userAddress!, amount);
         mutate('liquidity');
         mutate('wallet');
         toast({ title: t('liquidityPool.toast.removed.title'), description: t('liquidityPool.toast.removed.description', { amount }) });

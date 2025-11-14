@@ -17,6 +17,7 @@ import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR, { useSWRConfig } from 'swr';
 import { getStakingData, getWalletData, stakeLipt, unstakeLipt, claimStakingRewards, Stake, STAKING_PLANS } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: string, penalty: number) => void; }) => {
@@ -54,7 +55,7 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
   const handleUnstake = async () => {
     setIsUnstaking(true);
     try {
-        const { penalty } = await unstakeLipt(stake.id);
+        const { penalty } = await unstakeLipt(userAddress!, stake.id);
         mutate('staking');
         mutate('wallet');
         onUnstake(stake.id, penalty);
@@ -127,7 +128,8 @@ export function StakingPool() {
   const { mutate } = useSWRConfig();
   
   const { data: stakingData, isLoading: isLoadingStaking } = useSWR('staking', getStakingData);
-  const { data: walletData, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { address: userAddress } = useAccount();
+  const { data: walletData, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [stakeAmount, setStakeAmount] = useState('');
   const [selectedPlan, setSelectedPlan] = useState(STAKING_PLANS[0]);
@@ -139,7 +141,7 @@ export function StakingPool() {
     if(walletData && amount > 0 && amount <= walletData.liptBalance) {
       setIsStaking(true);
       try {
-        await stakeLipt(amount, selectedPlan);
+        await stakeLipt(userAddress!, amount, selectedPlan);
         mutate('staking');
         mutate('wallet');
         toast({ title: t('stakingPool.toast.staked.title'), description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration }) });

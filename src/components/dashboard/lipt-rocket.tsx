@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import * as PIXI from 'pixi.js';
 import useSWR, { useSWRConfig } from 'swr';
 import { getWalletData, placeRocketBet, cashOutRocket } from '@/services/mock-api';
+import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
 // --- DEFINIÇÕES DE TIPO ---
@@ -194,7 +195,8 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
 
-  const { data: wallet, isLoading: isLoadingWallet } = useSWR('wallet', getWalletData);
+  const { address: userAddress } = useAccount();
+  const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [betAmount, setBetAmount] = useState('');
   const [displayMultiplier, setDisplayMultiplier] = useState(1.0);
@@ -409,7 +411,7 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     crashPointRef.current = generateCrashPoint();
     
     try {
-        await placeRocketBet(bet);
+        await placeRocketBet(userAddress!, bet);
         mutate('wallet');
         setGameStatus('waiting');
         toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
@@ -429,8 +431,8 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     const finalMultiplier = multiplierRef.current;
 
     try {
-        const bet = parseFloat(betAmount);
-        const { winnings } = await cashOutRocket(bet, finalMultiplier);
+        const bet = parseFloat(betAmount);
+        const { winnings } = await cashOutRocket(userAddress!, bet, finalMultiplier);
         mutate('wallet');
         setCashedOutMultiplier(finalMultiplier);
         setGameStatus('cashed_out');
