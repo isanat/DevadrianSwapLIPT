@@ -9,12 +9,13 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import useSWR, { useSWRConfig } from 'swr';
 import { getWalletData, spinWheel } from '@/services/mock-api';
+import { getWheelSegments } from '@/services/web3-api';
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
-// Pesos ajustados para que a soma seja 100 e a vantagem seja da casa.
-const segments = [
+// Segmentos padrão (fallback se o contrato não retornar)
+const defaultSegments = [
     { value: 1.5, label: '1.5x', color: '#6366f1', weight: 8 },  // Indigo
     { value: 0,   label: '0x',   color: '#ef4444', weight: 25 }, // Red
     { value: 1,   label: '1x',   color: '#22c55e', weight: 10 }, // Green
@@ -25,10 +26,9 @@ const segments = [
     { value: 1,   label: '1x',   color: '#16a34a', weight: 10 }, // Darker Green
 ];
 
-const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
-
 // 🎨 Gera o gradiente conic proporcional
-const getConicGradient = () => {
+const getConicGradient = (segments: typeof defaultSegments) => {
+  const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
   let gradient = 'conic-gradient(';
   let currentAngle = 0; 
   segments.forEach((seg, i) => {
@@ -43,7 +43,8 @@ const getConicGradient = () => {
 };
 
 // 📊 Sorteio ponderado por peso
-const getWeightedRandomSegment = () => {
+const getWeightedRandomSegment = (segments: typeof defaultSegments) => {
+  const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
   let r = Math.random() * totalWeight;
   for (const seg of segments) {
     if (r < seg.weight) return seg;
@@ -53,11 +54,13 @@ const getWeightedRandomSegment = () => {
 };
 
 
-const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean }) => {
+const Wheel = ({ rotation, isSpinning, segments }: { rotation: number; isSpinning: boolean; segments: typeof defaultSegments }) => {
   const { t } = useI18n();
   const transitionStyle = isSpinning
     ? { transition: 'transform 8s cubic-bezier(0.2, 0.8, 0.2, 1)' }
     : { transition: 'none' };
+
+  const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
 
   return (
     <div className="relative w-72 h-72 md:w-80 md:h-80 mx-auto my-8 flex items-center justify-center">
@@ -87,7 +90,7 @@ const Wheel = ({ rotation, isSpinning }: { rotation: number; isSpinning: boolean
         {/* Fundo da roda com cores */}
         <div
           className="absolute w-full h-full rounded-full"
-          style={{ background: getConicGradient() }}
+          style={{ background: getConicGradient(segments) }}
         />
         {/* Sombra interna para efeito 3D */}
         <div className="absolute w-full h-full rounded-full shadow-[inset_0_0_25px_rgba(0,0,0,0.5)]" />
@@ -135,10 +138,14 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
   const { mutate } = useSWRConfig();
   const { address: userAddress } = useAccount();
   const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
+  const { data: segments, isLoading: isLoadingSegments } = useSWR('wheelSegments', getWheelSegments);
   
   const [betAmount, setBetAmount] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
+
+  // Usar segmentos do contrato ou fallback
+  const currentSegments = segments && segments.length > 0 ? segments : defaultSegments;
 
   const handleSpin = async () => {
     const bet = parseFloat(betAmount);
@@ -181,7 +188,7 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     try {
         const result = await spinWheel(userAddress!, bet, winningSeg);
         setTimeout(() => {
-            mutate('wallet');
+            mutate(['wallet', userAddress]);
             onSpinResult({
                 id: Date.now(),
                 bet,
@@ -210,14 +217,24 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
         }, 8000); 
     } catch(e: any) {
         toast({ variant: 'destructive', title: "Spin failed", description: e.message });
-        mutate('wallet');
+        mutate(['wallet', userAddress]);
         setIsSpinning(false);
     }
   };
 
+  if (isLoadingSegments) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <Skeleton className="w-72 h-72 md:w-80 md:h-80 rounded-full" />
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-12 w-64" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
-      <Wheel rotation={rotation} isSpinning={isSpinning} />
+      <Wheel rotation={rotation} isSpinning={isSpinning} segments={currentSegments} />
 
       {isLoadingWallet ? (
         <div className="w-full max-w-xs space-y-2">

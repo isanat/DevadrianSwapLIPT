@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR, { useSWRConfig } from 'swr';
-import { getMiningData, getWalletData, activateMiner, claimMinedRewards, MINING_PLANS, Miner } from '@/services/mock-api';
+import { getMiningData, getWalletData, activateMiner, claimMinedRewards, Miner } from '@/services/mock-api';
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
@@ -102,17 +102,29 @@ export function MiningPool() {
   const { data: miningData, isLoading: isLoadingMining } = useSWR(userAddress ? ['mining', userAddress] : null, () => getMiningData(userAddress!));
   const { data: walletData, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
   
-  const [selectedPlan, setSelectedPlan] = useState(MINING_PLANS[0]);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; cost: number; power: number; duration: number } | null>(null);
   const [isActivating, setIsActivating] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
 
+  // Atualizar selectedPlan quando os planos forem carregados
+  useEffect(() => {
+    if (miningData?.plans && miningData.plans.length > 0 && !selectedPlan) {
+      setSelectedPlan(miningData.plans[0]);
+    }
+  }, [miningData?.plans, selectedPlan]);
+
   const handleActivateMiner = async () => {
+    if (!selectedPlan) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a mining plan' });
+      return;
+    }
+    
     if(walletData && walletData.liptBalance >= selectedPlan.cost) {
       setIsActivating(true);
       try {
         await activateMiner(userAddress!, selectedPlan);
-        mutate('mining');
-        mutate('wallet');
+        mutate(['mining', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ title: t('miningPool.toast.activated.title'), description: t('miningPool.toast.activated.description', { name: selectedPlan.name }) });
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -130,8 +142,8 @@ export function MiningPool() {
       const amount = miningData.minedRewards.toFixed(2);
       try {
         await claimMinedRewards(userAddress!);
-        mutate('mining');
-        mutate('wallet');
+        mutate(['mining', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ title: t('miningPool.toast.rewardsClaimed.title'), description: t('miningPool.toast.rewardsClaimed.description', { amount }) });
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -198,15 +210,22 @@ export function MiningPool() {
                 <div className="space-y-4">
                 <div>
                     <Label>{t('miningPool.selectMiner')}</Label>
-                    <RadioGroup defaultValue={selectedPlan.name} onValueChange={(val) => setSelectedPlan(MINING_PLANS.find(p => p.name === val)!)} className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                        {MINING_PLANS.map(plan => (
+                    <RadioGroup 
+                      value={selectedPlan?.name} 
+                      onValueChange={(val) => {
+                        const plan = miningData?.plans?.find(p => p.name === val);
+                        if (plan) setSelectedPlan(plan);
+                      }} 
+                      className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2"
+                    >
+                        {miningData?.plans?.map(plan => (
                             <Label 
                                 key={plan.name} 
                                 htmlFor={`miner-${plan.name}`} 
                                 className={cn(
                                 "flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all cursor-pointer",
                                 "hover:border-primary/50 hover:bg-accent/50",
-                                selectedPlan.name === plan.name ? "border-primary bg-accent/20" : "border-muted bg-background/50"
+                                selectedPlan?.name === plan.name ? "border-primary bg-accent/20" : "border-muted bg-background/50"
                                 )}>
                                 <RadioGroupItem value={plan.name} id={`miner-${plan.name}`} className="sr-only" />
                                 <div className="text-lg font-bold">{plan.name}</div>
@@ -221,9 +240,9 @@ export function MiningPool() {
                     </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                    <Button className="w-full" variant="default" onClick={handleActivateMiner} disabled={isActivating}>
+                    <Button className="w-full" variant="default" onClick={handleActivateMiner} disabled={isActivating || !selectedPlan}>
                         {isActivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isActivating ? 'Activating...' : `${t('miningPool.activateButton')} '${selectedPlan.name}'`}
+                        {isActivating ? 'Activating...' : selectedPlan ? `${t('miningPool.activateButton')} '${selectedPlan.name}'` : t('miningPool.activateButton')}
                     </Button>
                     <p className="text-xs text-muted-foreground text-center">{t('stakingPool.walletBalance')}: {walletData?.liptBalance.toLocaleString('en-US')} LIPT</p>
                 </div>

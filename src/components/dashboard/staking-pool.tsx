@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { useI18n } from '@/context/i18n-context';
 import { HelpTooltip } from './help-tooltip';
 import useSWR, { useSWRConfig } from 'swr';
-import { getStakingData, getWalletData, stakeLipt, unstakeLipt, claimStakingRewards, Stake, STAKING_PLANS } from '@/services/mock-api';
+import { getStakingData, getWalletData, stakeLipt, unstakeLipt, claimStakingRewards, Stake } from '@/services/mock-api';
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
@@ -127,23 +127,35 @@ export function StakingPool() {
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
   
-  const { data: stakingData, isLoading: isLoadingStaking } = useSWR('staking', getStakingData);
   const { address: userAddress } = useAccount();
+  const { data: stakingData, isLoading: isLoadingStaking } = useSWR(userAddress ? ['staking', userAddress] : null, () => getStakingData(userAddress!));
   const { data: walletData, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [stakeAmount, setStakeAmount] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState(STAKING_PLANS[0]);
+  const [selectedPlan, setSelectedPlan] = useState<{ duration: number; apy: number } | null>(null);
   const [isStaking, setIsStaking] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+
+  // Atualizar selectedPlan quando os planos forem carregados
+  useEffect(() => {
+    if (stakingData?.plans && stakingData.plans.length > 0 && !selectedPlan) {
+      setSelectedPlan(stakingData.plans[0]);
+    }
+  }, [stakingData?.plans, selectedPlan]);
   
   const handleStake = async () => {
+    if (!selectedPlan) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a staking plan' });
+      return;
+    }
+    
     const amount = parseFloat(stakeAmount);
     if(walletData && amount > 0 && amount <= walletData.liptBalance) {
       setIsStaking(true);
       try {
         await stakeLipt(userAddress!, amount, selectedPlan);
-        mutate('staking');
-        mutate('wallet');
+        mutate(['staking', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ title: t('stakingPool.toast.staked.title'), description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration }) });
         setStakeAmount('');
       } catch (error: any) {
@@ -164,13 +176,13 @@ export function StakingPool() {
   };
 
   const handleClaim = async () => {
-    if(stakingData && stakingData.unclaimedRewards > 0) {
+    if(stakingData && stakingData.unclaimedRewards > 0 && userAddress) {
       setIsClaiming(true);
       const amount = stakingData.unclaimedRewards.toFixed(2);
       try {
-        await claimStakingRewards();
-        mutate('staking');
-        mutate('wallet');
+        await claimStakingRewards(userAddress);
+        mutate(['staking', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ title: t('stakingPool.toast.rewardsClaimed.title'), description: t('stakingPool.toast.rewardsClaimed.description', { amount }) });
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -239,15 +251,22 @@ export function StakingPool() {
                 <div className="space-y-4">
                 <div>
                     <Label>{t('stakingPool.selectPlan')}</Label>
-                    <RadioGroup defaultValue={String(selectedPlan.duration)} onValueChange={(val) => setSelectedPlan(STAKING_PLANS.find(p => p.duration === parseInt(val))!)} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-                        {STAKING_PLANS.map(plan => (
+                    <RadioGroup 
+                      value={selectedPlan ? String(selectedPlan.duration) : undefined} 
+                      onValueChange={(val) => {
+                        const plan = stakingData?.plans?.find(p => p.duration === parseInt(val));
+                        if (plan) setSelectedPlan(plan);
+                      }} 
+                      className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2"
+                    >
+                        {stakingData?.plans?.map(plan => (
                             <Label 
                                 key={plan.duration} 
                                 htmlFor={`plan-${plan.duration}`} 
                                 className={cn(
                                 "flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all cursor-pointer",
                                 "hover:border-primary/50 hover:bg-accent/50",
-                                selectedPlan.duration === plan.duration ? "border-primary bg-accent/20" : "border-muted bg-background/50"
+                                selectedPlan?.duration === plan.duration ? "border-primary bg-accent/20" : "border-muted bg-background/50"
                                 )}>
                                 <RadioGroupItem value={String(plan.duration)} id={`plan-${plan.duration}`} className="sr-only" />
                                 <div className="flex items-center gap-2 font-semibold text-sm">

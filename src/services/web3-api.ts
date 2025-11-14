@@ -13,9 +13,10 @@ function getClients() {
   }
 
   if (!publicClient) {
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'https://polygon-rpc.com';
     publicClient = createPublicClient({
       chain: polygon,
-      transport: http('https://polygon-rpc.com'),
+      transport: http(rpcUrl),
     });
   }
 
@@ -78,6 +79,179 @@ export async function getStakingPlans() {
     apy: Number(plan.apy),
     cost: Number(plan.cost),
   }));
+}
+
+// Buscar decimais de um token
+export async function getTokenDecimals(tokenAddress: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) return 18; // Fallback padrão para ERC-20
+
+  try {
+    const tokenContract = getContract({
+      address: tokenAddress,
+      abi: CONTRACT_ABIS.liptToken, // Ambos LIPT e USDT devem ter decimals()
+      client: publicClient,
+    });
+
+    const decimals = await tokenContract.read.decimals();
+    return Number(decimals);
+  } catch (error) {
+    console.error('Error fetching token decimals:', error);
+    return 18; // Fallback
+  }
+}
+
+// Buscar planos de mineração
+export async function getMiningPlans() {
+  const { publicClient } = getClients();
+  if (!publicClient) return [];
+
+  try {
+    const miningContract = getContract({
+      address: CONTRACT_ADDRESSES.miningPool as Address,
+      abi: CONTRACT_ABIS.miningPool,
+      client: publicClient,
+    });
+
+    // Assumindo que o contrato tem getMiningPlans() similar ao staking
+    const plans = await miningContract.read.getMiningPlans();
+    return plans.map((plan: any) => ({
+      name: plan.name || `Plan ${plan.id}`,
+      cost: Number(plan.cost),
+      power: Number(plan.power),
+      duration: Number(plan.duration),
+    }));
+  } catch (error) {
+    console.error('Error fetching mining plans:', error);
+    return []; // Fallback
+  }
+}
+
+// Buscar penalidade de unstake antecipado
+export async function getEarlyUnstakePenalty() {
+  const { publicClient } = getClients();
+  if (!publicClient) return 10; // Fallback padrão de 10%
+
+  try {
+    const stakingContract = getContract({
+      address: STAKING_ADDRESS,
+      abi: CONTRACT_ABIS.stakingPool,
+      client: publicClient,
+    });
+
+    // Assumindo que retorna em basis points (10000 = 100%)
+    const penaltyBasisPoints = await stakingContract.read.earlyUnstakePenaltyBasisPoints();
+    return Number(penaltyBasisPoints) / 100; // Converter para porcentagem
+  } catch (error) {
+    console.error('Error fetching early unstake penalty:', error);
+    return 10; // Fallback de 10%
+  }
+}
+
+// Buscar stakes do usuário
+export async function getUserStakes(userAddress: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) return [];
+
+  try {
+    const stakingContract = getContract({
+      address: STAKING_ADDRESS,
+      abi: CONTRACT_ABIS.stakingPool,
+      client: publicClient,
+    });
+
+    // Assumindo que o contrato tem getUserStakes(address)
+    const stakes = await stakingContract.read.getUserStakes([userAddress]);
+    return stakes.map((stake: any, index: number) => ({
+      id: stake.id?.toString() || index.toString(),
+      amount: Number(stake.amount),
+      startDate: Number(stake.startDate) * 1000, // Converter de segundos para ms
+      plan: {
+        duration: Number(stake.plan?.duration || stake.duration),
+        apy: Number(stake.plan?.apy || stake.apy),
+      },
+    }));
+  } catch (error) {
+    console.error('Error fetching user stakes:', error);
+    return []; // Fallback
+  }
+}
+
+// Buscar miners do usuário
+export async function getUserMiners(userAddress: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) return [];
+
+  try {
+    const miningContract = getContract({
+      address: CONTRACT_ADDRESSES.miningPool as Address,
+      abi: CONTRACT_ABIS.miningPool,
+      client: publicClient,
+    });
+
+    // Assumindo que o contrato tem getUserMiners(address)
+    const miners = await miningContract.read.getUserMiners([userAddress]);
+    return miners.map((miner: any, index: number) => ({
+      id: miner.id?.toString() || index.toString(),
+      startDate: Number(miner.startDate) * 1000, // Converter de segundos para ms
+      plan: {
+        name: miner.plan?.name || miner.name || `Plan ${index}`,
+        cost: Number(miner.plan?.cost || miner.cost),
+        power: Number(miner.plan?.power || miner.power),
+        duration: Number(miner.plan?.duration || miner.duration),
+      },
+      minedAmount: Number(miner.minedAmount || 0),
+    }));
+  } catch (error) {
+    console.error('Error fetching user miners:', error);
+    return []; // Fallback
+  }
+}
+
+// Buscar segmentos da roda da fortuna
+export async function getWheelSegments() {
+  const { publicClient } = getClients();
+  if (!publicClient) return [];
+
+  try {
+    const wheelContract = getContract({
+      address: CONTRACT_ADDRESSES.wheelOfFortune as Address,
+      abi: CONTRACT_ABIS.wheelOfFortune,
+      client: publicClient,
+    });
+
+    // Assumindo que o contrato tem getSegments() ou precisa iterar
+    // Se o contrato tem um contador de segmentos, iterar
+    let segments: any[] = [];
+    try {
+      // Tentar buscar todos os segmentos de uma vez
+      const allSegments = await wheelContract.read.getSegments();
+      segments = Array.isArray(allSegments) ? allSegments : [];
+    } catch {
+      // Se não tiver getSegments(), tentar iterar
+      try {
+        const segmentCount = await wheelContract.read.segmentCount();
+        const promises = [];
+        for (let i = 0; i < Number(segmentCount); i++) {
+          promises.push(wheelContract.read.segments([i]));
+        }
+        segments = await Promise.all(promises);
+      } catch {
+        // Se falhar, retornar array vazio (fallback será usado)
+        return [];
+      }
+    }
+
+    return segments.map((seg: any, index: number) => ({
+      value: Number(seg.value || seg.multiplier || 0),
+      label: `${seg.value || seg.multiplier || 0}x`,
+      color: seg.color || `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Cor aleatória se não tiver
+      weight: Number(seg.weight || seg.probability || 1),
+    }));
+  } catch (error) {
+    console.error('Error fetching wheel segments:', error);
+    return []; // Fallback - o componente usará os segmentos hardcoded
+  }
 }
 
 // --- FUNÇÕES DE AÇÃO (MUTATIONS) ---

@@ -186,8 +186,33 @@ export const priceHistory = Array.from({ length: 20 }, (_, i) => ({
 
 // GETTERS
 export const getWalletData = async (userAddress: string) => {
-  await wait(300);
-  return getFromStorage('wallet', initialWallet);
+  if (!userAddress) {
+    // Se não há endereço, retornar dados mock
+    await wait(300);
+    return getFromStorage('wallet', initialWallet);
+  }
+
+  try {
+    // Importar funções do web3-api
+    const { getWalletBalances, getTokenDecimals } = await import('./web3-api');
+    const { CONTRACT_ADDRESSES } = await import('../config/contracts');
+    
+    const balances = await getWalletBalances(userAddress as any);
+    const [liptDecimals, usdtDecimals] = await Promise.all([
+      getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any),
+      getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any),
+    ]);
+    
+    return {
+      liptBalance: parseFloat(balances.liptBalance) / (10 ** liptDecimals),
+      usdtBalance: parseFloat(balances.usdtBalance) / (10 ** usdtDecimals),
+    };
+  } catch (error) {
+    console.error('Error fetching wallet data from contract, using fallback:', error);
+    // Fallback para dados mock em caso de erro
+    await wait(300);
+    return getFromStorage('wallet', initialWallet);
+  }
 };
 
 export const getDashboardStats = async (userAddress: string) => {
@@ -196,21 +221,95 @@ export const getDashboardStats = async (userAddress: string) => {
 };
 
 export const getStakingData = async (userAddress: string) => {
-  await wait(600);
-  // Simulate rewards accumulation
-  const staking = getFromStorage('staking', initialStaking);
-  staking.unclaimedRewards += Math.random() * 0.1;
-  saveToStorage('staking', staking);
-  return staking;
+  if (!userAddress) {
+    // Se não há endereço, retornar dados mock
+    await wait(600);
+    const staking = getFromStorage('staking', initialStaking);
+    staking.unclaimedRewards += Math.random() * 0.1;
+    saveToStorage('staking', staking);
+    return staking;
+  }
+
+  try {
+    // Importar funções do web3-api
+    const { getUserStakes, getStakingPlans, getEarlyUnstakePenalty } = await import('./web3-api');
+    
+    const [stakes, plans, penalty] = await Promise.all([
+      getUserStakes(userAddress as any),
+      getStakingPlans(),
+      getEarlyUnstakePenalty(),
+    ]);
+    
+    // Calcular recompensas não reivindicadas
+    const now = Date.now();
+    const unclaimedRewards = stakes.reduce((total, stake) => {
+      const elapsed = (now - stake.startDate) / (1000 * 60 * 60 * 24); // dias
+      const dailyReward = (stake.amount * stake.plan.apy / 100) / stake.plan.duration;
+      return total + (dailyReward * elapsed);
+    }, 0);
+    
+    return {
+      stakes,
+      plans,
+      stakedBalance: stakes.reduce((sum, s) => sum + s.amount, 0),
+      unclaimedRewards: Math.max(0, unclaimedRewards),
+      earlyUnstakePenalty: penalty,
+    };
+  } catch (error) {
+    console.error('Error fetching staking data from contract, using fallback:', error);
+    // Fallback para dados mock
+    await wait(600);
+    const staking = getFromStorage('staking', initialStaking);
+    staking.unclaimedRewards += Math.random() * 0.1;
+    saveToStorage('staking', staking);
+    return staking;
+  }
 };
 
 export const getMiningData = async (userAddress: string) => {
-  await wait(700);
-  const mining = getFromStorage('mining', initialMining);
-  mining.minedRewards += mining.miningPower / (60 * 12); // Simulate 5 sec interval
-  mining.miners = mining.miners.map(m => ({ ...m, minedAmount: m.minedAmount + m.plan.power / (60*12) }))
-  saveToStorage('mining', mining);
-  return mining;
+  if (!userAddress) {
+    // Se não há endereço, retornar dados mock
+    await wait(700);
+    const mining = getFromStorage('mining', initialMining);
+    mining.minedRewards += mining.miningPower / (60 * 12); // Simulate 5 sec interval
+    mining.miners = mining.miners.map(m => ({ ...m, minedAmount: m.minedAmount + m.plan.power / (60*12) }))
+    saveToStorage('mining', mining);
+    return mining;
+  }
+
+  try {
+    // Importar funções do web3-api
+    const { getUserMiners, getMiningPlans } = await import('./web3-api');
+    
+    const [miners, plans] = await Promise.all([
+      getUserMiners(userAddress as any),
+      getMiningPlans(),
+    ]);
+    
+    // Calcular poder total de mineração e recompensas
+    const miningPower = miners.reduce((total, miner) => total + miner.plan.power, 0);
+    const now = Date.now();
+    const minedRewards = miners.reduce((total, miner) => {
+      const elapsed = (now - miner.startDate) / (1000 * 60 * 60); // horas
+      return total + (miner.plan.power * elapsed) + miner.minedAmount;
+    }, 0);
+    
+    return {
+      miners,
+      plans: plans.length > 0 ? plans : MINING_PLANS, // Fallback para MINING_PLANS se vazio
+      miningPower,
+      minedRewards: Math.max(0, minedRewards),
+    };
+  } catch (error) {
+    console.error('Error fetching mining data from contract, using fallback:', error);
+    // Fallback para dados mock
+    await wait(700);
+    const mining = getFromStorage('mining', initialMining);
+    mining.minedRewards += mining.miningPower / (60 * 12);
+    mining.miners = mining.miners.map(m => ({ ...m, minedAmount: m.minedAmount + m.plan.power / (60*12) }))
+    saveToStorage('mining', mining);
+    return mining;
+  }
 };
 
 export const getLiquidityData = async (userAddress: string) => {
@@ -239,86 +338,242 @@ export const getLeaderboardData = async (userAddress: string) => {
 // --- ACTIONS (MUTATIONS) ---
 
 export const purchaseLipt = async (userAddress: string, amount: number) => {
-  await wait(1000);
-  const wallet = getFromStorage('wallet', initialWallet);
-  const stats = getFromStorage('stats', initialStats);
-  const cost = amount * stats.liptPrice;
-  if (wallet.usdtBalance < cost) {
-    throw new Error('Insufficient USDT balance');
+  if (!userAddress) {
+    // Fallback para mock se não há endereço
+    await wait(1000);
+    const wallet = getFromStorage('wallet', initialWallet);
+    const stats = getFromStorage('stats', initialStats);
+    const cost = amount * stats.liptPrice;
+    if (wallet.usdtBalance < cost) {
+      throw new Error('Insufficient USDT balance');
+    }
+    wallet.usdtBalance -= cost;
+    wallet.liptBalance += amount;
+    saveToStorage('wallet', wallet);
+    return wallet;
   }
-  wallet.usdtBalance -= cost;
-  wallet.liptBalance += amount;
-  saveToStorage('wallet', wallet);
-  return wallet;
+
+  try {
+    // Importar funções do web3-api
+    const { purchaseLipt: web3PurchaseLipt, getTokenDecimals } = await import('./web3-api');
+    const { CONTRACT_ADDRESSES } = await import('../config/contracts');
+    
+    const usdtDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any);
+    const usdtAmountBigInt = BigInt(amount * (10 ** usdtDecimals));
+    
+    const hash = await web3PurchaseLipt(userAddress as any, usdtAmountBigInt);
+    return { hash }; // Retorna o hash da transação
+  } catch (error) {
+    console.error('Error purchasing LIPT from contract, using fallback:', error);
+    // Fallback para mock
+    await wait(1000);
+    const wallet = getFromStorage('wallet', initialWallet);
+    const stats = getFromStorage('stats', initialStats);
+    const cost = amount * stats.liptPrice;
+    if (wallet.usdtBalance < cost) {
+      throw new Error('Insufficient USDT balance');
+    }
+    wallet.usdtBalance -= cost;
+    wallet.liptBalance += amount;
+    saveToStorage('wallet', wallet);
+    return wallet;
+  }
 };
 
 export const stakeLipt = async (userAddress: string, amount: number, plan: { duration: number; apy: number }) => {
-    await wait(1500);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const staking = getFromStorage('staking', initialStaking);
+    if (!userAddress) {
+        // Fallback para mock se não há endereço
+        await wait(1500);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const staking = getFromStorage('staking', initialStaking);
 
-    if (wallet.liptBalance < amount) {
-        throw new Error('Insufficient LIPT balance');
+        if (wallet.liptBalance < amount) {
+            throw new Error('Insufficient LIPT balance');
+        }
+
+        const newStake: Stake = {
+            id: `stake_${Date.now()}_${Math.random()}`,
+            amount,
+            plan,
+            startDate: Date.now(),
+        };
+
+        wallet.liptBalance -= amount;
+        staking.stakes.push(newStake);
+        staking.stakedBalance += amount;
+
+        saveToStorage('wallet', wallet);
+        saveToStorage('staking', staking);
+        return { wallet, staking };
     }
 
-    const newStake: Stake = {
-        id: `stake_${Date.now()}_${Math.random()}`,
-        amount,
-        plan,
-        startDate: Date.now(),
-    };
+    try {
+        // Importar funções do web3-api
+        const { stakeLipt: web3StakeLipt, getStakingPlans, getTokenDecimals } = await import('./web3-api');
+        const { CONTRACT_ADDRESSES } = await import('../config/contracts');
+        
+        // Buscar planId correspondente ao plan selecionado
+        const plans = await getStakingPlans();
+        const planIndex = plans.findIndex(p => p.duration === plan.duration && p.apy === plan.apy);
+        if (planIndex === -1) {
+            throw new Error('Staking plan not found');
+        }
+        
+        const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const amountBigInt = BigInt(amount * (10 ** liptDecimals));
+        
+        const hash = await web3StakeLipt(userAddress as any, amountBigInt, planIndex);
+        return { hash }; // Retorna o hash da transação
+    } catch (error) {
+        console.error('Error staking LIPT from contract, using fallback:', error);
+        // Fallback para mock
+        await wait(1500);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const staking = getFromStorage('staking', initialStaking);
 
-    wallet.liptBalance -= amount;
-    staking.stakes.push(newStake);
-    staking.stakedBalance += amount;
+        if (wallet.liptBalance < amount) {
+            throw new Error('Insufficient LIPT balance');
+        }
 
-    saveToStorage('wallet', wallet);
-    saveToStorage('staking', staking);
-    return { wallet, staking };
+        const newStake: Stake = {
+            id: `stake_${Date.now()}_${Math.random()}`,
+            amount,
+            plan,
+            startDate: Date.now(),
+        };
+
+        wallet.liptBalance -= amount;
+        staking.stakes.push(newStake);
+        staking.stakedBalance += amount;
+
+        saveToStorage('wallet', wallet);
+        saveToStorage('staking', staking);
+        return { wallet, staking };
+    }
 };
 
 export const unstakeLipt = async (userAddress: string, stakeId: string) => {
-    await wait(1200);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const staking = getFromStorage('staking', initialStaking);
+    if (!userAddress) {
+        // Fallback para mock se não há endereço
+        await wait(1200);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const staking = getFromStorage('staking', initialStaking);
 
-    const stakeIndex = staking.stakes.findIndex(s => s.id === stakeId);
-    if (stakeIndex === -1) {
-        throw new Error('Stake not found');
+        const stakeIndex = staking.stakes.findIndex(s => s.id === stakeId);
+        if (stakeIndex === -1) {
+            throw new Error('Stake not found');
+        }
+
+        const stake = staking.stakes[stakeIndex];
+        const now = Date.now();
+        const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
+        
+        let amountToReturn = stake.amount;
+        let penalty = 0;
+
+        if (stakeAgeInDays < stake.plan.duration) {
+          penalty = (stake.amount * EARLY_UNSTAKE_PENALTY_PERCENTAGE) / 100;
+          amountToReturn = stake.amount - penalty;
+        }
+
+        wallet.liptBalance += amountToReturn;
+        staking.stakedBalance -= stake.amount;
+        staking.stakes.splice(stakeIndex, 1);
+        
+        saveToStorage('wallet', wallet);
+        saveToStorage('staking', staking);
+        return { penalty };
     }
 
-    const stake = staking.stakes[stakeIndex];
-    const now = Date.now();
-    const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
-    
-    let amountToReturn = stake.amount;
-    let penalty = 0;
+    try {
+        // Importar função do web3-api
+        const { unstakeLipt: web3UnstakeLipt } = await import('./web3-api');
+        
+        // Converter stakeId string para number
+        const stakeIdNum = parseInt(stakeId);
+        if (isNaN(stakeIdNum)) {
+            throw new Error('Invalid stake ID');
+        }
+        
+        const hash = await web3UnstakeLipt(userAddress as any, stakeIdNum);
+        return { hash }; // Retorna o hash da transação
+    } catch (error) {
+        console.error('Error unstaking LIPT from contract, using fallback:', error);
+        // Fallback para mock
+        await wait(1200);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const staking = getFromStorage('staking', initialStaking);
 
-    if (stakeAgeInDays < stake.plan.duration) {
-      penalty = (stake.amount * EARLY_UNSTAKE_PENALTY_PERCENTAGE) / 100;
-      amountToReturn = stake.amount - penalty;
+        const stakeIndex = staking.stakes.findIndex(s => s.id === stakeId);
+        if (stakeIndex === -1) {
+            throw new Error('Stake not found');
+        }
+
+        const stake = staking.stakes[stakeIndex];
+        const now = Date.now();
+        const stakeAgeInDays = (now - stake.startDate) / (1000 * 60 * 60 * 24);
+        
+        let amountToReturn = stake.amount;
+        let penalty = 0;
+
+        if (stakeAgeInDays < stake.plan.duration) {
+          penalty = (stake.amount * EARLY_UNSTAKE_PENALTY_PERCENTAGE) / 100;
+          amountToReturn = stake.amount - penalty;
+        }
+
+        wallet.liptBalance += amountToReturn;
+        staking.stakedBalance -= stake.amount;
+        staking.stakes.splice(stakeIndex, 1);
+        
+        saveToStorage('wallet', wallet);
+        saveToStorage('staking', staking);
+        return { penalty };
     }
-
-    wallet.liptBalance += amountToReturn;
-    staking.stakedBalance -= stake.amount;
-    staking.stakes.splice(stakeIndex, 1);
-    
-    saveToStorage('wallet', wallet);
-    saveToStorage('staking', staking);
-    return { penalty };
 };
 
 export const claimStakingRewards = async (userAddress: string) => {
-    await wait(800);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const staking = getFromStorage('staking', initialStaking);
+    if (!userAddress) {
+        // Fallback para mock se não há endereço
+        await wait(800);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const staking = getFromStorage('staking', initialStaking);
 
-    wallet.liptBalance += staking.unclaimedRewards;
-    staking.unclaimedRewards = 0;
+        wallet.liptBalance += staking.unclaimedRewards;
+        staking.unclaimedRewards = 0;
 
-    saveToStorage('wallet', wallet);
-    saveToStorage('staking', staking);
-    return { wallet, staking };
+        saveToStorage('wallet', wallet);
+        saveToStorage('staking', staking);
+        return { wallet, staking };
+    }
+
+    try {
+        // Importar função do web3-api
+        const { claimStakingRewards: web3ClaimStakingRewards, getUserStakes } = await import('./web3-api');
+        
+        // Buscar stakes do usuário para obter stakeId
+        const stakes = await getUserStakes(userAddress as any);
+        if (stakes.length === 0) {
+            throw new Error('No stakes found');
+        }
+        
+        // Por enquanto, claim do primeiro stake. Idealmente deveria ter uma UI para selecionar qual stake
+        const stakeId = parseInt(stakes[0].id);
+        const hash = await web3ClaimStakingRewards(userAddress as any, stakeId);
+        return { hash }; // Retorna o hash da transação
+    } catch (error) {
+        console.error('Error claiming staking rewards from contract, using fallback:', error);
+        // Fallback para mock
+        await wait(800);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const staking = getFromStorage('staking', initialStaking);
+
+        wallet.liptBalance += staking.unclaimedRewards;
+        staking.unclaimedRewards = 0;
+
+        saveToStorage('wallet', wallet);
+        saveToStorage('staking', staking);
+        return { wallet, staking };
+    }
 };
 
 export const addLiquidity = async (userAddress: string, liptAmount: number, usdtAmount: number) => {
