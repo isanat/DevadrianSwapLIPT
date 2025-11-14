@@ -159,12 +159,13 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     }
 
     setIsSpinning(true);
-    mutate('wallet', { ...wallet, liptBalance: wallet.liptBalance - bet }, false);
+    mutate(['wallet', userAddress], { ...wallet, liptBalance: wallet.liptBalance - bet }, false);
 
-    const winningSeg = getWeightedRandomSegment();
+    const winningSeg = getWeightedRandomSegment(currentSegments);
+    const totalWeight = currentSegments.reduce((sum, s) => sum + s.weight, 0);
     
     let cumulativeWeight = 0;
-    const matchingIndices = segments.reduce((acc, segment, index) => {
+    const matchingIndices = currentSegments.reduce((acc, segment, index) => {
         if (segment.label === winningSeg.label && segment.color === winningSeg.color) {
             acc.push(index);
         }
@@ -173,7 +174,7 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
     const winningSegmentIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
 
     for(let i = 0; i < winningSegmentIndex; i++) {
-        cumulativeWeight += segments[i].weight;
+        cumulativeWeight += currentSegments[i].weight;
     }
     
     const segmentStartAngle = (cumulativeWeight / totalWeight) * 360;
