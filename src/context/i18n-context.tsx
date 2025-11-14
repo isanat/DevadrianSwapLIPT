@@ -49,6 +49,8 @@ const translations = {
       amountToStake: 'Amount to Stake',
       walletBalance: 'Your wallet balance',
       stakeButton: 'Stake',
+      staking: 'Staking...',
+      claiming: 'Claiming...',
       yourActiveStakes: 'Your Active Stakes',
       noActiveStakes: 'You have no active stakes.',
       unstakeButton: 'Unstake',
@@ -160,6 +162,12 @@ const translations = {
       copyAddress: 'Copy Address',
       metaMaskNotFound: 'MetaMask Not Found',
       installMetaMask: 'Please install the MetaMask browser extension.',
+      administrator: 'Administrator',
+      frontend: 'Frontend',
+    },
+    errors: {
+      generic: 'Error',
+      genericDescription: 'An error occurred. Please try again.',
     },
     miningPool: {
       title: 'Mining Room',
@@ -223,6 +231,10 @@ const translations = {
           invalidBet: {
             title: 'Invalid Bet',
             description: 'Please check your balance and bet amount.',
+          },
+          spinFailed: {
+            title: 'Spin Failed',
+            description: 'An error occurred while spinning the wheel. Please try again.',
           },
         },
       },
@@ -350,6 +362,8 @@ const translations = {
       amountToStake: 'Quantidade para Stake',
       walletBalance: 'Saldo na sua carteira',
       stakeButton: 'Fazer Stake',
+      staking: 'Fazendo Stake...',
+      claiming: 'Reivindicando...',
       yourActiveStakes: 'Seus Stakes Ativos',
       noActiveStakes: 'Você não tem stakes ativos.',
       unstakeButton: 'Retirar',
@@ -461,6 +475,12 @@ const translations = {
       copyAddress: 'Copiar Endereço',
       metaMaskNotFound: 'MetaMask Não Encontrado',
       installMetaMask: 'Por favor, instale a extensão MetaMask no seu navegador.',
+      administrator: 'Administrador',
+      frontend: 'Frontend',
+    },
+    errors: {
+      generic: 'Erro',
+      genericDescription: 'Ocorreu um erro. Por favor, tente novamente.',
     },
     miningPool: {
       title: 'Sala de Mineração',
@@ -524,6 +544,10 @@ const translations = {
           invalidBet: {
             title: 'Aposta Inválida',
             description: 'Por favor, verifique seu saldo e o valor da aposta.',
+          },
+          spinFailed: {
+            title: 'Falha ao Girar',
+            description: 'Ocorreu um erro ao girar a roda. Por favor, tente novamente.',
           },
         },
       },
@@ -651,6 +675,8 @@ const translations = {
       amountToStake: 'Cantidad para Stake',
       walletBalance: 'Saldo en tu billetera',
       stakeButton: 'Hacer Stake',
+      staking: 'Haciendo Stake...',
+      claiming: 'Reclamando...',
       yourActiveStakes: 'Tus Stakes Activos',
       noActiveStakes: 'No tienes stakes activos.',
       unstakeButton: 'Retirar',
@@ -762,6 +788,12 @@ const translations = {
       copyAddress: 'Copiar Dirección',
       metaMaskNotFound: 'MetaMask No Encontrado',
       installMetaMask: 'Por favor, instala la extensión de navegador MetaMask.',
+      administrator: 'Administrador',
+      frontend: 'Frontend',
+    },
+    errors: {
+      generic: 'Error',
+      genericDescription: 'Ocurrió un error. Por favor, inténtalo de nuevo.',
     },
     miningPool: {
       title: 'Sala de Minería',
@@ -825,6 +857,10 @@ const translations = {
           invalidBet: {
             title: 'Apuesta Inválida',
             description: 'Por favor, revisa tu saldo y la cantidad de la apuesta.',
+          },
+          spinFailed: {
+            title: 'Error al Girar',
+            description: 'Ocurrió un error al girar la rueda. Por favor, inténtalo de nuevo.',
           },
         },
       },
@@ -952,6 +988,8 @@ const translations = {
       amountToStake: 'Importo da Mettere in Stake',
       walletBalance: 'Saldo nel tuo portafoglio',
       stakeButton: 'Metti in Stake',
+      staking: 'Mettendo in Stake...',
+      claiming: 'Riscattando...',
       yourActiveStakes: 'I Tuoi Stake Attivi',
       noActiveStakes: 'Non hai stake attivi.',
       unstakeButton: 'Ritira',
@@ -1063,6 +1101,12 @@ const translations = {
       copyAddress: 'Copia Indirizzo',
       metaMaskNotFound: 'MetaMask Non Trovato',
       installMetaMask: 'Per favore, installa l\'estensione per browser MetaMask.',
+      administrator: 'Amministratore',
+      frontend: 'Frontend',
+    },
+    errors: {
+      generic: 'Errore',
+      genericDescription: 'Si è verificato un errore. Riprova.',
     },
     miningPool: {
       title: 'Sala di Estrazione',
@@ -1126,6 +1170,10 @@ const translations = {
           invalidBet: {
             title: 'Scommessa non valida',
             description: 'Controlla il tuo saldo e l\'importo della scommessa.',
+          },
+          spinFailed: {
+            title: 'Rotazione Fallita',
+            description: 'Si è verificato un errore durante la rotazione della ruota. Riprova.',
           },
         },
       },

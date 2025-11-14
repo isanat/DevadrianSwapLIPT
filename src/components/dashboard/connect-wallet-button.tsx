@@ -66,16 +66,16 @@ export function ConnectWalletButton() {
             <DropdownMenuContent align="end" className='w-56'>
                 <DropdownMenuLabel className='font-normal'>
                   <div className='flex flex-col space-y-1'>
-                    <p className='text-sm font-medium leading-none'>Administrator</p>
+                    <p className='text-sm font-medium leading-none'>{t('wallet.administrator')}</p>
                     <p className='text-xs leading-none text-muted-foreground'>{shortAddress}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={copyToClipboard}>
-                    {t('wallet.copyAddress', { defaultValue: 'Copy Address' })}
+                    {t('wallet.copyAddress')}
                 </DropdownMenuItem>
                  <DropdownMenuItem>
-                    <a href="/" className='w-full'>Frontend</a>
+                    <a href="/" className='w-full'>{t('wallet.frontend')}</a>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => disconnect()}>

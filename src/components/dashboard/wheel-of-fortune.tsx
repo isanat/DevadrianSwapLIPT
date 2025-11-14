@@ -217,7 +217,11 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
             setRotation(finalRotation % 360);
         }, 8000); 
     } catch(e: any) {
-        toast({ variant: 'destructive', title: "Spin failed", description: e.message });
+        toast({ 
+            variant: 'destructive', 
+            title: t('gameZone.wheelOfFortune.toast.spinFailed.title'), 
+            description: e.message || t('gameZone.wheelOfFortune.toast.spinFailed.description')
+        });
         mutate(['wallet', userAddress]);
         setIsSpinning(false);
     }

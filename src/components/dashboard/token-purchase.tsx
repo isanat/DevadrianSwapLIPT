@@ -57,7 +57,11 @@ export function TokenPurchase() {
             setLiptAmount('');
             setUsdtAmount('');
         } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message });
+            toast({ 
+                variant: 'destructive', 
+                title: t('errors.generic'), 
+                description: error.message || t('errors.genericDescription')
+            });
         } finally {
             setIsPurchasing(false);
         }

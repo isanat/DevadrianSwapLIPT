@@ -20,7 +20,7 @@ import { getStakingData, getWalletData, stakeLipt, unstakeLipt, claimStakingRewa
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
-const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: string, penalty: number) => void; }) => {
+const StakedPosition = ({ stake, onUnstake, userAddress }: { stake: Stake; onUnstake: (id: string, penalty: number) => void; userAddress: string; }) => {
   const { t } = useI18n();
   const { mutate } = useSWRConfig();
   const [isUnstaking, setIsUnstaking] = useState(false);
@@ -60,7 +60,11 @@ const StakedPosition = ({ stake, onUnstake }: { stake: Stake; onUnstake: (id: st
         mutate('wallet');
         onUnstake(stake.id, penalty);
     } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ 
+            variant: 'destructive', 
+            title: t('errors.generic'), 
+            description: error.message || t('errors.genericDescription')
+        });
     } finally {
         setIsUnstaking(false);
     }
@@ -285,7 +289,7 @@ export function StakingPool() {
                     <Input id="stake-amount" type="number" placeholder="0.0" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} disabled={isStaking}/>
                     <Button variant="default" onClick={handleStake} disabled={isStaking}>
                         {isStaking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isStaking ? 'Staking...' : t('stakingPool.stakeButton')}
+                        {isStaking ? t('stakingPool.staking') : t('stakingPool.stakeButton')}
                     </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">{t('stakingPool.walletBalance')}: {walletData?.liptBalance.toLocaleString('en-US')} LIPT</p>
@@ -298,7 +302,7 @@ export function StakingPool() {
                 {stakingData && stakingData.stakes.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                     {stakingData.stakes.map(stake => (
-                        <StakedPosition key={stake.id} stake={stake} onUnstake={handleUnstake} />
+                        <StakedPosition key={stake.id} stake={stake} onUnstake={handleUnstake} userAddress={userAddress!} />
                     ))}
                     </div>
                 ) : (
@@ -313,7 +317,7 @@ export function StakingPool() {
       <CardFooter>
         <Button variant="outline" className="w-full" onClick={handleClaim} disabled={isClaiming}>
             {isClaiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isClaiming ? 'Claiming...' : (
+            {isClaiming ? t('stakingPool.claiming') : (
                 <>
                     <Download className="mr-2 h-4 w-4" />
                     {t('stakingPool.claimRewardsButton')}

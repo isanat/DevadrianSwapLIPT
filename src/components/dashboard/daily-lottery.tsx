@@ -124,7 +124,11 @@ export function DailyLottery() {
       toast({ title: t('gameZone.lottery.toast.success.title'), description: t('gameZone.lottery.toast.success.description', { amount }) });
       setTicketAmount('1');
     } catch (error: any) {
-      toast({ variant: 'destructive', title: error.message });
+      toast({ 
+        variant: 'destructive', 
+        title: t('errors.generic'), 
+        description: error.message || t('errors.genericDescription')
+      });
     } finally {
       setIsBuying(false);
     }
@@ -143,7 +147,11 @@ export function DailyLottery() {
             description: t('gameZone.lottery.toast.claimed.description', { amount: prizeAmount.toLocaleString() }) 
         });
     } catch (error: any) {
-         toast({ variant: 'destructive', title: error.message });
+         toast({ 
+            variant: 'destructive', 
+            title: t('errors.generic'), 
+            description: error.message || t('errors.genericDescription')
+         });
     } finally {
         setIsClaiming(false);
     }
