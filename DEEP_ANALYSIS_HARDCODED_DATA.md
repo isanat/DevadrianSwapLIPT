@@ -67,9 +67,11 @@ Estes são problemas de lógica e implementação no frontend que precisam ser c
 1.  **Implementar i18n:** Substituir todos os textos hardcoded.
 2.  **Construir o Backend Off-Chain:** Iniciar o desenvolvimento do serviço de backend para gerenciar histórico, leaderboard e outras funcionalidades off-chain.
 
+
 ## Conclusão
 
 Este plano de ação é **seguro e viável** porque **não requer a reimplementação de nenhum Smart Contract**. Ele aproveita as funções de administração já existentes e foca em corrigir a lógica do frontend para que ele se comporte como um verdadeiro cliente da arquitetura híbrida, lendo dados dinâmicos dos contratos e do futuro backend, em vez de usar valores hardcoded.
+
 
 Este documento será salvo no repositório para referência futura.
 """
