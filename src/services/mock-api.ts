@@ -740,12 +740,12 @@ export const claimMinedRewards = async (userAddress: string) => {
 export const spinWheel = async (userAddress: string, bet: number) => {
     // Tentar usar o contrato real
     try {
-        const { getTokenDecimals, spinWheel as web3SpinWheel } = await import('./web3-api');
-        const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const web3Api = await import('./web3-api');
+        const decimals = await web3Api.getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
         const betAmount = BigInt(Math.floor(bet * 10**decimals));
         
         // Chamar o contrato (ele decide o resultado)
-        const hash = await web3SpinWheel(userAddress as any, betAmount);
+        const hash = await web3Api.spinWheel(userAddress as any, betAmount);
         
         // Aguardar a transação ser minerada
         // TODO: Escutar evento WheelSpun para obter o resultado real
