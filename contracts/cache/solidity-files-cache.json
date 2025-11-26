@@ -1,9 +1,9 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/home/ubuntu/studio/contracts/contracts/DevAdrianSwapPool.sol": {
-      "lastModificationDate": 1762999432097,
-      "contentHash": "c8b1c93134e311f2d6bd3ce1ab658095",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\DevAdrianSwapPool.sol": {
+      "lastModificationDate": 1764196653688,
+      "contentHash": "5134631142942475fe3b60cabda554da",
       "sourceName": "contracts/DevAdrianSwapPool.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -32,6 +32,7 @@
       "imports": [
         "@openzeppelin/contracts/access/Ownable.sol",
         "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"
       ],
       "versionPragmas": [
@@ -41,9 +42,9 @@
         "DevAdrianSwapPool"
       ]
     },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
-      "lastModificationDate": 1762998791387,
-      "contentHash": "d3c790edc9ccf808a17c5a6cd13614fd",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\access\\Ownable.sol": {
+      "lastModificationDate": 1764193258158,
+      "contentHash": "f665fc4a91af3170f86727fc49cc091f",
       "sourceName": "@openzeppelin/contracts/access/Ownable.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -79,9 +80,9 @@
         "Ownable"
       ]
     },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1762998791335,
-      "contentHash": "9261adf6457863de3e9892f51317ec89",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\IERC20.sol": {
+      "lastModificationDate": 1764193258945,
+      "contentHash": "a00cf658e29421979ba74ec1db151c1a",
       "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -115,269 +116,9 @@
         "IERC20"
       ]
     },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
-      "lastModificationDate": 1762998791403,
-      "contentHash": "1fb9edee1d763745a62d0b1954998792",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../IERC20.sol",
-        "../../../interfaces/IERC1363.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "SafeERC20"
-      ]
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1762998791139,
-      "contentHash": "67bfbc07588eb8683b3fd8f6f909563e",
-      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "Context"
-      ]
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/interfaces/IERC1363.sol": {
-      "lastModificationDate": 1762998791327,
-      "contentHash": "a7fd0f05e36b0d0a21c75340c9c639ec",
-      "sourceName": "@openzeppelin/contracts/interfaces/IERC1363.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20.sol",
-        "./IERC165.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IERC1363"
-      ]
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/interfaces/IERC20.sol": {
-      "lastModificationDate": 1762998791335,
-      "contentHash": "68620db2da7583d9a4919096ac77f577",
-      "sourceName": "@openzeppelin/contracts/interfaces/IERC20.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../token/ERC20/IERC20.sol"
-      ],
-      "versionPragmas": [
-        ">=0.4.16"
-      ],
-      "artifacts": []
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/interfaces/IERC165.sol": {
-      "lastModificationDate": 1762998791331,
-      "contentHash": "947853028399b7de34bcc3704ee06e99",
-      "sourceName": "@openzeppelin/contracts/interfaces/IERC165.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../utils/introspection/IERC165.sol"
-      ],
-      "versionPragmas": [
-        ">=0.4.16"
-      ],
-      "artifacts": []
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
-      "lastModificationDate": 1762998791331,
-      "contentHash": "7074c93b1ea0a122063f26ddd1db1032",
-      "sourceName": "@openzeppelin/contracts/utils/introspection/IERC165.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.4.16"
-      ],
-      "artifacts": [
-        "IERC165"
-      ]
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
-      "lastModificationDate": 1762998791339,
-      "contentHash": "513778b30d2750f5d2b9b19bbcf748a5",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../IERC20.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IERC20Metadata"
-      ]
-    },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
-      "lastModificationDate": 1762998791239,
-      "contentHash": "59dfce11284f2636db261df9b6a18f81",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\ERC20.sol": {
+      "lastModificationDate": 1764193258943,
+      "contentHash": "433b9ff827dda3fff384a8bfb61dba87",
       "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -416,9 +157,84 @@
         "ERC20"
       ]
     },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/interfaces/draft-IERC6093.sol": {
-      "lastModificationDate": 1762998791183,
-      "contentHash": "5041977bbe908de2e6ed0270447f79ad",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\utils\\SafeERC20.sol": {
+      "lastModificationDate": 1764193258987,
+      "contentHash": "970401ca7e2ef27ed6738a14a440e09d",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../IERC20.sol",
+        "../../../interfaces/IERC1363.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "SafeERC20"
+      ]
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\utils\\Context.sol": {
+      "lastModificationDate": 1764193259085,
+      "contentHash": "2783b901218e982baedae531a748ed8d",
+      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "Context"
+      ]
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\interfaces\\draft-IERC6093.sol": {
+      "lastModificationDate": 1764193258806,
+      "contentHash": "74f382a9e878a0ef61ce9973df2e1c7d",
       "sourceName": "@openzeppelin/contracts/interfaces/draft-IERC6093.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -454,9 +270,194 @@
         "IERC721Errors"
       ]
     },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol": {
-      "lastModificationDate": 1762998791239,
-      "contentHash": "273d8d24b06f67207dd5f35c3a0c1086",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\extensions\\IERC20Metadata.sol": {
+      "lastModificationDate": 1764193258970,
+      "contentHash": "7e10cffb8881a54674e96fee07b2649f",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../IERC20.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IERC20Metadata"
+      ]
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\interfaces\\IERC1363.sol": {
+      "lastModificationDate": 1764193258756,
+      "contentHash": "f96044e0027d477621b9f0e5fc8d2c1e",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC1363.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC20.sol",
+        "./IERC165.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IERC1363"
+      ]
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\interfaces\\IERC20.sol": {
+      "lastModificationDate": 1764193258766,
+      "contentHash": "b95e9b15fbe03c4924f457d71754234e",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC20.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        ">=0.4.16"
+      ],
+      "artifacts": []
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\interfaces\\IERC165.sol": {
+      "lastModificationDate": 1764193258761,
+      "contentHash": "135c199224b230d9d9e86745b871274b",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC165.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        ">=0.4.16"
+      ],
+      "artifacts": []
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\utils\\introspection\\IERC165.sol": {
+      "lastModificationDate": 1764193259213,
+      "contentHash": "ff4d1e14b9194d66aa102ea99c561d87",
+      "sourceName": "@openzeppelin/contracts/utils/introspection/IERC165.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.16"
+      ],
+      "artifacts": [
+        "IERC165"
+      ]
+    },
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\extensions\\ERC20Burnable.sol": {
+      "lastModificationDate": 1764193258957,
+      "contentHash": "d85f9dfd2aecd1d93e70f50e1d46aaab",
       "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -493,9 +494,9 @@
         "ERC20Burnable"
       ]
     },
-    "/home/ubuntu/studio/contracts/node_modules/@openzeppelin/contracts/utils/Pausable.sol": {
-      "lastModificationDate": 1762998791395,
-      "contentHash": "0d47b53e10b1985efbb396f937626279",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\node_modules\\@openzeppelin\\contracts\\utils\\Pausable.sol": {
+      "lastModificationDate": 1764193259099,
+      "contentHash": "63dc0763d0f6cbfc5d485ac7488f49cf",
       "sourceName": "@openzeppelin/contracts/utils/Pausable.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -531,9 +532,9 @@
         "Pausable"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/ProtocolController.sol": {
-      "lastModificationDate": 1762998685514,
-      "contentHash": "e087e49aada78b686af5768f813a469f",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\ProtocolController.sol": {
+      "lastModificationDate": 1764193245582,
+      "contentHash": "b7d973ca0ebef38b2c3548fd67ae6dae",
       "sourceName": "contracts/ProtocolController.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -570,9 +571,9 @@
         "ProtocolController"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/TaxHandler.sol": {
-      "lastModificationDate": 1762999384920,
-      "contentHash": "c668ed2a2d612e26042be27303c721ed",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\TaxHandler.sol": {
+      "lastModificationDate": 1764193245590,
+      "contentHash": "c1ca499571cb6014624ed3c7e11c0b65",
       "sourceName": "contracts/TaxHandler.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -610,9 +611,9 @@
         "TaxHandler"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/StakingPool.sol": {
-      "lastModificationDate": 1762998859817,
-      "contentHash": "deff70b96b4615b85c4bc1408ab01119",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\StakingPool.sol": {
+      "lastModificationDate": 1764196370879,
+      "contentHash": "46ed4f6c8b81c4d69ca4fdddf1bc8fa9",
       "sourceName": "contracts/StakingPool.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -650,9 +651,9 @@
         "StakingPool"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/ReferralProgram.sol": {
-      "lastModificationDate": 1762998653749,
-      "contentHash": "daf1a3db9de94fd1b0b6cbfc51a16963",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\ReferralProgram.sol": {
+      "lastModificationDate": 1764196469833,
+      "contentHash": "b9427229c1b83ccdbfca0dd1ffeaefb2",
       "sourceName": "contracts/ReferralProgram.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -690,9 +691,9 @@
         "ReferralProgram"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/MiningPool.sol": {
-      "lastModificationDate": 1762999388712,
-      "contentHash": "460e090ee8d828d5ba4235339cc2a931",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\MiningPool.sol": {
+      "lastModificationDate": 1764196437558,
+      "contentHash": "82ff1ebd24b957588ba0bbed6f9fd66c",
       "sourceName": "contracts/MiningPool.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -730,9 +731,9 @@
         "MiningPool"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/LIPTToken.sol": {
-      "lastModificationDate": 1762999376784,
-      "contentHash": "061b94f8e9e6096d9780fd958f89be50",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\LIPTToken.sol": {
+      "lastModificationDate": 1764193245575,
+      "contentHash": "300cd02dc1c41565693cdc64f88e6230",
       "sourceName": "contracts/LIPTToken.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -770,9 +771,9 @@
         "LIPTToken"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/GameBase.sol": {
-      "lastModificationDate": 1762999401973,
-      "contentHash": "07a368663b6fae47be5a7ceb70448f90",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\GameBase.sol": {
+      "lastModificationDate": 1764193245573,
+      "contentHash": "7e39099dfd02efc25eb3235db471da79",
       "sourceName": "contracts/GameBase.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -810,9 +811,9 @@
         "GameBase"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/WheelOfFortune.sol": {
-      "lastModificationDate": 1762998666350,
-      "contentHash": "6735bc3078c9180b6e46c6c4a8348f27",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\WheelOfFortune.sol": {
+      "lastModificationDate": 1764193245592,
+      "contentHash": "c7672d0fc7427d700753f4f42044def4",
       "sourceName": "contracts/WheelOfFortune.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -848,9 +849,9 @@
         "WheelOfFortune"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/RocketGame.sol": {
-      "lastModificationDate": 1762999461305,
-      "contentHash": "20f9e094e1b237c21f1858bdc244d763",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\RocketGame.sol": {
+      "lastModificationDate": 1764193245585,
+      "contentHash": "2f697b670963827d447b81e832be90e6",
       "sourceName": "contracts/RocketGame.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -886,9 +887,9 @@
         "RocketGame"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/Lottery.sol": {
-      "lastModificationDate": 1762999414293,
-      "contentHash": "48fa68e82b55cbf248a53cc09e2a030c",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\Lottery.sol": {
+      "lastModificationDate": 1764193245577,
+      "contentHash": "9a090c36f37e16023079ce1346ce64d7",
       "sourceName": "contracts/Lottery.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -924,9 +925,9 @@
         "Lottery"
       ]
     },
-    "/home/ubuntu/studio/contracts/contracts/MockUSDT.sol": {
-      "lastModificationDate": 1762997502217,
-      "contentHash": "8698b40fe56a6f46f3c4cf846b742a6f",
+    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\MockUSDT.sol": {
+      "lastModificationDate": 1764193245580,
+      "contentHash": "6cfb1631897b38c157301134d0961384",
       "sourceName": "contracts/MockUSDT.sol",
       "solcConfig": {
         "version": "0.8.24",

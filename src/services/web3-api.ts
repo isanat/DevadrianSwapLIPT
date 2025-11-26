@@ -160,17 +160,24 @@ export async function getUserStakes(userAddress: Address) {
       client: publicClient,
     });
 
-    // Assumindo que o contrato tem getUserStakes(address)
-    const stakes = await stakingContract.read.getUserStakes([userAddress]);
-    return stakes.map((stake: any, index: number) => ({
-      id: stake.id?.toString() || index.toString(),
-      amount: Number(stake.amount),
-      startDate: Number(stake.startDate) * 1000, // Converter de segundos para ms
-      plan: {
-        duration: Number(stake.plan?.duration || stake.duration),
-        apy: Number(stake.plan?.apy || stake.apy),
-      },
-    }));
+    const [stakes, plans] = await Promise.all([
+      stakingContract.read.getUserStakes([userAddress]),
+      stakingContract.read.getStakingPlans(),
+    ]);
+
+    return stakes.map((stake: any, index: number) => {
+      const planId = Number(stake.planId);
+      const plan = plans[planId] || { duration: 0, apy: 0 };
+      return {
+        id: index.toString(),
+        amount: Number(stake.amount),
+        startDate: Number(stake.startDate) * 1000,
+        plan: {
+          duration: Number(plan.duration),
+          apy: Number(plan.apy),
+        },
+      };
+    });
   } catch (error) {
     console.error('Error fetching user stakes:', error);
     return []; // Fallback
@@ -189,19 +196,26 @@ export async function getUserMiners(userAddress: Address) {
       client: publicClient,
     });
 
-    // Assumindo que o contrato tem getUserMiners(address)
-    const miners = await miningContract.read.getUserMiners([userAddress]);
-    return miners.map((miner: any, index: number) => ({
-      id: miner.id?.toString() || index.toString(),
-      startDate: Number(miner.startDate) * 1000, // Converter de segundos para ms
-      plan: {
-        name: miner.plan?.name || miner.name || `Plan ${index}`,
-        cost: Number(miner.plan?.cost || miner.cost),
-        power: Number(miner.plan?.power || miner.power),
-        duration: Number(miner.plan?.duration || miner.duration),
-      },
-      minedAmount: Number(miner.minedAmount || 0),
-    }));
+    const [miners, plans] = await Promise.all([
+      miningContract.read.getUserMiners([userAddress]),
+      miningContract.read.getMiningPlans(),
+    ]);
+
+    return miners.map((miner: any, index: number) => {
+      const planId = Number(miner.planId);
+      const plan = plans[planId] || { cost: 0, power: 0, duration: 0, active: false };
+      return {
+        id: index.toString(),
+        startDate: Number(miner.startDate) * 1000,
+        plan: {
+          name: `Plan ${planId}`,
+          cost: Number(plan.cost),
+          power: Number(plan.power),
+          duration: Number(plan.duration),
+        },
+        minedAmount: Number(miner.rewardsClaimed || 0),
+      };
+    });
   } catch (error) {
     console.error('Error fetching user miners:', error);
     return []; // Fallback
@@ -467,10 +481,10 @@ export async function getLiquidityPoolData(userAddress: Address) {
     const poolShare = totalSupply > 0n ? (Number(userLpBalance) / Number(totalSupply)) * 100 : 0;
 
     return {
-      reserveLipt: reserves[0],
-      reserveUsdt: reserves[1],
-      totalSupply,
-      userLpBalance,
+      reserveLipt: reserves?.[0] ?? 0n,
+      reserveUsdt: reserves?.[1] ?? 0n,
+      totalSupply: totalSupply ?? 0n,
+      userLpBalance: userLpBalance ?? 0n,
       poolShare,
     };
   } catch (error) {
@@ -562,12 +576,12 @@ export async function getCommissionRates() {
       client: publicClient,
     });
 
-    // Buscar taxas de comissão para cada nível
-    const level1 = await referralContract.read.commissionRates([0]);
-    const level2 = await referralContract.read.commissionRates([1]);
-    const level3 = await referralContract.read.commissionRates([2]);
+    const rates = await referralContract.read.getCommissionRates();
+    return rates.map((r: any) => Number(r));
 
-    return [Number(level1), Number(level2), Number(level3)];
+
+
+
   } catch (error) {
     console.error('Error getting commission rates:', error);
     return [10, 5, 3]; // Fallback

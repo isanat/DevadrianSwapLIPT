@@ -10,15 +10,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @dev Implementa a Pool de Staking para o LIPT Token.
  */
 contract StakingPool is Ownable {
-    address public immutable DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     using SafeERC20 for IERC20;
 
+    address public immutable DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     IERC20 public immutable LIPT;
 
-    // Estruturas de Dados
     struct StakingPlan {
         uint256 duration; // em segundos
-        uint256 apy;      // em pontos base (ex: 1250 = 12.5%)
+        uint256 apy; // em pontos base (ex: 1250 = 12.5%)
         bool active;
     }
 
@@ -34,7 +33,6 @@ contract StakingPool is Ownable {
     mapping(address => Stake[]) public userStakes;
     uint256 public earlyUnstakePenaltyBasisPoints = 1000; // 10%
 
-    // Eventos
     event Staked(address indexed user, uint256 amount, uint256 planId, uint256 stakeId);
     event RewardsClaimed(address indexed user, uint256 amount);
     event Unstaked(address indexed user, uint256 amount, uint256 penalty);
@@ -43,7 +41,7 @@ contract StakingPool is Ownable {
         LIPT = IERC20(_lipt);
     }
 
-    // --- Funções de Administração (Owner-Only) ---
+    // --- Admin ---
 
     function addStakingPlan(uint256 _duration, uint256 _apy) public onlyOwner {
         plans.push(StakingPlan(_duration, _apy, true));
@@ -58,16 +56,15 @@ contract StakingPool is Ownable {
         earlyUnstakePenaltyBasisPoints = penaltyBasisPoints;
     }
 
-    // --- Funções de Utilizador ---
+    // --- Usuário ---
 
     function stake(uint256 amount, uint256 planId) public {
+        require(planId < plans.length, "Staking: Invalid plan");
         require(plans[planId].active, "Staking: Plan not active");
         require(amount > 0, "Staking: Zero amount");
 
-        // Transferir LIPT para o Pool
         LIPT.safeTransferFrom(msg.sender, address(this), amount);
 
-        // Criar o stake
         userStakes[msg.sender].push(
             Stake({
                 user: msg.sender,
@@ -82,60 +79,69 @@ contract StakingPool is Ownable {
     }
 
     function calculateRewards(uint256 stakeId) public view returns (uint256 rewards) {
-        Stake storage stake = userStakes[msg.sender][stakeId];
-        StakingPlan storage plan = plans[stake.planId];
-
-        uint256 timeElapsed = block.timestamp - stake.startDate;
-        uint256 totalDuration = plan.duration;
-
-        // Recompensas são calculadas com base no tempo decorrido
-        // Formula: amount * apy * timeElapsed / (365 dias * 10000)
-        // Simplificado para: amount * apy * timeElapsed / (totalDuration * 10000)
-        
-        uint256 rewardsPerSecond = (stake.amount * plan.apy) / (10000 * totalDuration);
-        rewards = rewardsPerSecond * timeElapsed;
-
-        // Subtrair recompensas já reclamadas
-        rewards = rewards - stake.rewardsClaimed;
+        rewards = _calculateRewards(msg.sender, stakeId);
     }
 
     function claimRewards(uint256 stakeId) public {
-        uint256 rewards = calculateRewards(stakeId);
+        uint256 rewards = _calculateRewards(msg.sender, stakeId);
         require(rewards > 0, "Staking: No rewards to claim");
 
-        // Atualizar o registro de recompensas reclamadas
         userStakes[msg.sender][stakeId].rewardsClaimed += rewards;
-
-        // Transferir recompensas (assumindo que o Pool tem LIPT para pagar)
-        // Em um sistema real, o Pool precisaria de um mecanismo de minting ou de fundos.
         LIPT.safeTransfer(msg.sender, rewards);
 
         emit RewardsClaimed(msg.sender, rewards);
     }
 
     function unstake(uint256 stakeId) public {
-        Stake storage stake = userStakes[msg.sender][stakeId];
-        StakingPlan storage plan = plans[stake.planId];
+        Stake storage stakeData = userStakes[msg.sender][stakeId];
+        StakingPlan storage plan = plans[stakeData.planId];
 
-        uint256 capital = stake.amount;
+        uint256 capital = stakeData.amount;
         uint256 penalty = 0;
 
-        // Verificar se houve retirada antecipada
-        if (block.timestamp < stake.startDate + plan.duration) {
+        if (block.timestamp < stakeData.startDate + plan.duration) {
             penalty = (capital * earlyUnstakePenaltyBasisPoints) / 10000;
             capital = capital - penalty;
         }
 
-        // Transferir capital de volta ao usuário
         LIPT.safeTransfer(msg.sender, capital);
-
-        // Queimar a penalidade (conforme Tokenomics)
         LIPT.safeTransfer(DEAD_ADDRESS, penalty);
 
-        // Remover o stake (simplificado: apenas zerar o valor)
-        stake.amount = 0;
-        stake.startDate = 0;
+        stakeData.amount = 0;
+        stakeData.startDate = 0;
 
         emit Unstaked(msg.sender, capital, penalty);
+    }
+
+    // --- Views para integra��o ---
+
+    function getStakingPlans() external view returns (StakingPlan[] memory) {
+        return plans;
+    }
+
+    function getUserStakes(address user) external view returns (Stake[] memory) {
+        return userStakes[user];
+    }
+
+    function getUnclaimedRewards(address user) external view returns (uint256[] memory rewards) {
+        uint256 len = userStakes[user].length;
+        rewards = new uint256[](len);
+        for (uint256 i = 0; i < len; i++) {
+            rewards[i] = _calculateRewards(user, i);
+        }
+    }
+
+    // --- Interno ---
+
+    function _calculateRewards(address user, uint256 stakeId) internal view returns (uint256 rewards) {
+        Stake storage stakeData = userStakes[user][stakeId];
+        StakingPlan storage plan = plans[stakeData.planId];
+
+        uint256 timeElapsed = block.timestamp - stakeData.startDate;
+        uint256 totalDuration = plan.duration;
+
+        uint256 rewardsPerSecond = (stakeData.amount * plan.apy) / (10000 * totalDuration);
+        rewards = rewardsPerSecond * timeElapsed;
+        rewards = rewards - stakeData.rewardsClaimed;
     }
 }
