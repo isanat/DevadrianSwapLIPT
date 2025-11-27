@@ -617,38 +617,6 @@ export async function claimLotteryPrize(userAddress: Address, drawId: number) {
 
 // --- FUNÇÕES DE LIQUIDEZ ---
 
-export async function getLiquidityPoolData(userAddress: Address) {
-  const { publicClient } = getClients();
-  if (!publicClient) return null;
-
-  try {
-    const swapContract = getContract({
-      address: SWAP_ADDRESS,
-      abi: CONTRACT_ABIS.swapPool,
-      client: publicClient,
-    });
-
-    // Buscar reservas da pool
-    const reserves = await swapContract.read.getReserves();
-    const totalSupply = await swapContract.read.totalSupply();
-    const userLpBalance = await swapContract.read.balanceOf([userAddress]);
-
-    // Calcular pool share do usuário
-    const poolShare = totalSupply > 0n ? (Number(userLpBalance) / Number(totalSupply)) * 100 : 0;
-
-    return {
-      reserveLipt: reserves?.[0] ?? 0n,
-      reserveUsdt: reserves?.[1] ?? 0n,
-      totalSupply: totalSupply ?? 0n,
-      userLpBalance: userLpBalance ?? 0n,
-      poolShare,
-    };
-  } catch (error) {
-    console.error('Error getting liquidity pool data:', error);
-    return null;
-  }
-}
-
 export async function addLiquidity(userAddress: Address, liptAmount: bigint, usdtAmount: bigint) {
   const { publicClient, walletClient } = getClients();
   if (!walletClient) throw new Error('Wallet not connected');

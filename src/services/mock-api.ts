@@ -330,7 +330,7 @@ export const getLiquidityData = async (userAddress: string) => {
   try {
     // Importar funções do web3-api
     const { getLiquidityPoolData } = await import('./web3-api');
-    const poolData = await getLiquidityPoolData(userAddress as any);
+    const poolData = await getLiquidityPoolData(userAddress ? userAddress as any : undefined);
     
     if (poolData && poolData.totalLpTokens > 0) {
       return {
