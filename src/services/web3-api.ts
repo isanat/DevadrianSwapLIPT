@@ -942,16 +942,24 @@ export async function checkContractOwner(contractAddress: Address, userAddress: 
   if (!publicClient) return false;
 
   try {
-    // Tentar ler o owner usando Ownable
-    const contract = getContract({
-      address: contractAddress,
-      abi: [{ 
+    // Para o LIPT Token, usar o ABI completo
+    let abi: any;
+    if (contractAddress.toLowerCase() === LIPT_ADDRESS.toLowerCase()) {
+      abi = CONTRACT_ABIS.liptToken;
+    } else {
+      // Para outros contratos, usar ABI mínimo com função owner
+      abi = [{ 
         inputs: [], 
         name: 'owner', 
         outputs: [{ internalType: 'address', name: '', type: 'address' }], 
         stateMutability: 'view', 
         type: 'function' 
-      }],
+      }];
+    }
+
+    const contract = getContract({
+      address: contractAddress,
+      abi,
       client: publicClient,
     });
 
@@ -967,7 +975,35 @@ export async function checkContractOwner(contractAddress: Address, userAddress: 
  * Verificar se um endereço é owner do LIPT Token
  */
 export async function isLIPTOwner(userAddress: Address): Promise<boolean> {
-  return checkContractOwner(LIPT_ADDRESS, userAddress);
+  const { publicClient } = getClients();
+  if (!publicClient) {
+    console.error('isLIPTOwner: publicClient não disponível');
+    return false;
+  }
+
+  try {
+    // Usar o ABI completo do LIPT Token que já inclui a função owner()
+    const liptContract = getContract({
+      address: LIPT_ADDRESS,
+      abi: CONTRACT_ABIS.liptToken,
+      client: publicClient,
+    });
+
+    const owner = await liptContract.read.owner();
+    const isOwner = owner.toLowerCase() === userAddress.toLowerCase();
+    
+    console.log('isLIPTOwner check:', {
+      contractAddress: LIPT_ADDRESS,
+      userAddress,
+      ownerAddress: owner,
+      isOwner,
+    });
+    
+    return isOwner;
+  } catch (error) {
+    console.error('Error checking LIPT owner:', error);
+    return false;
+  }
 }
 
 /**
@@ -978,16 +1014,24 @@ export async function getContractOwnerAddress(contractAddress: Address): Promise
   if (!publicClient) return null;
 
   try {
-    // Tentar ler o owner usando Ownable
-    const contract = getContract({
-      address: contractAddress,
-      abi: [{ 
+    // Para o LIPT Token, usar o ABI completo
+    let abi: any;
+    if (contractAddress.toLowerCase() === LIPT_ADDRESS.toLowerCase()) {
+      abi = CONTRACT_ABIS.liptToken;
+    } else {
+      // Para outros contratos, usar ABI mínimo com função owner
+      abi = [{ 
         inputs: [], 
         name: 'owner', 
         outputs: [{ internalType: 'address', name: '', type: 'address' }], 
         stateMutability: 'view', 
         type: 'function' 
-      }],
+      }];
+    }
+
+    const contract = getContract({
+      address: contractAddress,
+      abi,
       client: publicClient,
     });
 

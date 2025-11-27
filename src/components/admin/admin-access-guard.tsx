@@ -29,10 +29,13 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
     }
 
     try {
+      console.log('AdminAccessGuard: Verificando owner para:', userAddress);
       const ownerStatus = await isLIPTOwner(userAddress);
+      console.log('AdminAccessGuard: Resultado da verificação:', ownerStatus);
       setIsOwner(ownerStatus);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error checking owner status:', error);
+      console.error('Error details:', error?.message, error?.stack);
       setIsOwner(false);
     } finally {
       setIsChecking(false);
@@ -126,7 +129,18 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
                 <span className="font-mono text-xs">{userAddress}</span>
                 <br />
                 <br />
-                Se você é o owner, verifique se está conectado com a carteira correta.
+                <strong>Endereço do contrato LIPT Token:</strong>
+                <br />
+                <span className="font-mono text-xs">0x15F6CAfD1fE68B0BCddecb28a739d14dB38947e6</span>
+                <br />
+                <br />
+                Se você é o owner, verifique:
+                <br />
+                1. Se está conectado com a carteira correta
+                <br />
+                2. Se a rede está configurada para Polygon Mainnet (Chain ID: 137)
+                <br />
+                3. Abra o console do navegador (F12) para ver logs de debug
               </AlertDescription>
             </Alert>
             <div className="flex gap-2">
