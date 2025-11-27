@@ -615,10 +615,11 @@ export const stakeLipt = async (userAddress: string, amount: number, plan: { dur
         const { CONTRACT_ADDRESSES } = await import('../config/contracts');
         
         // Buscar planId correspondente ao plan selecionado
-        // Usar STAKING_PLANS como fallback se o contrato não retornar planos
-        let plans = await getStakingPlans();
+        // IMPORTANTE: NUNCA usar fallback STAKING_PLANS aqui, pois o planIndex precisa corresponder ao índice do contrato
+        const plans = await getStakingPlans();
+        
         if (!plans || plans.length === 0) {
-            plans = STAKING_PLANS;
+            throw new Error('No staking plans available in the contract. Please contact the administrator.');
         }
         
         // Usar comparação tolerante para floating point
@@ -628,7 +629,12 @@ export const stakeLipt = async (userAddress: string, amount: number, plan: { dur
         );
         
         if (planIndex === -1) {
-            throw new Error('Staking plan not found. Please refresh and try again.');
+            throw new Error('Staking plan not found in contract. The plan you selected may not exist in the contract. Please refresh and select a valid plan.');
+        }
+        
+        // Verificar se o planIndex está dentro dos limites válidos
+        if (planIndex < 0 || planIndex >= plans.length) {
+            throw new Error(`Invalid plan index: ${planIndex}. Available plans: ${plans.length}`);
         }
         
         const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
@@ -975,7 +981,8 @@ export const placeRocketBet = async (userAddress: string, bet: number) => {
         }
         wallet.liptBalance -= bet;
         saveToStorage('wallet', wallet);
-        return { success: true };
+        // Retornar betIndex para o fallback (será 0 para mock, mas permite cashout no fallback)
+        return { success: true, betIndex: 0 };
     }
 }
 

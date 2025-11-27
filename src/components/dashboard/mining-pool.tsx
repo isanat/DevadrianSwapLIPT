@@ -139,41 +139,59 @@ export function MiningPool() {
       return;
     }
     
-    // IMPORTANTE: O planId deve ser baseado nos planos do CONTRATO, não dos planos exibidos
-    // Se os planos exibidos são do fallback, não podemos ativar
-    // Precisamos buscar os planos do contrato para obter o planId correto
+    // IMPORTANTE: O planId deve ser baseado nos planos do CONTRATO
+    // Precisamos buscar os planos do contrato diretamente para garantir que o planId seja correto
     if (!miningData?.plans || miningData.plans.length === 0) {
       toast({ variant: 'destructive', title: t('errors.generic'), description: 'Nenhum plano de mineração disponível no contrato. Por favor, contate o administrador.' });
       return;
     }
     
-    // Encontrar planId do selectedPlan nos planos do contrato
-    // Como os planos do contrato não têm 'name', vamos usar índice baseado na ordem
-    const planId = miningData.plans.findIndex(p => 
-      Math.abs(p.cost - selectedPlan.cost) < 0.01 && // Comparar custos (com tolerância para erros de float)
-      Math.abs(p.power - selectedPlan.power) < 0.01 && // Comparar power
-      Math.abs(p.duration - selectedPlan.duration) < 0.01 // Comparar duration
-    );
-    
-    if (planId === -1) {
-      toast({ variant: 'destructive', title: t('errors.generic'), description: 'Plano não encontrado. Por favor, selecione um plano válido.' });
-      return;
-    }
-    
-    if(walletData && walletData.liptBalance >= selectedPlan.cost) {
-      setIsActivating(true);
-      try {
-        await activateMiner(userAddress!, planId);
-        mutate(['mining', userAddress]);
-        mutate(['wallet', userAddress]);
-        toast({ title: t('miningPool.toast.activated.title'), description: t('miningPool.toast.activated.description', { name: selectedPlan.name }) });
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
-      } finally {
-        setIsActivating(false);
+    // Buscar planos do contrato diretamente para garantir que estamos usando os índices corretos
+    try {
+      const { getMiningPlans } = await import('@/services/web3-api');
+      const contractPlans = await getMiningPlans();
+      
+      if (!contractPlans || contractPlans.length === 0) {
+        toast({ variant: 'destructive', title: t('errors.generic'), description: 'Nenhum plano de mineração disponível no contrato. Por favor, contate o administrador.' });
+        return;
       }
-    } else {
-      toast({ variant: 'destructive', title: t('miningPool.toast.insufficientFunds.title'), description: t('miningPool.toast.insufficientFunds.description') });
+      
+      // Encontrar planId do selectedPlan nos planos do contrato
+      const planId = contractPlans.findIndex(p => 
+        Math.abs(p.cost - selectedPlan.cost) < 0.01 && // Comparar custos (com tolerância para erros de float)
+        Math.abs(p.power - selectedPlan.power) < 0.01 && // Comparar power
+        Math.abs(p.duration - selectedPlan.duration) < 0.01 // Comparar duration
+      );
+      
+      if (planId === -1) {
+        toast({ variant: 'destructive', title: t('errors.generic'), description: 'Plano não encontrado. Por favor, selecione um plano válido.' });
+        return;
+      }
+      
+      // Usar o planId encontrado para ativar o miner
+      if(walletData && walletData.liptBalance >= selectedPlan.cost) {
+        setIsActivating(true);
+        try {
+          await activateMiner(userAddress!, planId);
+          // Aguardar um pouco para garantir que o contrato atualizou
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Atualizar dados do cache
+          await Promise.all([
+            mutate(['mining', userAddress]),
+            mutate(['wallet', userAddress])
+          ]);
+          toast({ title: t('miningPool.toast.activated.title'), description: t('miningPool.toast.activated.description', { name: selectedPlan.name }) });
+        } catch (error: any) {
+          toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
+        } finally {
+          setIsActivating(false);
+        }
+      } else {
+        toast({ variant: 'destructive', title: t('miningPool.toast.insufficientFunds.title'), description: t('miningPool.toast.insufficientFunds.description') });
+      }
+    } catch (fetchError) {
+      console.error('Error fetching contract plans:', fetchError);
+      toast({ variant: 'destructive', title: t('errors.generic'), description: 'Erro ao buscar planos do contrato. Por favor, tente novamente.' });
     }
   };
 

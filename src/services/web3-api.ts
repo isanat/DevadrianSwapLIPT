@@ -69,16 +69,16 @@ export async function getStakingPlans() {
   if (!publicClient) return [];
 
   try {
-    const stakingContract = getContract({
-      address: STAKING_ADDRESS,
-      abi: CONTRACT_ABIS.stakingPool,
-      client: publicClient,
-    });
+  const stakingContract = getContract({
+    address: STAKING_ADDRESS,
+    abi: CONTRACT_ABIS.stakingPool,
+    client: publicClient,
+  });
 
-    const plans = await stakingContract.read.getStakingPlans();
+  const plans = await stakingContract.read.getStakingPlans();
     
     // Converter planos do contrato para o formato esperado pelo frontend
-    return plans.map((plan: any) => ({
+  return plans.map((plan: any) => ({
       duration: Number(plan.duration) / (24 * 60 * 60), // Converter segundos para dias
       apy: Number(plan.apy) / 100, // Converter basis points para porcentagem
       cost: Number(plan.cost || 0),
@@ -202,8 +202,8 @@ export async function getUserStakes(userAddress: Address) {
     // Buscar rewards disponíveis para cada stake
     const stakesWithRewards = await Promise.all(
       stakes.map(async (stake: any, index: number) => {
-        const planId = Number(stake.planId);
-        const plan = plans[planId] || { duration: 0, apy: 0 };
+      const planId = Number(stake.planId);
+      const plan = plans[planId] || { duration: 0, apy: 0 };
         
         // Calcular rewards disponíveis
         let availableRewards = 0n;
@@ -218,18 +218,18 @@ export async function getUserStakes(userAddress: Address) {
         // Buscar decimais do LIPT para converter corretamente
         const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
         
-        return {
-          id: index.toString(),
+      return {
+        id: index.toString(),
           stakeId: index, // ID numérico para usar no claim
           amount: Number(stake.amount) / 10 ** liptDecimals,
-          startDate: Number(stake.startDate) * 1000,
-          plan: {
+        startDate: Number(stake.startDate) * 1000,
+        plan: {
             duration: Number(plan.duration) / (24 * 60 * 60), // Converter segundos para dias
             apy: Number(plan.apy) / 100, // Converter basis points para porcentagem
-          },
+        },
           availableRewards: Number(availableRewards) / 10 ** liptDecimals, // Rewards disponíveis
           rewardsClaimed: Number(stake.rewardsClaimed || 0) / 10 ** liptDecimals, // Total já claimado
-        };
+      };
       })
     );
 
@@ -282,8 +282,8 @@ export async function getUserMiners(userAddress: Address) {
     // Buscar rewards disponíveis para cada miner
     const minersWithRewards = await Promise.all(
       miners.map(async (miner: any, index: number) => {
-        const planId = Number(miner.planId);
-        const plan = plans[planId] || { cost: 0, power: 0, duration: 0, active: false };
+      const planId = Number(miner.planId);
+      const plan = plans[planId] || { cost: 0, power: 0, duration: 0, active: false };
         
         // Calcular rewards disponíveis
         let availableRewards = 0n;
@@ -295,19 +295,19 @@ export async function getUserMiners(userAddress: Address) {
           console.error(`Error calculating rewards for miner ${index}:`, error);
         }
 
-        return {
-          id: index.toString(),
+      return {
+        id: index.toString(),
           minerId: index, // ID numérico para usar no claim
-          startDate: Number(miner.startDate) * 1000,
-          plan: {
-            name: `Plan ${planId}`,
-            cost: Number(plan.cost),
-            power: Number(plan.power),
-            duration: Number(plan.duration),
-          },
+        startDate: Number(miner.startDate) * 1000,
+        plan: {
+          name: `Plan ${planId}`,
+          cost: Number(plan.cost),
+          power: Number(plan.power),
+          duration: Number(plan.duration),
+        },
           minedAmount: Number(availableRewards), // Rewards disponíveis (não os já claimados)
           rewardsClaimed: Number(miner.rewardsClaimed || 0), // Total já claimado
-        };
+      };
       })
     );
 
@@ -517,7 +517,11 @@ export async function getWheelSegments() {
     }
 
     if (segments.length === 0) {
-      console.warn('No wheel segments found in contract');
+      // Não logar warning múltiplas vezes - usar um log único por sessão
+      if (!(window as any).__wheelSegmentsWarningLogged) {
+        console.warn('No wheel segments found in contract. The administrator needs to configure wheel segments using setWheelSegments.');
+        (window as any).__wheelSegmentsWarningLogged = true;
+      }
       return [];
     }
 
@@ -660,6 +664,12 @@ export async function activateMiner(userAddress: Address, planId: number) {
 
   const { request } = await miningContract.simulate.activateMiner([planId], { account: userAddress });
   const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação da transação
+  if (publicClient) {
+    await publicClient.waitForTransactionReceipt({ hash });
+  }
+  
   return hash;
 }
 
@@ -806,16 +816,49 @@ export async function playRocket(userAddress: Address, betAmount: bigint) {
       }
     }
     
-    // Se não encontramos nosso evento, o betIndex será o número total de eventos + 1 (será o próximo)
-    // Mas como já foi adicionado, precisamos subtrair 1
-    // Na verdade, o betIndex é baseado em 0, então o último evento terá index = total - 1
-    // Como nosso bet é o último adicionado, o betIndex será total - 1
-    if (betIndex > 0) {
-      betIndex = betIndex - 1; // Ajustar porque já foi adicionado
+    // O betIndex deve ser o índice do nosso bet no array de bets da rodada
+    // Se encontramos nosso evento no loop, betIndex já está correto (contagem até encontrar)
+    // Se não encontramos, precisamos contar todos os eventos da rodada
+    let foundOurEvent = false;
+    let totalBetsInRound = 0;
+    
+    for (const eventLog of events) {
+      if (eventLog.blockNumber) {
+        try {
+          const block = await publicClient.getBlock({ blockNumber: eventLog.blockNumber });
+          if (block && block.timestamp >= BigInt(roundStartTime)) {
+            totalBetsInRound++;
+            if (eventLog.transactionHash === hash) {
+              // Encontramos nosso evento, betIndex é o número de eventos ANTES dele
+              betIndex = totalBetsInRound - 1;
+              foundOurEvent = true;
+              break;
+            }
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+    
+    // Se não encontramos nosso evento nos logs, usar o total de bets como índice
+    // (nosso bet foi adicionado como último)
+    if (!foundOurEvent && totalBetsInRound > 0) {
+      betIndex = totalBetsInRound - 1;
+    } else if (!foundOurEvent) {
+      // Se não encontramos nenhum evento e não encontramos o nosso, usar 0
+      // (pode ser o primeiro bet ou race condition)
+      betIndex = 0;
     }
   } catch (error) {
     console.error('Error counting bets for betIndex:', error);
-    // Se falhar, retornar 0 como fallback (assumir que é o primeiro bet)
+    // Se falhar completamente, retornar -1 para indicar erro
+    betIndex = -1;
+  }
+  
+  // Se betIndex ainda for inválido após todas as tentativas, usar 0 como último recurso
+  if (betIndex < 0) {
+    console.warn('Could not determine betIndex, using 0 as fallback');
     betIndex = 0;
   }
   
@@ -845,6 +888,8 @@ export async function cashOutRocket(userAddress: Address, betIndex: number, mult
   const rocketCashedOutEvent = parseAbiItem('event RocketCashedOut(address indexed user, uint256 amount, uint256 multiplier)');
   
   let winnings = 0n;
+  let foundEvent = false;
+  
   for (const log of receipt.logs) {
     try {
       const decoded = decodeEventLog({
@@ -855,11 +900,23 @@ export async function cashOutRocket(userAddress: Address, betIndex: number, mult
       
       if (decoded.eventName === 'RocketCashedOut' && decoded.args.user?.toLowerCase() === userAddress.toLowerCase()) {
         winnings = decoded.args.amount || 0n;
+        foundEvent = true;
         break;
       }
     } catch (error) {
+      // Não é o evento que procuramos, continuar
       continue;
     }
+  }
+  
+  // Se não encontramos o evento, lançar erro em vez de retornar winnings 0
+  if (!foundEvent) {
+    throw new Error('RocketCashedOut event not found in transaction receipt. The cash out may have failed or the transaction was invalid.');
+  }
+  
+  // Validar que os winnings não são zero
+  if (winnings === 0n) {
+    throw new Error('Cash out transaction succeeded but winnings are zero. This may indicate an error in the transaction.');
   }
   
   return { hash, winnings };
