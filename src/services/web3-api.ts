@@ -577,6 +577,32 @@ export async function spinWheel(userAddress: Address, betAmount: bigint) {
   return hash;
 }
 
+// Buscar dados da rodada atual do Rocket Game
+export async function getRocketCurrentRound() {
+  const { publicClient } = getClients();
+  if (!publicClient) return null;
+
+  try {
+    const rocketContract = getContract({
+      address: CONTRACT_ADDRESSES.rocketGame as Address,
+      abi: CONTRACT_ABIS.rocketGame,
+      client: publicClient,
+    });
+
+    const round = await rocketContract.read.currentRound();
+    
+    // O crashPoint está em basis points (ex: 200 = 2.00x), converter para decimal
+    return {
+      crashPoint: Number(round[0]) / 100, // crashPoint em basis points -> decimal
+      startTime: Number(round[1]) * 1000, // timestamp em segundos -> milissegundos
+      active: round[2] as boolean,
+    };
+  } catch (error) {
+    console.error('Error fetching rocket current round:', error);
+    return null;
+  }
+}
+
 export async function playRocket(userAddress: Address, betAmount: bigint) {
   const { publicClient, walletClient } = getClients();
   if (!walletClient) throw new Error('Wallet not connected');

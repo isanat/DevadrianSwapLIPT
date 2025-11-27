@@ -226,12 +226,15 @@ export const getWalletData = async (userAddress: string) => {
 
 export const getDashboardStats = async (userAddress: string) => {
   // Retornar valores zerados - stats devem vir de agregação de contratos no futuro
+  // Propriedades esperadas pelos componentes (stats-group.tsx, admin dashboard)
   return {
-    tvl: 0,
-    totalStaked: 0,
-    totalMining: 0,
-    totalLiquidity: 0,
     liptPrice: 0,
+    totalValueLocked: 0,
+    totalVolume: 0,
+    totalUsers: 0,
+    protocolRevenue: 0,
+    totalInvested: 0,
+    totalReturns: 0,
   };
 };
 
@@ -486,7 +489,8 @@ export const getReferralData = async (userAddress: string) => {
 
 export const getLeaderboardData = async (userAddress: string) => {
     // Leaderboard deve vir de backend/indexação de eventos
-    // Por enquanto, retornar array vazio
+    // Por enquanto, retornar array vazio com estrutura correta
+    // O componente espera objetos com: rank, name, avatar, commission
     return [];
 }
 
