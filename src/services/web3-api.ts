@@ -875,3 +875,97 @@ export async function registerReferrer(userAddress: Address, referrerAddress: Ad
     throw new Error(error.message || 'Failed to register referrer');
   }
 }
+
+// --- FUNÇÕES DE ADMINISTRAÇÃO DE TOKENS ---
+
+/**
+ * Mintar MockUSDT para um endereço
+ * Nota: A função mint() do MockUSDT é pública, qualquer pessoa pode mintar
+ */
+export async function mintMockUSDT(userAddress: Address, toAddress: Address, amount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const mockUsdtContract = getContract({
+    address: USDT_ADDRESS,
+    abi: CONTRACT_ABIS.mockUsdt,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await mockUsdtContract.simulate.mint([toAddress, amount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+/**
+ * Transferir LIPT de um endereço para outro
+ * Nota: Requer que o userAddress tenha aprovação ou seja o owner
+ */
+export async function transferLIPT(userAddress: Address, toAddress: Address, amount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const liptContract = getContract({
+    address: LIPT_ADDRESS,
+    abi: CONTRACT_ABIS.liptToken,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await liptContract.simulate.transfer([toAddress, amount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+/**
+ * Mintar LIPT (função owner-only)
+ */
+export async function mintLIPT(userAddress: Address, toAddress: Address, amount: bigint) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  const liptContract = getContract({
+    address: LIPT_ADDRESS,
+    abi: CONTRACT_ABIS.liptToken,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  const { request } = await liptContract.simulate.mint([toAddress, amount], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  return hash;
+}
+
+/**
+ * Verificar se um endereço é owner de um contrato
+ */
+export async function checkContractOwner(contractAddress: Address, userAddress: Address): Promise<boolean> {
+  const { publicClient } = getClients();
+  if (!publicClient) return false;
+
+  try {
+    // Tentar ler o owner usando Ownable
+    const contract = getContract({
+      address: contractAddress,
+      abi: [{ 
+        inputs: [], 
+        name: 'owner', 
+        outputs: [{ internalType: 'address', name: '', type: 'address' }], 
+        stateMutability: 'view', 
+        type: 'function' 
+      }],
+      client: publicClient,
+    });
+
+    const owner = await contract.read.owner();
+    return owner.toLowerCase() === userAddress.toLowerCase();
+  } catch (error) {
+    console.error('Error checking contract owner:', error);
+    return false;
+  }
+}
+
+/**
+ * Verificar se um endereço é owner do LIPT Token
+ */
+export async function isLIPTOwner(userAddress: Address): Promise<boolean> {
+  return checkContractOwner(LIPT_ADDRESS, userAddress);
+}
