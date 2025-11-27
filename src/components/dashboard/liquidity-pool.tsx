@@ -75,6 +75,9 @@ export function LiquidityPool() {
   };
   
   const isLoading = isLoadingLp || isLoadingWallet;
+  const poolShare = lpData ? Number(lpData.poolShare ?? 0) : 0;
+  const lpTokens = lpData ? Number(lpData.lpTokens ?? lpData.userLpBalance ?? 0) : 0;
+  const feesEarned = lpData ? Number(lpData.feesEarned ?? 0) : 0;
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm h-full flex flex-col">
@@ -118,15 +121,15 @@ export function LiquidityPool() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center">
             <div>
                 <p className="text-sm text-muted-foreground">{t('liquidityPool.yourPoolShare')}</p>
-                <p className="text-2xl font-bold">{lpData?.poolShare.toFixed(2)}%</p>
+                <p className="text-2xl font-bold">{poolShare.toFixed(2)}%</p>
             </div>
             <div>
                 <p className="text-sm text-muted-foreground">{t('liquidityPool.yourLpTokens')}</p>
-                <p className="text-2xl font-bold">{lpData?.lpTokens.toLocaleString('en-US')}</p>
+                <p className="text-2xl font-bold">{lpTokens.toLocaleString('en-US')}</p>
             </div>
             <div>
                 <p className="text-sm text-muted-foreground">{t('liquidityPool.feesEarned')}</p>
-                <p className="text-2xl font-bold">{lpData?.feesEarned.toFixed(2)} USDT</p>
+                <p className="text-2xl font-bold">{feesEarned.toFixed(2)} USDT</p>
             </div>
             </div>
             <Separator className="my-4" />
