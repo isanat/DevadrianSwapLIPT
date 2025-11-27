@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAccount, useConnect } from 'wagmi';
 import { Header } from '@/components/layout/header';
@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2, XCircle, Gift, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { registerReferrer } from '@/services/web3-api';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function InvitePage() {
+function InvitePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { address: userAddress, isConnected } = useAccount();
@@ -210,3 +211,33 @@ export default function InvitePage() {
   );
 }
 
+// Componente de fallback para Suspense
+function InvitePageSkeleton() {
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      <Header />
+      <main className="flex flex-1 items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Skeleton className="mx-auto mb-4 h-16 w-16 rounded-full" />
+            <Skeleton className="h-6 w-48 mx-auto mb-2" />
+            <Skeleton className="h-4 w-64 mx-auto" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+// Exportar o componente principal com Suspense
+export default function InvitePage() {
+  return (
+    <Suspense fallback={<InvitePageSkeleton />}>
+      <InvitePageContent />
+    </Suspense>
+  );
+}
