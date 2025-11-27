@@ -570,7 +570,6 @@ export const purchaseLipt = async (userAddress: string, amount: number) => {
       throw new Error('Insufficient USDT balance');
     }
     // Calcular quantos LIPT serão recebidos baseado no preço
-    const stats = getFromStorage('stats', initialStats);
     const liptReceived = cost / stats.liptPrice;
     wallet.usdtBalance -= cost;
     wallet.liptBalance += liptReceived;
