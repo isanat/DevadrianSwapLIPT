@@ -30,7 +30,9 @@ export function ReferralDashboard() {
   };
 
   const network = referralData?.network || [];
-  const totalTeamMembers = network.reduce((sum, ref) => sum + ref.members, 0);
+  const totalTeamMembers = network.reduce((sum, ref) => sum + (ref?.members || 0), 0);
+  const totalReferrals = referralData?.totalReferrals ?? 0;
+  const totalRewards = referralData?.totalRewards ?? 0;
 
   return (
     <div className="space-y-8 h-full">
