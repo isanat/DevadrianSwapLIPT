@@ -42,7 +42,7 @@ O ambiente de desenvolvimento utiliza **Hardhat**, um framework de desenvolvimen
 *   **npm** ou **pnpm**
 *   **Git**
 *   **Conta MetaMask** com uma carteira de teste
-*   **MATIC de Teste** na Polygon Amoy Testnet (obtido via Faucet)
+*   **POL de Teste** na Polygon Amoy Testnet (obtido via Faucet)
 
 ### 2.2. Estrutura de Diretórios
 
@@ -157,12 +157,14 @@ Os artefatos de compilação (ABIs e bytecode) serão salvos no diretório `arti
 
 ## 4. Implantação na Polygon Mainnet
 
-### 4.1. Obter MATIC Real
+### 4.1. Obter POL (Polygon Native Token)
 
-Antes de implantar, você precisa de **MATIC real** na sua carteira para pagar as taxas de gás.
+Antes de implantar, você precisa de **POL real** na sua carteira para pagar as taxas de gás.
 
-1.  **Adquirir MATIC:** Você pode adquirir MATIC em uma corretora de criptomoedas e transferi-lo para a sua carteira MetaMask.
-2.  **Verificar o Saldo:** Confirme que o MATIC está na sua carteira antes de prosseguir.
+**Importante:** A partir de setembro de 2024, a Polygon migrou do token MATIC para POL. Em dezembro de 2025, apenas POL é aceito como token de gas na Polygon Mainnet.
+
+1.  **Adquirir POL:** Você pode adquirir POL em uma corretora de criptomoedas e transferi-lo para a sua carteira MetaMask.
+2.  **Verificar o Saldo:** Confirme que o POL está na sua carteira antes de prosseguir.
 
 ### 4.2. Executar o Script de Implantação
 
