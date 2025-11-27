@@ -139,16 +139,24 @@ export function MiningPool() {
       return;
     }
     
-    // Encontrar planId do selectedPlan
-    const planId = miningData?.plans?.findIndex(p => 
-      p.name === selectedPlan.name && 
-      p.cost === selectedPlan.cost && 
-      p.power === selectedPlan.power &&
-      p.duration === selectedPlan.duration
+    // IMPORTANTE: O planId deve ser baseado nos planos do CONTRATO, não dos planos exibidos
+    // Se os planos exibidos são do fallback, não podemos ativar
+    // Precisamos buscar os planos do contrato para obter o planId correto
+    if (!miningData?.plans || miningData.plans.length === 0) {
+      toast({ variant: 'destructive', title: t('errors.generic'), description: 'Nenhum plano de mineração disponível no contrato. Por favor, contate o administrador.' });
+      return;
+    }
+    
+    // Encontrar planId do selectedPlan nos planos do contrato
+    // Como os planos do contrato não têm 'name', vamos usar índice baseado na ordem
+    const planId = miningData.plans.findIndex(p => 
+      Math.abs(p.cost - selectedPlan.cost) < 0.01 && // Comparar custos (com tolerância para erros de float)
+      Math.abs(p.power - selectedPlan.power) < 0.01 && // Comparar power
+      Math.abs(p.duration - selectedPlan.duration) < 0.01 // Comparar duration
     );
     
-    if (planId === undefined || planId === -1) {
-      toast({ variant: 'destructive', title: t('errors.generic'), description: 'Plan ID not found' });
+    if (planId === -1) {
+      toast({ variant: 'destructive', title: t('errors.generic'), description: 'Plano não encontrado. Por favor, selecione um plano válido.' });
       return;
     }
     

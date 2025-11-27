@@ -201,12 +201,13 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     }
   }, [currentRound]);
 
-  const [betAmount, setBetAmount] = useState('');
-  const [displayMultiplier, setDisplayMultiplier] = useState(1.0);
-  const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
-  const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
-  const [crashHistory, setCrashHistory] = useState<number[]>([]);
-  const [isLoadingAction, setIsLoadingAction] = useState(false);
+  const [betAmount, setBetAmount] = useState('');
+  const [displayMultiplier, setDisplayMultiplier] = useState(1.0);
+  const [gameStatus, setGameStatus] = useState<'idle' | 'waiting' | 'in_progress' | 'crashed' | 'cashed_out'>('idle');
+  const [cashedOutMultiplier, setCashedOutMultiplier] = useState<number | null>(null);
+  const [crashHistory, setCrashHistory] = useState<number[]>([]);
+  const [isLoadingAction, setIsLoadingAction] = useState(false);
+  const [currentBetIndex, setCurrentBetIndex] = useState<number | null>(null); // Armazenar betIndex após fazer aposta
   const [isClient, setIsClient] = useState(false);
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -431,9 +432,14 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     setIsLoadingAction(true);
     
     try {
-        await placeRocketBet(userAddress!, bet);
+        const result = await placeRocketBet(userAddress!, bet);
         
-        mutate('wallet');
+        // Armazenar betIndex retornado pela transação
+        if (result.betIndex !== undefined) {
+            setCurrentBetIndex(result.betIndex);
+        }
+        
+        mutate(['wallet', userAddress]);
         setGameStatus('waiting');
         setIsLoadingAction(false);
         toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
@@ -452,10 +458,19 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
     
     const finalMultiplier = multiplierRef.current;
 
-    try {
+    try {
         const bet = parseFloat(betAmount);
-        const { winnings } = await cashOutRocket(userAddress!, bet, finalMultiplier);
-        mutate('wallet');
+        
+        // Verificar se temos betIndex válido
+        if (currentBetIndex === null || currentBetIndex < 0) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'BetIndex não encontrado. Por favor, faça uma nova aposta.' });
+            setIsLoadingAction(false);
+            return;
+        }
+        
+        const { winnings } = await cashOutRocket(userAddress!, bet, finalMultiplier, currentBetIndex);
+        mutate(['wallet', userAddress]);
+        setCurrentBetIndex(null); // Limpar betIndex após cash out
         setCashedOutMultiplier(finalMultiplier);
         setGameStatus('cashed_out');
         if (rocketRef.current) rocketRef.current.flame.visible = false;

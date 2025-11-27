@@ -185,10 +185,21 @@ export function StakingPool() {
     if(walletData && amount > 0 && amount <= walletData.liptBalance) {
       setIsStaking(true);
       try {
-        await stakeLipt(userAddress!, amount, selectedPlan);
-        mutate(['staking', userAddress]);
-        mutate(['wallet', userAddress]);
-        toast({ title: t('stakingPool.toast.staked.title'), description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration }) });
+        const result = await stakeLipt(userAddress!, amount, selectedPlan);
+        // Aguardar um pouco para garantir que o contrato atualizou antes de buscar dados
+        // Se já aguardou na função stakeLipt, não precisa aguardar novamente
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Atualizar dados do cache
+        await Promise.all([
+          mutate(['staking', userAddress]),
+          mutate(['wallet', userAddress])
+        ]);
+        
+        toast({ 
+          title: t('stakingPool.toast.staked.title'), 
+          description: t('stakingPool.toast.staked.description', { amount, duration: selectedPlan.duration })
+        });
         setStakeAmount('');
       } catch (error: any) {
         toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });

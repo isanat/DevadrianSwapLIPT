@@ -351,21 +351,19 @@ export const getMiningData = async (userAddress: string) => {
       return total + (miner.minedAmount || 0);
     }, 0);
     
-    // Se não houver planos do contrato, usar fallback
-    const finalPlans = plans && plans.length > 0 ? plans : MINING_PLANS;
-    
+    // Se não houver planos do contrato, retornar array vazio (o componente mostrará mensagem)
     return {
       miners,
-      plans: finalPlans,
+      plans: plans && plans.length > 0 ? plans : [], // NÃO usar fallback - mostrar mensagem quando vazio
       miningPower,
       minedRewards: Math.max(0, minedRewards),
     };
   } catch (error) {
     console.error('Error fetching mining data from contract:', error);
-    // Retornar estrutura com planos do fallback em caso de erro
+    // Retornar estrutura vazia em caso de erro (sem fallback)
     return {
       miners: [],
-      plans: MINING_PLANS, // Usar planos do fallback
+      plans: [], // NÃO usar fallback - permitir que o componente mostre mensagem
       miningPower: 0,
       minedRewards: 0,
     };
@@ -617,16 +615,30 @@ export const stakeLipt = async (userAddress: string, amount: number, plan: { dur
         const { CONTRACT_ADDRESSES } = await import('../config/contracts');
         
         // Buscar planId correspondente ao plan selecionado
-        const plans = await getStakingPlans();
-        const planIndex = plans.findIndex(p => p.duration === plan.duration && p.apy === plan.apy);
+        // Usar STAKING_PLANS como fallback se o contrato não retornar planos
+        let plans = await getStakingPlans();
+        if (!plans || plans.length === 0) {
+            plans = STAKING_PLANS;
+        }
+        
+        // Usar comparação tolerante para floating point
+        const planIndex = plans.findIndex(p => 
+            Math.abs(p.duration - plan.duration) < 0.01 && 
+            Math.abs(p.apy - plan.apy) < 0.01
+        );
+        
         if (planIndex === -1) {
-            throw new Error('Staking plan not found');
+            throw new Error('Staking plan not found. Please refresh and try again.');
         }
         
         const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
-        const amountBigInt = BigInt(amount * (10 ** liptDecimals));
+        const amountBigInt = BigInt(Math.floor(amount * (10 ** liptDecimals)));
         
         const hash = await web3StakeLipt(userAddress as any, amountBigInt, planIndex);
+        
+        // Aguardar confirmação da transação antes de retornar
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         return { hash }; // Retorna o hash da transação
     } catch (error) {
         console.error('Error staking LIPT from contract, using fallback:', error);
@@ -829,10 +841,17 @@ export const activateMiner = async (userAddress: string, planId: number) => {
         // Importar função do web3-api
         const { activateMiner: web3ActivateMiner, getMiningPlans } = await import('./web3-api');
         
-        // Verificar se o planId é válido antes de ativar
-        const plans = await getMiningPlans();
-        if (planId < 0 || planId >= plans.length) {
-            throw new Error('Invalid plan ID');
+        // Buscar planos do contrato para validar o planId
+        const contractPlans = await getMiningPlans();
+        
+        // Se não há planos no contrato, não podemos ativar
+        if (!contractPlans || contractPlans.length === 0) {
+            throw new Error('Nenhum plano de mineração disponível no contrato. Por favor, contate o administrador para configurar os planos.');
+        }
+        
+        // Verificar se o planId é válido
+        if (planId < 0 || planId >= contractPlans.length) {
+            throw new Error(`Invalid plan ID: ${planId}. Available plans: ${contractPlans.length}`);
         }
         
         const hash = await web3ActivateMiner(userAddress as any, planId);
@@ -942,10 +961,10 @@ export const placeRocketBet = async (userAddress: string, bet: number) => {
         const betAmount = BigInt(Math.floor(bet * 10**decimals));
         
         // Chamar o contrato (ele decide o crash point)
-        const hash = await playRocket(userAddress as any, betAmount);
+        const result = await playRocket(userAddress as any, betAmount);
         
-        // TODO: Escutar evento RocketPlayed para obter o betIndex
-        return { success: true, hash };
+        // playRocket agora retorna { hash, betIndex }
+        return { success: true, hash: result.hash, betIndex: result.betIndex };
     } catch (error) {
         console.error('Error calling playRocket contract:', error);
         // Fallback para mock
@@ -960,20 +979,26 @@ export const placeRocketBet = async (userAddress: string, bet: number) => {
     }
 }
 
-export const cashOutRocket = async (userAddress: string, bet: number, multiplier: number) => {
+export const cashOutRocket = async (userAddress: string, bet: number, multiplier: number, betIndex?: number) => {
     // Tentar usar o contrato real
     try {
-        const { cashOutRocket: web3CashOut } = await import('./web3-api');
+        const { cashOutRocket: web3CashOut, getTokenDecimals } = await import('./web3-api');
+        const { CONTRACT_ADDRESSES } = await import('../config/contracts');
         
-        // TODO: Obter betIndex correto do evento RocketPlayed
-        const betIndex = 0; // Mock por enquanto
+        // betIndex deve ser passado como parâmetro (armazenado após playRocket)
+        if (betIndex === undefined || betIndex < 0) {
+            throw new Error('betIndex is required for cashOut. Please place a bet first.');
+        }
+        
         const multiplierBasisPoints = Math.floor(multiplier * 100); // Converter para basis points
         
-        const hash = await web3CashOut(userAddress as any, betIndex, multiplierBasisPoints);
+        const result = await web3CashOut(userAddress as any, betIndex, multiplier);
         
-        // Calcular winnings
-        const winnings = bet * multiplier;
-        return { winnings, hash };
+        // web3CashOut agora retorna { hash, winnings }
+        const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const winnings = Number(result.winnings) / 10 ** liptDecimals;
+        
+        return { winnings, hash: result.hash };
     } catch (error) {
         console.error('Error calling cashOutRocket contract:', error);
         // Fallback para mock

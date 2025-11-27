@@ -34,6 +34,7 @@ function getClients() {
 const LIPT_ADDRESS = CONTRACT_ADDRESSES.liptToken as Address;
 const USDT_ADDRESS = CONTRACT_ADDRESSES.mockUsdt as Address;
 const STAKING_ADDRESS = CONTRACT_ADDRESSES.stakingPool as Address;
+const MINING_ADDRESS = CONTRACT_ADDRESSES.miningPool as Address;
 const SWAP_ADDRESS = CONTRACT_ADDRESSES.swapPool as Address;
 
 // --- FUNÇÕES DE LEITURA (GETTERS) ---
@@ -120,13 +121,17 @@ export async function getMiningPlans() {
       client: publicClient,
     });
 
-    // Assumindo que o contrato tem getMiningPlans() similar ao staking
     const plans = await miningContract.read.getMiningPlans();
-    return plans.map((plan: any) => ({
-      name: plan.name || `Plan ${plan.id}`,
-      cost: Number(plan.cost),
-      power: Number(plan.power),
-      duration: Number(plan.duration),
+    
+    // Buscar decimais do LIPT para converter cost corretamente
+    const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
+    
+    // Converter planos do contrato para o formato esperado pelo frontend
+    return plans.map((plan: any, index: number) => ({
+      name: `Plan ${index + 1}`, // O contrato não tem name, gerar baseado no índice
+      cost: Number(plan.cost) / 10 ** liptDecimals, // Converter de wei para tokens
+      power: Number(plan.power) / 10 ** 18, // Power geralmente em 18 decimais (tokens por segundo)
+      duration: Number(plan.duration) / (24 * 60 * 60), // Converter segundos para dias
     }));
   } catch (error) {
     console.error('Error fetching mining plans:', error);
@@ -566,11 +571,22 @@ export async function stakeLipt(userAddress: Address, amount: bigint, planId: nu
 
   // 1. Aprovar
   const { request: approveRequest } = await liptContract.simulate.approve([STAKING_ADDRESS, amount], { account: userAddress });
-  await walletClient.writeContract(approveRequest);
+  const approveHash = await walletClient.writeContract(approveRequest);
+  
+  // Aguardar confirmação do approve
+  if (publicClient) {
+    await publicClient.waitForTransactionReceipt({ hash: approveHash });
+  }
 
   // 2. Stake
   const { request: stakeRequest } = await stakingContract.simulate.stake([amount, planId], { account: userAddress });
   const hash = await walletClient.writeContract(stakeRequest);
+  
+  // Aguardar confirmação do stake para garantir que foi gravado no contrato
+  if (publicClient) {
+    await publicClient.waitForTransactionReceipt({ hash });
+  }
+  
   return hash;
 }
 
@@ -735,7 +751,7 @@ export async function getRocketCurrentRound() {
 
 export async function playRocket(userAddress: Address, betAmount: bigint) {
   const { publicClient, walletClient } = getClients();
-  if (!walletClient) throw new Error('Wallet not connected');
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
 
   const rocketContract = getContract({
     address: CONTRACT_ADDRESSES.rocketGame as Address,
@@ -746,17 +762,69 @@ export async function playRocket(userAddress: Address, betAmount: bigint) {
   const { request } = await rocketContract.simulate.playRocket([betAmount], { account: userAddress });
   const hash = await walletClient.writeContract(request);
   
-  // Aguardar confirmação e obter o crash point da rodada atual
-  if (publicClient) {
-    await publicClient.waitForTransactionReceipt({ hash });
+  // Aguardar confirmação da transação
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  
+  // Buscar betIndex através da contagem de eventos RocketBetPlaced desta rodada
+  // Como o contrato adiciona bets sequencialmente no array, podemos contar os eventos
+  const rocketBetPlacedEvent = parseAbiItem('event RocketBetPlaced(address indexed user, uint256 amount)');
+  
+  // Obter informações da rodada para filtrar eventos desta rodada
+  const currentRound = await rocketContract.read.currentRound();
+  const roundStartTime = Number(currentRound[1]); // startTime em segundos
+  
+  let betIndex = 0;
+  try {
+    // Buscar eventos RocketBetPlaced desde o início da rodada até agora
+    // Usar um range de blocos razoável (últimos 1000 blocos) para evitar busca muito lenta
+    const currentBlock = await publicClient.getBlockNumber();
+    const fromBlock = currentBlock - 1000n > 0n ? currentBlock - 1000n : 0n;
+    
+    const events = await publicClient.getLogs({
+      address: CONTRACT_ADDRESSES.rocketGame as Address,
+      event: rocketBetPlacedEvent,
+      fromBlock,
+      toBlock: 'latest',
+    });
+    
+    // Contar eventos desta rodada (block timestamp >= roundStartTime)
+    for (const eventLog of events) {
+      if (eventLog.blockNumber) {
+        try {
+          const block = await publicClient.getBlock({ blockNumber: eventLog.blockNumber });
+          if (block && block.timestamp >= BigInt(roundStartTime)) {
+            betIndex++;
+            // Se encontramos nosso evento no receipt, parar a contagem
+            if (eventLog.transactionHash === hash) {
+              break;
+            }
+          }
+        } catch {
+          // Ignorar erros ao buscar block
+          continue;
+        }
+      }
+    }
+    
+    // Se não encontramos nosso evento, o betIndex será o número total de eventos + 1 (será o próximo)
+    // Mas como já foi adicionado, precisamos subtrair 1
+    // Na verdade, o betIndex é baseado em 0, então o último evento terá index = total - 1
+    // Como nosso bet é o último adicionado, o betIndex será total - 1
+    if (betIndex > 0) {
+      betIndex = betIndex - 1; // Ajustar porque já foi adicionado
+    }
+  } catch (error) {
+    console.error('Error counting bets for betIndex:', error);
+    // Se falhar, retornar 0 como fallback (assumir que é o primeiro bet)
+    betIndex = 0;
   }
   
-  return hash;
+  return { hash, betIndex };
 }
 
 export async function cashOutRocket(userAddress: Address, betIndex: number, multiplier: number) {
   const { publicClient, walletClient } = getClients();
-  if (!walletClient) throw new Error('Wallet not connected');
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
 
   const rocketContract = getContract({
     address: CONTRACT_ADDRESSES.rocketGame as Address,
@@ -769,7 +837,32 @@ export async function cashOutRocket(userAddress: Address, betIndex: number, mult
   
   const { request } = await rocketContract.simulate.cashOutRocket([betIndex, multiplierBasisPoints], { account: userAddress });
   const hash = await walletClient.writeContract(request);
-  return hash;
+  
+  // Aguardar confirmação e buscar winnings do evento
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  
+  // Extrair winnings do evento RocketCashedOut
+  const rocketCashedOutEvent = parseAbiItem('event RocketCashedOut(address indexed user, uint256 amount, uint256 multiplier)');
+  
+  let winnings = 0n;
+  for (const log of receipt.logs) {
+    try {
+      const decoded = decodeEventLog({
+        abi: [rocketCashedOutEvent],
+        data: log.data,
+        topics: log.topics,
+      });
+      
+      if (decoded.eventName === 'RocketCashedOut' && decoded.args.user?.toLowerCase() === userAddress.toLowerCase()) {
+        winnings = decoded.args.amount || 0n;
+        break;
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+  
+  return { hash, winnings };
 }
 
 export async function buyLotteryTickets(userAddress: Address, ticketQuantity: number) {
