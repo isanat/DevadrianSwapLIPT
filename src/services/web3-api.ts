@@ -390,37 +390,59 @@ export async function getWheelSegments() {
       client: publicClient,
     });
 
-    // Assumindo que o contrato tem getSegments() ou precisa iterar
-    // Se o contrato tem um contador de segmentos, iterar
-    let segments: any[] = [];
-    try {
-      // Tentar buscar todos os segmentos de uma vez
-      const allSegments = await wheelContract.read.getSegments();
-      segments = Array.isArray(allSegments) ? allSegments : [];
-    } catch {
-      // Se não tiver getSegments(), tentar iterar
+    // O contrato WheelOfFortune tem segments(uint256) que retorna um Segment
+    // Não há função para obter o tamanho, então iteramos até obter erro
+    const segments: any[] = [];
+    let index = 0;
+    const maxSegments = 100; // Limite de segurança para evitar loop infinito
+
+    while (index < maxSegments) {
       try {
-        const segmentCount = await wheelContract.read.segmentCount();
-        const promises = [];
-        for (let i = 0; i < Number(segmentCount); i++) {
-          promises.push(wheelContract.read.segments([i]));
+        const segment = await wheelContract.read.segments([index]);
+        if (segment && (segment.multiplier !== undefined || segment.weight !== undefined)) {
+          segments.push(segment);
+          index++;
+        } else {
+          break; // Segmento inválido, parar iteração
         }
-        segments = await Promise.all(promises);
       } catch {
-        // Se falhar, retornar array vazio (fallback será usado)
-        return [];
+        // Erro ao buscar segmento no índice, assumir que não há mais segmentos
+        break;
       }
     }
 
-    return segments.map((seg: any, index: number) => ({
-      value: Number(seg.value || seg.multiplier || 0),
-      label: `${seg.value || seg.multiplier || 0}x`,
-      color: seg.color || `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Cor aleatória se não tiver
-      weight: Number(seg.weight || seg.probability || 1),
-    }));
+    if (segments.length === 0) {
+      console.warn('No wheel segments found in contract');
+      return [];
+    }
+
+    // Cores padrão baseadas no índice
+    const defaultColors = [
+      '#6366f1', // Indigo
+      '#ef4444', // Red
+      '#22c55e', // Green
+      '#8b5cf6', // Purple
+      '#f97316', // Orange
+      '#3b82f6', // Blue
+      '#ec4899', // Pink
+      '#14b8a6', // Teal
+    ];
+
+    return segments.map((seg: any, index: number) => {
+      const multiplier = Number(seg.multiplier || 0);
+      // O multiplier no contrato está em basis points (ex: 150 = 1.5x), converter para decimal
+      const value = multiplier / 100;
+      
+      return {
+        value,
+        label: `${value}x`,
+        color: defaultColors[index % defaultColors.length],
+        weight: Number(seg.weight || 1),
+      };
+    });
   } catch (error) {
     console.error('Error fetching wheel segments:', error);
-    return []; // Fallback - o componente usará os segmentos hardcoded
+    return []; // Retornar array vazio - componente não renderiza se não houver segmentos
   }
 }
 

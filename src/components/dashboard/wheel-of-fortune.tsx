@@ -14,20 +14,16 @@ import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
-// Segmentos padrão (fallback se o contrato não retornar)
-const defaultSegments = [
-    { value: 1.5, label: '1.5x', color: '#6366f1', weight: 8 },  // Indigo
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 25 }, // Red
-    { value: 1,   label: '1x',   color: '#22c55e', weight: 10 }, // Green
-    { value: 3,   label: '3x',   color: '#8b5cf6', weight: 2 },  // Purple
-    { value: 0.5, label: '0.5x', color: '#f97316', weight: 20 }, // Orange
-    { value: 2,   label: '2x',   color: '#3b82f6', weight: 5 },  // Blue
-    { value: 0,   label: '0x',   color: '#ef4444', weight: 20 }, // Red
-    { value: 1,   label: '1x',   color: '#16a34a', weight: 10 }, // Darker Green
-];
+// Tipo para segmentos
+type Segment = {
+  value: number;
+  label: string;
+  color: string;
+  weight: number;
+};
 
 // 🎨 Gera o gradiente conic proporcional
-const getConicGradient = (segments: typeof defaultSegments) => {
+const getConicGradient = (segments: Segment[]) => {
   const totalWeight = segments.reduce((sum, s) => sum + s.weight, 0);
   let gradient = 'conic-gradient(';
   let currentAngle = 0; 
@@ -46,7 +42,7 @@ const getConicGradient = (segments: typeof defaultSegments) => {
 // O frontend não deve calcular qual segmento ganha
 
 
-const Wheel = ({ rotation, isSpinning, segments }: { rotation: number; isSpinning: boolean; segments: typeof defaultSegments }) => {
+const Wheel = ({ rotation, isSpinning, segments }: { rotation: number; isSpinning: boolean; segments: Segment[] }) => {
   const { t } = useI18n();
   const transitionStyle = isSpinning
     ? { transition: 'transform 8s cubic-bezier(0.2, 0.8, 0.2, 1)' }
@@ -136,8 +132,15 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
 
-  // Usar segmentos do contrato ou fallback
-  const currentSegments = segments && segments.length > 0 ? segments : defaultSegments;
+  // Segmentos devem sempre vir do contrato - não usar fallback hardcoded
+  const currentSegments: Segment[] = segments && segments.length > 0 
+    ? segments.map(s => ({
+        value: s.value,
+        label: s.label,
+        color: s.color || '#6366f1', // Cor padrão apenas se não vier do contrato
+        weight: s.weight || 1,
+      }))
+    : []; // Se não houver segmentos, array vazio - componente não renderiza
 
   const handleSpin = async () => {
     const bet = parseFloat(betAmount);
@@ -207,6 +210,18 @@ export function WheelOfFortune({ onSpinResult }: WheelOfFortuneProps) {
         <Skeleton className="w-72 h-72 md:w-80 md:h-80 rounded-full" />
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-12 w-64" />
+      </div>
+    );
+  }
+
+  // Se não houver segmentos do contrato, mostrar erro
+  if (!currentSegments || currentSegments.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 p-8">
+        <div className="text-center text-muted-foreground">
+          <p className="text-lg font-semibold mb-2">Segmentos não configurados</p>
+          <p className="text-sm">Os segmentos da roda precisam ser configurados no contrato.</p>
+        </div>
       </div>
     );
   }
