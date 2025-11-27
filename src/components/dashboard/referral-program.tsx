@@ -12,12 +12,13 @@ import useSWR from 'swr';
 import { getReferralData } from '@/services/mock-api';
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
+import { getReferralLink } from '@/lib/utils';
 
 export function ReferralDashboard() {
   const { toast } = useToast();
   const { t } = useI18n();
   const { address: userAddress } = useAccount();
-  const referralLink = userAddress ? `https://devadrianswap.com/invite?ref=${userAddress}` : "https://devadrianswap.com/invite?ref=...";
+  const referralLink = userAddress ? getReferralLink(userAddress) : getReferralLink('...');
 
   const { data: referralData, isLoading } = useSWR(userAddress ? ['referral', userAddress] : null, () => getReferralData(userAddress!));
 

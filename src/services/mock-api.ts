@@ -386,6 +386,7 @@ export const getReferralData = async (userAddress: string) => {
     // Tentar usar o contrato real
     try {
         const { getReferralViewData, getTokenDecimals } = await import('./web3-api');
+        const { getReferralLink } = await import('../lib/utils');
         const referralData = await getReferralViewData(userAddress as any);
         
         if (referralData) {
@@ -395,7 +396,7 @@ export const getReferralData = async (userAddress: string) => {
                 referrer: referralData.referrer,
                 referralCount: referralData.referralCount,
                 totalCommissions: referralData.totalCommissions / 10**decimals,
-                referralLink: `https://devadrian.com?ref=${userAddress}`,
+                referralLink: userAddress ? getReferralLink(userAddress) : getReferralLink('...'),
                 // TODO: Buscar lista de referidos do backend
                 referrals: [],
             };
@@ -406,7 +407,15 @@ export const getReferralData = async (userAddress: string) => {
     
     // Fallback para mock
     await wait(800);
-    return getFromStorage('referral', initialReferralData);
+    const mockData = getFromStorage('referral', initialReferralData);
+    
+    // Garantir que o link de referral no mock também use o domínio correto
+    if (userAddress && typeof window !== 'undefined') {
+        const { getReferralLink } = await import('../lib/utils');
+        mockData.referralLink = getReferralLink(userAddress);
+    }
+    
+    return mockData;
 };
 
 export const getLeaderboardData = async (userAddress: string) => {

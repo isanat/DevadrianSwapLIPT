@@ -824,3 +824,33 @@ export async function getReferralViewData(userAddress: Address) {
     return null;
   }
 }
+
+// Registrar referrer no programa de afiliados
+export async function registerReferrer(userAddress: Address, referrerAddress: Address) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient) throw new Error('Wallet not connected');
+
+  try {
+    const referralContract = getContract({
+      address: CONTRACT_ADDRESSES.referralProgram as Address,
+      abi: CONTRACT_ABIS.referralProgram,
+      client: { public: publicClient, wallet: walletClient },
+    });
+
+    const { request } = await referralContract.simulate.register([referrerAddress], {
+      account: userAddress,
+    });
+
+    const hash = await walletClient.writeContract(request);
+    
+    // Aguardar confirmação
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+
+    return { hash };
+  } catch (error: any) {
+    console.error('Error registering referrer:', error);
+    throw new Error(error.message || 'Failed to register referrer');
+  }
+}
