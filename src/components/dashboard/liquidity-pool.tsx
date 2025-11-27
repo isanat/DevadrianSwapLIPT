@@ -31,6 +31,10 @@ export function LiquidityPool() {
   const [isAdding, setIsAdding] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   
+  // Calcular valores derivados antes das funções para garantir consistência
+  // Use fallback para garantir consistência entre exibição e validação
+  const lpTokens = lpData ? Number(lpData.lpTokens ?? lpData.userLpBalance ?? 0) : 0;
+  
   const handleAddLiquidity = async () => {
     const lipt = parseFloat(addLiptAmount);
     const usdt = parseFloat(addUsdtAmount);
@@ -56,7 +60,9 @@ export function LiquidityPool() {
 
   const handleRemoveLiquidity = async () => {
     const amount = parseFloat(removeLpAmount);
-    if (lpData && amount > 0 && amount <= lpData.lpTokens) {
+    // Usar a mesma variável lpTokens que inclui fallback para userLpBalance
+    // Isso garante consistência entre o que é exibido e o que pode ser removido
+    if (lpData && amount > 0 && amount <= lpTokens) {
       setIsRemoving(true);
       try {
         await removeLiquidity(userAddress!, amount);
@@ -76,7 +82,6 @@ export function LiquidityPool() {
   
   const isLoading = isLoadingLp || isLoadingWallet;
   const poolShare = lpData ? Number(lpData.poolShare ?? 0) : 0;
-  const lpTokens = lpData ? Number(lpData.lpTokens ?? lpData.userLpBalance ?? 0) : 0;
   const feesEarned = lpData ? Number(lpData.feesEarned ?? 0) : 0;
 
   return (
@@ -169,7 +174,7 @@ export function LiquidityPool() {
                         {isRemoving ? 'Removing...' : t('liquidityPool.removeButton')}
                     </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('liquidityPool.yourLpTokens')}: {lpData?.lpTokens.toLocaleString('en-US')}</p>
+                    <p className="text-xs text-muted-foreground">{t('liquidityPool.yourLpTokens')}: {lpTokens.toLocaleString('en-US')}</p>
                 </div>
             </TabsContent>
             </Tabs>
