@@ -192,9 +192,11 @@ export const priceHistory = Array.from({ length: 20 }, (_, i) => ({
 // GETTERS
 export const getWalletData = async (userAddress: string) => {
   if (!userAddress) {
-    // Se não há endereço, retornar dados mock
-    await wait(300);
-    return getFromStorage('wallet', initialWallet);
+    // Se não há endereço, retornar valores zerados
+    return {
+      liptBalance: 0,
+      usdtBalance: 0,
+    };
   }
 
   try {
@@ -213,26 +215,36 @@ export const getWalletData = async (userAddress: string) => {
       usdtBalance: parseFloat(balances.usdtBalance) / (10 ** usdtDecimals),
     };
   } catch (error) {
-    console.error('Error fetching wallet data from contract, using fallback:', error);
-    // Fallback para dados mock em caso de erro
-    await wait(300);
-    return getFromStorage('wallet', initialWallet);
+    console.error('Error fetching wallet data from contract:', error);
+    // Retornar valores zerados em caso de erro
+    return {
+      liptBalance: 0,
+      usdtBalance: 0,
+    };
   }
 };
 
 export const getDashboardStats = async (userAddress: string) => {
-  await wait(500);
-  return getFromStorage('stats', initialStats);
+  // Retornar valores zerados - stats devem vir de agregação de contratos no futuro
+  return {
+    tvl: 0,
+    totalStaked: 0,
+    totalMining: 0,
+    totalLiquidity: 0,
+    liptPrice: 0,
+  };
 };
 
 export const getStakingData = async (userAddress: string) => {
   if (!userAddress) {
-    // Se não há endereço, retornar dados mock
-    await wait(600);
-    const staking = getFromStorage('staking', initialStaking);
-    staking.unclaimedRewards += Math.random() * 0.1;
-    saveToStorage('staking', staking);
-    return staking;
+    // Se não há endereço, retornar estrutura vazia
+    return {
+      stakes: [],
+      plans: [],
+      stakedBalance: 0,
+      unclaimedRewards: 0,
+      earlyUnstakePenalty: 0,
+    };
   }
 
   try {
@@ -258,28 +270,30 @@ export const getStakingData = async (userAddress: string) => {
       plans,
       stakedBalance: stakes.reduce((sum, s) => sum + s.amount, 0),
       unclaimedRewards: Math.max(0, unclaimedRewards),
-      earlyUnstakePenalty: penalty,
+      earlyUnstakePenalty: penalty || 0,
     };
   } catch (error) {
-    console.error('Error fetching staking data from contract, using fallback:', error);
-    // Fallback para dados mock
-    await wait(600);
-    const staking = getFromStorage('staking', initialStaking);
-    staking.unclaimedRewards += Math.random() * 0.1;
-    saveToStorage('staking', staking);
-    return staking;
+    console.error('Error fetching staking data from contract:', error);
+    // Retornar estrutura vazia em caso de erro
+    return {
+      stakes: [],
+      plans: [],
+      stakedBalance: 0,
+      unclaimedRewards: 0,
+      earlyUnstakePenalty: 0,
+    };
   }
 };
 
 export const getMiningData = async (userAddress: string) => {
   if (!userAddress) {
-    // Se não há endereço, retornar dados mock
-    await wait(700);
-    const mining = getFromStorage('mining', initialMining);
-    mining.minedRewards += mining.miningPower / (60 * 12); // Simulate 5 sec interval
-    mining.miners = mining.miners.map(m => ({ ...m, minedAmount: m.minedAmount + m.plan.power / (60*12) }))
-    saveToStorage('mining', mining);
-    return mining;
+    // Se não há endereço, retornar estrutura vazia
+    return {
+      miners: [],
+      plans: [],
+      miningPower: 0,
+      minedRewards: 0,
+    };
   }
 
   try {
@@ -301,68 +315,92 @@ export const getMiningData = async (userAddress: string) => {
     
     return {
       miners,
-      plans: plans.length > 0 ? plans : MINING_PLANS, // Fallback para MINING_PLANS se vazio
+      plans: plans.length > 0 ? plans : [], // Não usar fallback hardcoded
       miningPower,
       minedRewards: Math.max(0, minedRewards),
     };
   } catch (error) {
-    console.error('Error fetching mining data from contract, using fallback:', error);
-    // Fallback para dados mock
-    await wait(700);
-    const mining = getFromStorage('mining', initialMining);
-    mining.minedRewards += mining.miningPower / (60 * 12);
-    mining.miners = mining.miners.map(m => ({ ...m, minedAmount: m.minedAmount + m.plan.power / (60*12) }))
-    saveToStorage('mining', mining);
-    return mining;
+    console.error('Error fetching mining data from contract:', error);
+    // Retornar estrutura vazia em caso de erro
+    return {
+      miners: [],
+      plans: [],
+      miningPower: 0,
+      minedRewards: 0,
+    };
   }
 };
 
 export const getLiquidityData = async (userAddress: string) => {
   if (!userAddress) {
-    // Se não há endereço, retornar dados mock
-    await wait(400);
-    const liquidity = getFromStorage('liquidity', initialLiquidity);
-    liquidity.userFeesEarned += Math.random() * 0.01;
-    saveToStorage('liquidity', liquidity);
-    return liquidity;
+    // Se não há endereço, retornar valores zerados
+    return {
+      totalLipt: 0,
+      totalUsdt: 0,
+      totalLpTokens: 0,
+      volume24h: 0,
+      userPoolShare: 0,
+      userLpTokens: 0,
+      lpTokens: 0,
+      userLpBalance: 0,
+      feesEarned: 0,
+      poolShare: 0,
+    };
   }
 
   try {
     // Importar funções do web3-api
     const { getLiquidityPoolData } = await import('./web3-api');
-    const poolData = await getLiquidityPoolData(userAddress ? userAddress as any : undefined);
+    const poolData = await getLiquidityPoolData(userAddress as any);
     
-    if (poolData && poolData.totalLpTokens > 0) {
+    if (poolData) {
       return {
-        totalLipt: poolData.totalLipt,
-        totalUsdt: poolData.totalUsdt,
-        totalLpTokens: poolData.totalLpTokens,
-        volume24h: poolData.volume24h,
-        userPoolShare: poolData.userPoolShare,
-        userLpTokens: poolData.userLpTokens,
-        lpTokens: poolData.lpTokens,
-        userLpBalance: poolData.userLpBalance,
-        feesEarned: poolData.feesEarned,
-        poolShare: poolData.poolShare,
+        totalLipt: poolData.totalLipt || 0,
+        totalUsdt: poolData.totalUsdt || 0,
+        totalLpTokens: poolData.totalLpTokens || 0,
+        volume24h: poolData.volume24h || 0,
+        userPoolShare: poolData.userPoolShare || 0,
+        userLpTokens: poolData.userLpTokens || 0,
+        lpTokens: poolData.lpTokens || 0,
+        userLpBalance: poolData.userLpBalance || 0,
+        feesEarned: poolData.feesEarned || 0,
+        poolShare: poolData.poolShare || 0,
       };
     }
   } catch (error) {
-    console.error('Error fetching liquidity data from contract, using fallback:', error);
+    console.error('Error fetching liquidity data from contract:', error);
   }
   
-  // Fallback para mock
-  await wait(400);
-  const liquidity = getFromStorage('liquidity', initialLiquidity);
-  liquidity.userFeesEarned += Math.random() * 0.01;
-  saveToStorage('liquidity', liquidity);
-  return liquidity;
+  // Retornar valores zerados em caso de erro
+  return {
+    totalLipt: 0,
+    totalUsdt: 0,
+    totalLpTokens: 0,
+    volume24h: 0,
+    userPoolShare: 0,
+    userLpTokens: 0,
+    lpTokens: 0,
+    userLpBalance: 0,
+    feesEarned: 0,
+    poolShare: 0,
+  };
 };
 
 export const getLotteryData = async (userAddress: string) => {
     if (!userAddress) {
-        // Se não há endereço, retornar dados mock
-        await wait(500);
-        return getFromStorage('lottery', initialLottery);
+        // Se não há endereço, retornar estrutura vazia
+        return {
+            ticketPrice: 0,
+            totalTickets: 0,
+            userTickets: [],
+            currentDraw: {
+                id: 0,
+                prizePool: 0,
+                endTime: 0,
+                status: 'OPEN' as const,
+            },
+            previousDraws: [],
+        };
     }
 
     try {
@@ -370,57 +408,86 @@ export const getLotteryData = async (userAddress: string) => {
         const { getLotteryData: getLotteryDataFromContract } = await import('./web3-api');
         const lotteryData = await getLotteryDataFromContract(userAddress as any);
         
-        if (lotteryData && lotteryData.currentDraw) {
+        if (lotteryData) {
             return lotteryData;
         }
     } catch (error) {
-        console.error('Error fetching lottery data from contract, using fallback:', error);
+        console.error('Error fetching lottery data from contract:', error);
     }
     
-    // Fallback para mock
-    await wait(500);
-    return getFromStorage('lottery', initialLottery);
+    // Retornar estrutura vazia em caso de erro
+    return {
+        ticketPrice: 0,
+        totalTickets: 0,
+        userTickets: [],
+        currentDraw: {
+            id: 0,
+            prizePool: 0,
+            endTime: 0,
+            status: 'OPEN' as const,
+        },
+        previousDraws: [],
+    };
 };
 
 export const getReferralData = async (userAddress: string) => {
+    if (!userAddress) {
+        // Se não há endereço, retornar estrutura vazia
+        return {
+            referrer: '0x0000000000000000000000000000000000000000',
+            referralCount: 0,
+            totalCommissions: 0,
+            referralLink: '',
+            totalReferrals: 0,
+            totalRewards: 0,
+            network: [],
+            referrals: [],
+        };
+    }
+
     // Tentar usar o contrato real
     try {
         const { getReferralViewData, getTokenDecimals } = await import('./web3-api');
         const { getReferralLink } = await import('../lib/utils');
+        const { CONTRACT_ADDRESSES } = await import('../config/contracts');
         const referralData = await getReferralViewData(userAddress as any);
         
         if (referralData) {
             const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
             
             return {
-                referrer: referralData.referrer,
-                referralCount: referralData.referralCount,
-                totalCommissions: referralData.totalCommissions / 10**decimals,
-                referralLink: userAddress ? getReferralLink(userAddress) : getReferralLink('...'),
-                // TODO: Buscar lista de referidos do backend
-                referrals: [],
+                referrer: referralData.referrer || '0x0000000000000000000000000000000000000000',
+                referralCount: referralData.referralCount || 0,
+                totalCommissions: (referralData.totalCommissions || 0) / 10**decimals,
+                referralLink: getReferralLink(userAddress),
+                totalReferrals: referralData.referralCount || 0,
+                totalRewards: (referralData.totalCommissions || 0) / 10**decimals,
+                network: [], // TODO: Buscar network do backend
+                referrals: [], // TODO: Buscar lista de referidos do contrato
             };
         }
     } catch (error) {
         console.error('Error getting referral data from contract:', error);
     }
     
-    // Fallback para mock
-    await wait(800);
-    const mockData = getFromStorage('referral', initialReferralData);
-    
-    // Garantir que o link de referral no mock também use o domínio correto
-    if (userAddress && typeof window !== 'undefined') {
-        const { getReferralLink } = await import('../lib/utils');
-        mockData.referralLink = getReferralLink(userAddress);
-    }
-    
-    return mockData;
+    // Retornar estrutura vazia em caso de erro
+    const { getReferralLink } = await import('../lib/utils');
+    return {
+        referrer: '0x0000000000000000000000000000000000000000',
+        referralCount: 0,
+        totalCommissions: 0,
+        referralLink: getReferralLink(userAddress),
+        totalReferrals: 0,
+        totalRewards: 0,
+        network: [],
+        referrals: [],
+    };
 };
 
 export const getLeaderboardData = async (userAddress: string) => {
-    await wait(1200);
-    return getFromStorage('leaderboard', initialLeaderboardData);
+    // Leaderboard deve vir de backend/indexação de eventos
+    // Por enquanto, retornar array vazio
+    return [];
 }
 
 // --- ACTIONS (MUTATIONS) ---
