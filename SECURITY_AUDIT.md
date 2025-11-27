@@ -8,7 +8,7 @@ Este documento contém informações sobre verificação e remediação de crede
 
 ## 📋 RESUMO DA VERIFICAÇÃO
 
-**Data da Verificação:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+**Data da Verificação:** 2025-11-26 (Atualize esta data ao revisar o documento)
 
 ### ✅ Resultados das Verificações
 
@@ -214,6 +214,6 @@ git check-ignore -v contracts/.env
 
 ---
 
-**Última Atualização:** $(Get-Date -Format "yyyy-MM-dd")
-**Próxima Revisão Recomendada:** $(Get-Date).AddMonths(3).ToString("yyyy-MM-dd")
+**Última Atualização:** 2025-11-26
+**Próxima Revisão Recomendada:** 2026-02-26
 
