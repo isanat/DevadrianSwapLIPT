@@ -91,10 +91,12 @@ const initialStats = {
   totalReturns: 125.50,
 };
 
+const FIXED_NOW = 1700000000000; // evita variação SSR/CSR
+
 const initialStaking: { stakes: Stake[], stakedBalance: number, unclaimedRewards: number } = {
   stakes: [
-    { id: 'stake_1', amount: 5000, plan: STAKING_PLANS[2], startDate: Date.now() - 10 * 24 * 60 * 60 * 1000 },
-    { id: 'stake_2', amount: 2500, plan: STAKING_PLANS[1], startDate: Date.now() - 25 * 24 * 60 * 60 * 1000 },
+    { id: 'stake_1', amount: 5000, plan: STAKING_PLANS[2], startDate: FIXED_NOW - 10 * 24 * 60 * 60 * 1000 },
+    { id: 'stake_2', amount: 2500, plan: STAKING_PLANS[1], startDate: FIXED_NOW - 25 * 24 * 60 * 60 * 1000 },
   ],
   stakedBalance: 7500,
   unclaimedRewards: 88.54,
@@ -102,7 +104,7 @@ const initialStaking: { stakes: Stake[], stakedBalance: number, unclaimedRewards
 
 const initialMining: { miners: Miner[], miningPower: number, minedRewards: number } = {
   miners: [
-      { id: 'miner_1', plan: MINING_PLANS[0], startDate: Date.now() - 5 * 24 * 60 * 60 * 1000, minedAmount: 60 },
+      { id: 'miner_1', plan: MINING_PLANS[0], startDate: FIXED_NOW - 5 * 24 * 60 * 60 * 1000, minedAmount: 60 },
   ],
   miningPower: 0.5,
   minedRewards: 60,
