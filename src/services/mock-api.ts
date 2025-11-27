@@ -236,18 +236,12 @@ export const getDashboardStats = async (userAddress: string) => {
     const liptPrice = liquidityData.liptPrice || 0;
     
     // TVL (Total Value Locked) = valor total dos tokens no pool
-    // Em um pool AMM válido, ambos os lados têm o mesmo valor, então TVL = 2 * totalUsdt
-    // Mas precisamos tratar casos edge onde o pool está vazio ou inconsistente (liptPrice = 0)
-    let totalValueLocked: number;
-    if (liptPrice === 0 || liquidityData.totalLipt === 0 || liquidityData.totalUsdt === 0) {
-      // Pool vazio ou inconsistente: retornar apenas o valor de USDT
-      // A fórmula antiga (totalLipt * liptPrice) + totalUsdt colapsaria para totalUsdt neste caso
-      totalValueLocked = liquidityData.totalUsdt;
-    } else {
-      // Pool válido: ambos os lados têm o mesmo valor, então TVL = 2 * totalUsdt
-      // (equivalente a 2 * totalLipt * liptPrice, já que liptPrice = totalUsdt / totalLipt)
-      totalValueLocked = liquidityData.totalUsdt * 2;
-    }
+    // Fórmula robusta que funciona em todos os casos:
+    // - Pool válido: totalUsdt + (totalLipt * liptPrice) = 2 * totalUsdt (correto)
+    // - Pool vazio: 0 + 0 = 0 (correto)
+    // - Pool desbalanceado (só USDT): totalUsdt + 0 = totalUsdt (correto)
+    // - Pool desbalanceado (só LIPT): 0 + (totalLipt * 0) = 0 (correto, pois liptPrice = 0)
+    const totalValueLocked = liquidityData.totalUsdt + (liquidityData.totalLipt * liptPrice);
     
     return {
       liptPrice,
