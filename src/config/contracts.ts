@@ -55,10 +55,26 @@ const ADDRESSES = {
   },
 };
 
-// L?gica para selecionar os endere?os corretos com base na rede ativa
-const ACTIVE_NETWORK = (process.env.NEXT_PUBLIC_ACTIVE_NETWORK as keyof typeof ADDRESSES) || 'mainnet';
+// Lógica para selecionar os endereços corretos com base na rede ativa
+// Validar que a rede é uma chave válida antes de usar
+type NetworkKey = keyof typeof ADDRESSES;
+const VALID_NETWORKS: NetworkKey[] = ['mainnet', 'amoy'];
 
-export const CONTRACT_ADDRESSES = ADDRESSES[ACTIVE_NETWORK];
+const getActiveNetwork = (): NetworkKey => {
+  const envNetwork = process.env.NEXT_PUBLIC_ACTIVE_NETWORK as NetworkKey | undefined;
+  
+  // Validar que a rede da variável de ambiente é válida
+  if (envNetwork && VALID_NETWORKS.includes(envNetwork)) {
+    return envNetwork;
+  }
+  
+  // Se não for válida ou não existir, usar mainnet como padrão
+  return 'mainnet';
+};
+
+const ACTIVE_NETWORK = getActiveNetwork();
+
+export const CONTRACT_ADDRESSES: typeof ADDRESSES[NetworkKey] = ADDRESSES[ACTIVE_NETWORK];
 
 // Exportar a configura??o completa para compatibilidade
 export const contractConfig = ADDRESSES;

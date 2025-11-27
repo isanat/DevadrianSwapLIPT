@@ -29,8 +29,13 @@ export function Footer() {
           </div>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 text-xs">
             {contracts.map(({ label, key }) => {
+              // Validação de segurança: verificar se CONTRACT_ADDRESSES existe antes de acessar
+              if (!CONTRACT_ADDRESSES) {
+                return null;
+              }
+              
               const address = (CONTRACT_ADDRESSES as any)[key] as string | undefined;
-              if (!address) return null;
+              if (!address || address === '0x...') return null;
               return (
                 <a
                   key={key}
