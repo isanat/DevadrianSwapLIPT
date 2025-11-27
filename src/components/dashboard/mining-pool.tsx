@@ -16,9 +16,10 @@ import { getMiningData, getWalletData, activateMiner, claimMinedRewards, Miner }
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
-const ActiveMiner = ({ miner }: { miner: Miner }) => {
+const ActiveMiner = ({ miner, onClaim }: { miner: Miner; onClaim?: (minerId: number) => void }) => {
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [isClaiming, setIsClaiming] = useState(false);
   const { t } = useI18n();
   const [isClient, setIsClient] = useState(false);
 
@@ -88,6 +89,25 @@ const ActiveMiner = ({ miner }: { miner: Miner }) => {
           )}
         </div>
       </div>
+      {miner.minedAmount > 0 && onClaim && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full mt-2"
+          onClick={async () => {
+            if (onClaim) {
+              setIsClaiming(true);
+              const minerId = (miner as any).minerId ?? Number(miner.id);
+              await onClaim(minerId);
+              setIsClaiming(false);
+            }
+          }}
+          disabled={isClaiming}
+        >
+          {isClaiming && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+          {isClaiming ? 'Claiming...' : `Claim ${miner.minedAmount.toFixed(4)} LIPT`}
+        </Button>
+      )}
     </div>
   );
 };
@@ -119,10 +139,23 @@ export function MiningPool() {
       return;
     }
     
+    // Encontrar planId do selectedPlan
+    const planId = miningData?.plans?.findIndex(p => 
+      p.name === selectedPlan.name && 
+      p.cost === selectedPlan.cost && 
+      p.power === selectedPlan.power &&
+      p.duration === selectedPlan.duration
+    );
+    
+    if (planId === undefined || planId === -1) {
+      toast({ variant: 'destructive', title: t('errors.generic'), description: 'Plan ID not found' });
+      return;
+    }
+    
     if(walletData && walletData.liptBalance >= selectedPlan.cost) {
       setIsActivating(true);
       try {
-        await activateMiner(userAddress!, selectedPlan);
+        await activateMiner(userAddress!, planId);
         mutate(['mining', userAddress]);
         mutate(['wallet', userAddress]);
         toast({ title: t('miningPool.toast.activated.title'), description: t('miningPool.toast.activated.description', { name: selectedPlan.name }) });
@@ -136,22 +169,24 @@ export function MiningPool() {
     }
   };
 
-  const handleClaim = async () => {
-    if(miningData && miningData.minedRewards > 0) {
-      setIsClaiming(true);
-      const amount = miningData.minedRewards.toFixed(2);
-      try {
-        await claimMinedRewards(userAddress!);
-        mutate(['mining', userAddress]);
-        mutate(['wallet', userAddress]);
-        toast({ title: t('miningPool.toast.rewardsClaimed.title'), description: t('miningPool.toast.rewardsClaimed.description', { amount }) });
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
-      } finally {
-        setIsClaiming(false);
-      }
-    } else {
+  const handleClaimMiner = async (minerId: number) => {
+    const miner = miningData?.miners?.find(m => m.minerId === minerId || Number(m.id) === minerId);
+    if (!miner || miner.minedAmount <= 0) {
       toast({ variant: 'destructive', title: t('stakingPool.toast.noRewards.title'), description: t('stakingPool.toast.noRewards.description') });
+      return;
+    }
+    
+    setIsClaiming(true);
+    const amount = miner.minedAmount.toFixed(4);
+    try {
+      await claimMinedRewards(userAddress!, minerId);
+      mutate(['mining', userAddress]);
+      mutate(['wallet', userAddress]);
+      toast({ title: t('miningPool.toast.rewardsClaimed.title'), description: t('miningPool.toast.rewardsClaimed.description', { amount }) });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -254,7 +289,7 @@ export function MiningPool() {
                 {miningData && miningData.miners.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                     {miningData.miners.map(miner => (
-                        <ActiveMiner key={miner.id} miner={miner} />
+                        <ActiveMiner key={miner.id} miner={miner} onClaim={handleClaimMiner} />
                     ))}
                     </div>
                 ) : (
@@ -266,12 +301,6 @@ export function MiningPool() {
         </>
         )}
       </CardContent>
-      <CardFooter>
-        <Button variant="outline" className="w-full" onClick={handleClaim} disabled={isClaiming}>
-            {isClaiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isClaiming ? 'Claiming...' : t('miningPool.claimRewardsButton')}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

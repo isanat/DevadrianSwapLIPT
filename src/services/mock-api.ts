@@ -31,6 +31,7 @@ export interface Stake {
 
 export interface Miner {
   id: string;
+  minerId?: number; // ID numérico para usar no contrato (opcional para compatibilidade)
   startDate: number;
   plan: {
     name: string;
@@ -39,6 +40,7 @@ export interface Miner {
     duration: number;
   };
   minedAmount: number;
+  rewardsClaimed?: number; // Total já claimado (opcional)
 }
 
 export interface LotteryDraw {
@@ -338,11 +340,11 @@ export const getMiningData = async (userAddress: string) => {
     ]);
     
     // Calcular poder total de mineração e recompensas
+    // Usar os rewards já calculados pelo getUserMiners (que busca do contrato)
     const miningPower = miners.reduce((total, miner) => total + miner.plan.power, 0);
-    const now = Date.now();
     const minedRewards = miners.reduce((total, miner) => {
-      const elapsed = (now - miner.startDate) / (1000 * 60 * 60); // horas
-      return total + (miner.plan.power * elapsed) + miner.minedAmount;
+      // minedAmount já vem calculado corretamente do getUserMiners
+      return total + (miner.minedAmount || 0);
     }, 0);
     
     return {
@@ -822,39 +824,79 @@ export const removeLiquidity = async (userAddress: string, lpAmount: number) => 
     }
 };
 
-export const activateMiner = async (userAddress: string, plan: { name: string; cost: number; power: number; duration: number; }) => {
-    await wait(1300);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const mining = getFromStorage('mining', initialMining);
-    if (wallet.liptBalance < plan.cost) {
-        throw new Error('Insufficient LIPT balance');
+export const activateMiner = async (userAddress: string, planId: number) => {
+    try {
+        // Importar função do web3-api
+        const { activateMiner: web3ActivateMiner, getMiningPlans } = await import('./web3-api');
+        
+        // Verificar se o planId é válido antes de ativar
+        const plans = await getMiningPlans();
+        if (planId < 0 || planId >= plans.length) {
+            throw new Error('Invalid plan ID');
+        }
+        
+        const hash = await web3ActivateMiner(userAddress as any, planId);
+        return { hash }; // Retorna o hash da transação
+    } catch (error) {
+        console.error('Error activating miner from contract, using fallback:', error);
+        // Fallback para mock (deprecated - usar apenas para desenvolvimento)
+        await wait(1300);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const mining = getFromStorage('mining', initialMining);
+        
+        // Buscar plan por planId
+        const plan = mining.plans[planId];
+        if (!plan) {
+            throw new Error('Plan not found');
+        }
+        
+        if (wallet.liptBalance < plan.cost) {
+            throw new Error('Insufficient LIPT balance');
+        }
+        wallet.liptBalance -= plan.cost;
+        const newMiner: Miner = {
+            id: `miner_${Date.now()}`,
+            plan,
+            startDate: Date.now(),
+            minedAmount: 0,
+        };
+        mining.miners.push(newMiner);
+        mining.miningPower += plan.power;
+        saveToStorage('wallet', wallet);
+        saveToStorage('mining', mining);
+        return { success: true };
     }
-    wallet.liptBalance -= plan.cost;
-    const newMiner: Miner = {
-        id: `miner_${Date.now()}`,
-        plan,
-        startDate: Date.now(),
-        minedAmount: 0,
-    };
-    mining.miners.push(newMiner);
-    mining.miningPower += plan.power;
-    saveToStorage('wallet', wallet);
-    saveToStorage('mining', mining);
-    return { success: true };
 };
 
-export const claimMinedRewards = async (userAddress: string) => {
-    await wait(900);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const mining = getFromStorage('mining', initialMining);
+export const claimMinedRewards = async (userAddress: string, minerId: number) => {
+    try {
+        // Importar função do web3-api
+        const { claimMinedRewards: web3ClaimMinedRewards } = await import('./web3-api');
+        
+        const hash = await web3ClaimMinedRewards(userAddress as any, minerId);
+        return { hash }; // Retorna o hash da transação
+    } catch (error) {
+        console.error('Error claiming mined rewards from contract, using fallback:', error);
+        // Fallback para mock (deprecated - usar apenas para desenvolvimento)
+        await wait(900);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const mining = getFromStorage('mining', initialMining);
 
-    wallet.liptBalance += mining.minedRewards;
-    mining.minedRewards = 0;
-    mining.miners = mining.miners.map(m => ({ ...m, minedAmount: 0 }));
+        // Claimar rewards do miner específico
+        if (minerId < 0 || minerId >= mining.miners.length) {
+            throw new Error('Invalid miner ID');
+        }
 
-    saveToStorage('wallet', wallet);
-    saveToStorage('mining', mining);
-    return { success: true };
+        const miner = mining.miners[minerId];
+        if (miner.minedAmount > 0) {
+            wallet.liptBalance += miner.minedAmount;
+            miner.minedAmount = 0;
+            saveToStorage('wallet', wallet);
+            saveToStorage('mining', mining);
+        }
+
+        return { success: true };
+    }
 };
 
 // Game Actions

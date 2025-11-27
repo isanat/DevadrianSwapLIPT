@@ -184,6 +184,28 @@ export async function getUserStakes(userAddress: Address) {
   }
 }
 
+// Calcular rewards disponíveis para um miner específico
+export async function calculateMinedRewards(userAddress: Address, minerId: number) {
+  const { publicClient } = getClients();
+  if (!publicClient) return 0n;
+
+  try {
+    const miningContract = getContract({
+      address: CONTRACT_ADDRESSES.miningPool as Address,
+      abi: CONTRACT_ABIS.miningPool,
+      client: publicClient,
+    });
+
+    const rewards = await miningContract.read.calculateMinedRewards([minerId], {
+      account: userAddress,
+    });
+    return rewards;
+  } catch (error) {
+    console.error('Error calculating mined rewards:', error);
+    return 0n;
+  }
+}
+
 // Buscar miners do usuário
 export async function getUserMiners(userAddress: Address) {
   const { publicClient } = getClients();
@@ -201,21 +223,39 @@ export async function getUserMiners(userAddress: Address) {
       miningContract.read.getMiningPlans(),
     ]);
 
-    return miners.map((miner: any, index: number) => {
-      const planId = Number(miner.planId);
-      const plan = plans[planId] || { cost: 0, power: 0, duration: 0, active: false };
-      return {
-        id: index.toString(),
-        startDate: Number(miner.startDate) * 1000,
-        plan: {
-          name: `Plan ${planId}`,
-          cost: Number(plan.cost),
-          power: Number(plan.power),
-          duration: Number(plan.duration),
-        },
-        minedAmount: Number(miner.rewardsClaimed || 0),
-      };
-    });
+    // Buscar rewards disponíveis para cada miner
+    const minersWithRewards = await Promise.all(
+      miners.map(async (miner: any, index: number) => {
+        const planId = Number(miner.planId);
+        const plan = plans[planId] || { cost: 0, power: 0, duration: 0, active: false };
+        
+        // Calcular rewards disponíveis
+        let availableRewards = 0n;
+        try {
+          availableRewards = await miningContract.read.calculateMinedRewards([index], {
+            account: userAddress,
+          });
+        } catch (error) {
+          console.error(`Error calculating rewards for miner ${index}:`, error);
+        }
+
+        return {
+          id: index.toString(),
+          minerId: index, // ID numérico para usar no claim
+          startDate: Number(miner.startDate) * 1000,
+          plan: {
+            name: `Plan ${planId}`,
+            cost: Number(plan.cost),
+            power: Number(plan.power),
+            duration: Number(plan.duration),
+          },
+          minedAmount: Number(availableRewards), // Rewards disponíveis (não os já claimados)
+          rewardsClaimed: Number(miner.rewardsClaimed || 0), // Total já claimado
+        };
+      })
+    );
+
+    return minersWithRewards;
   } catch (error) {
     console.error('Error fetching user miners:', error);
     return []; // Fallback
