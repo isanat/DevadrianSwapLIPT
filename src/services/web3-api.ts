@@ -973,6 +973,8 @@ export async function checkContractOwner(contractAddress: Address, userAddress: 
 
 /**
  * Verificar se um endereço é owner do LIPT Token
+ * NOTA: Após o deploy, a propriedade foi transferida para o ProtocolController.
+ * Então verificamos se o usuário é owner do ProtocolController.
  */
 export async function isLIPTOwner(userAddress: Address): Promise<boolean> {
   const { publicClient } = getClients();
@@ -982,24 +984,53 @@ export async function isLIPTOwner(userAddress: Address): Promise<boolean> {
   }
 
   try {
-    // Usar o ABI completo do LIPT Token que já inclui a função owner()
+    // Primeiro, verificar se o LIPT Token foi transferido para ProtocolController
     const liptContract = getContract({
       address: LIPT_ADDRESS,
       abi: CONTRACT_ABIS.liptToken,
       client: publicClient,
     });
 
-    const owner = await liptContract.read.owner();
-    const isOwner = owner.toLowerCase() === userAddress.toLowerCase();
+    const liptOwner = await liptContract.read.owner();
     
-    console.log('isLIPTOwner check:', {
-      contractAddress: LIPT_ADDRESS,
-      userAddress,
-      ownerAddress: owner,
-      isOwner,
-    });
+    // Se o owner do LIPT Token é o ProtocolController, verificar se o usuário é owner do ProtocolController
+    const PROTOCOL_CONTROLLER_ADDRESS = CONTRACT_ADDRESSES.protocolController as Address;
     
-    return isOwner;
+    if (liptOwner.toLowerCase() === PROTOCOL_CONTROLLER_ADDRESS.toLowerCase()) {
+      // O LIPT Token foi transferido para o ProtocolController
+      // Verificar se o usuário é owner do ProtocolController
+      const protocolControllerContract = getContract({
+        address: PROTOCOL_CONTROLLER_ADDRESS,
+        abi: CONTRACT_ABIS.protocolController,
+        client: publicClient,
+      });
+
+      const protocolControllerOwner = await protocolControllerContract.read.owner();
+      const isOwner = protocolControllerOwner.toLowerCase() === userAddress.toLowerCase();
+      
+      console.log('isLIPTOwner check (via ProtocolController):', {
+        liptTokenAddress: LIPT_ADDRESS,
+        liptOwner: liptOwner,
+        protocolControllerAddress: PROTOCOL_CONTROLLER_ADDRESS,
+        protocolControllerOwner: protocolControllerOwner,
+        userAddress,
+        isOwner,
+      });
+      
+      return isOwner;
+    } else {
+      // O LIPT Token ainda não foi transferido, verificar diretamente
+      const isOwner = liptOwner.toLowerCase() === userAddress.toLowerCase();
+      
+      console.log('isLIPTOwner check (direct):', {
+        contractAddress: LIPT_ADDRESS,
+        userAddress,
+        ownerAddress: liptOwner,
+        isOwner,
+      });
+      
+      return isOwner;
+    }
   } catch (error) {
     console.error('Error checking LIPT owner:', error);
     return false;
@@ -1048,4 +1079,93 @@ export async function getContractOwnerAddress(contractAddress: Address): Promise
  */
 export async function getLIPTOwnerAddress(): Promise<string | null> {
   return getContractOwnerAddress(LIPT_ADDRESS);
+}
+
+/**
+ * Buscar informações completas sobre a cadeia de ownership
+ * Retorna o owner do LIPT Token e, se for o ProtocolController, também retorna o owner do ProtocolController
+ */
+export async function getOwnershipChain(): Promise<{
+  liptTokenAddress: string;
+  liptTokenOwner: string;
+  protocolControllerAddress: string;
+  protocolControllerOwner: string | null;
+  isOwnerTransferredToController: boolean;
+  finalOwner: string;
+}> {
+  const { publicClient } = getClients();
+  if (!publicClient) {
+    throw new Error('publicClient não disponível');
+  }
+
+  try {
+    // 1. Buscar owner do LIPT Token
+    const liptContract = getContract({
+      address: LIPT_ADDRESS,
+      abi: CONTRACT_ABIS.liptToken,
+      client: publicClient,
+    });
+
+    const liptOwner = await liptContract.read.owner();
+    const PROTOCOL_CONTROLLER_ADDRESS = CONTRACT_ADDRESSES.protocolController as Address;
+    
+    const isOwnerTransferredToController = liptOwner.toLowerCase() === PROTOCOL_CONTROLLER_ADDRESS.toLowerCase();
+    
+    let protocolControllerOwner: string | null = null;
+    let finalOwner = liptOwner as string;
+
+    // 2. Se o owner for o ProtocolController, buscar o owner do ProtocolController
+    // OU se for outro endereço de contrato, tentar buscar o owner dele também
+    if (isOwnerTransferredToController) {
+      try {
+        const protocolControllerContract = getContract({
+          address: PROTOCOL_CONTROLLER_ADDRESS,
+          abi: CONTRACT_ABIS.protocolController,
+          client: publicClient,
+        });
+
+        protocolControllerOwner = await protocolControllerContract.read.owner() as string;
+        finalOwner = protocolControllerOwner;
+      } catch (error) {
+        console.error('Error fetching ProtocolController owner:', error);
+      }
+    } else {
+      // Se o owner NÃO é o ProtocolController, pode ser outro contrato ou uma carteira
+      // Tentar verificar se é um contrato que tem função owner()
+      try {
+        const potentialContract = getContract({
+          address: liptOwner as Address,
+          abi: [{ 
+            inputs: [], 
+            name: 'owner', 
+            outputs: [{ internalType: 'address', name: '', type: 'address' }], 
+            stateMutability: 'view', 
+            type: 'function' 
+          }],
+          client: publicClient,
+        });
+
+        const nestedOwner = await potentialContract.read.owner();
+        if (nestedOwner && nestedOwner !== liptOwner) {
+          // É um contrato com owner, então o owner final é o owner desse contrato
+          finalOwner = nestedOwner as string;
+        }
+      } catch {
+        // Não é um contrato ou não tem função owner, então o owner final é o próprio liptOwner
+        // (que pode ser uma carteira simples)
+      }
+    }
+
+    return {
+      liptTokenAddress: LIPT_ADDRESS,
+      liptTokenOwner: liptOwner as string,
+      protocolControllerAddress: PROTOCOL_CONTROLLER_ADDRESS,
+      protocolControllerOwner,
+      isOwnerTransferredToController,
+      finalOwner,
+    };
+  } catch (error) {
+    console.error('Error fetching ownership chain:', error);
+    throw error;
+  }
 }

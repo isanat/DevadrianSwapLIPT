@@ -12,8 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAccount } from 'wagmi';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
-import { getLIPTOwnerAddress } from '@/services/web3-api';
+import { getLIPTOwnerAddress, getOwnershipChain } from '@/services/web3-api';
 import useSWR from 'swr';
+import { ExternalLink } from 'lucide-react';
 
 const MOCK_PROTOCOL_PAUSED = false;
 
@@ -28,6 +29,11 @@ export default function AdminSettingsPage() {
         isConnected ? 'lipt-owner-address' : null,
         () => getLIPTOwnerAddress(),
         { refreshInterval: 0 } // Não atualizar automaticamente
+    );
+    const { data: ownershipChain, isLoading: isLoadingOwnershipChain, mutate: refreshOwnershipChain } = useSWR(
+        isConnected ? 'ownership-chain' : null,
+        () => getOwnershipChain(),
+        { refreshInterval: 0 }
     );
 
     const copyToClipboard = (address: string) => {
@@ -86,44 +92,119 @@ export default function AdminSettingsPage() {
                  <Card className='lg:col-span-1'>
                     <CardHeader>
                         <CardTitle>Contract Ownership (LIPT Token)</CardTitle>
-                        <CardDescription>View the owner of the LIPT Token contract.</CardDescription>
+                        <CardDescription>View the ownership chain of the LIPT Token contract.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                         <div className="space-y-2">
-                            <Label>Current Owner</Label>
-                             {isLoadingOwner ? (
-                                <div className="flex items-center gap-2 p-2">
-                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                    <span className="text-sm text-muted-foreground">Carregando...</span>
+                        {isLoadingOwnershipChain ? (
+                            <div className="flex items-center gap-2 p-2">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">Carregando cadeia de ownership...</span>
+                            </div>
+                        ) : ownershipChain ? (
+                            <div className="space-y-4">
+                                {/* Owner direto do LIPT Token */}
+                                <div className="space-y-2">
+                                    <Label>Owner Direto do LIPT Token</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input readOnly value={ownershipChain.liptTokenOwner} className="font-mono text-xs bg-muted" />
+                                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(ownershipChain.liptTokenOwner)}>
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                        <a 
+                                            href={`https://polygonscan.com/address/${ownershipChain.liptTokenOwner}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1 hover:bg-muted rounded"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </a>
+                                    </div>
+                                    {ownershipChain.isOwnerTransferredToController && (
+                                        <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                                            ⚠️ Ownership foi transferido para o ProtocolController
+                                        </p>
+                                    )}
                                 </div>
-                             ) : ownerAddress ? (
-                                <div className="flex items-center gap-2">
-                                    <Input readOnly value={ownerAddress} className="font-mono text-xs bg-muted" />
-                                    <Button variant="ghost" size="icon" onClick={() => copyToClipboard(ownerAddress)}>
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
+
+                                {/* Owner do ProtocolController (se aplicável) */}
+                                {ownershipChain.isOwnerTransferredToController && ownershipChain.protocolControllerOwner && (
+                                    <div className="space-y-2">
+                                        <Label>Owner do ProtocolController</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input readOnly value={ownershipChain.protocolControllerOwner} className="font-mono text-xs bg-muted" />
+                                            <Button variant="ghost" size="icon" onClick={() => copyToClipboard(ownershipChain.protocolControllerOwner!)}>
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <a 
+                                                href={`https://polygonscan.com/address/${ownershipChain.protocolControllerOwner}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-1 hover:bg-muted rounded"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Owner Final (quem realmente controla) */}
+                                <div className="space-y-2">
+                                    <Label>Owner Final (Quem Controla)</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input readOnly value={ownershipChain.finalOwner} className="font-mono text-xs bg-muted font-bold" />
+                                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(ownershipChain.finalOwner)}>
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                        <a 
+                                            href={`https://polygonscan.com/address/${ownershipChain.finalOwner}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1 hover:bg-muted rounded"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </a>
+                                    </div>
+                                    {userAddress && (
+                                        <p className={`text-xs font-semibold ${ownershipChain.finalOwner.toLowerCase() === userAddress.toLowerCase() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                            {ownershipChain.finalOwner.toLowerCase() === userAddress.toLowerCase() 
+                                                ? '✅ Você é o owner final (tem controle total)'
+                                                : '❌ Você NÃO é o owner final'}
+                                        </p>
+                                    )}
                                 </div>
-                             ) : (
-                                <Alert variant="destructive">
-                                    <AlertDescription className="text-xs">
-                                        Não foi possível buscar o endereço do owner. Verifique sua conexão com a blockchain.
-                                    </AlertDescription>
-                                </Alert>
-                             )}
-                            {ownerAddress && userAddress && (
-                                <p className={`text-xs ${ownerAddress.toLowerCase() === userAddress.toLowerCase() ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
-                                    {ownerAddress.toLowerCase() === userAddress.toLowerCase() 
-                                        ? '✅ Você é o owner deste contrato'
-                                        : '⚠️ Você não é o owner deste contrato'}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="new-owner">Transfer Ownership</Label>
-                            <Input id="new-owner" placeholder="0x..." />
-                            <p className="text-xs text-muted-foreground">Enter the address of the new owner. This action is irreversible.</p>
-                        </div>
-                        <Button className="w-full" variant="outline" disabled>Transfer Ownership (Não implementado)</Button>
+
+                                {/* Informações sobre ProtocolController */}
+                                {ownershipChain.isOwnerTransferredToController && (
+                                    <div className="space-y-2">
+                                        <Label>Endereço do ProtocolController</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input readOnly value={ownershipChain.protocolControllerAddress} className="font-mono text-xs bg-muted" />
+                                            <Button variant="ghost" size="icon" onClick={() => copyToClipboard(ownershipChain.protocolControllerAddress)}>
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <a 
+                                                href={`https://polygonscan.com/address/${ownershipChain.protocolControllerAddress}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-1 hover:bg-muted rounded"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <Button onClick={() => refreshOwnershipChain()} variant="outline" className="w-full">
+                                    Atualizar Informações
+                                </Button>
+                            </div>
+                        ) : (
+                            <Alert variant="destructive">
+                                <AlertDescription className="text-xs">
+                                    Não foi possível buscar a cadeia de ownership. Verifique sua conexão com a blockchain.
+                                </AlertDescription>
+                            </Alert>
+                        )}
                     </CardContent>
                 </Card>
 
