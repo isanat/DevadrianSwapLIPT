@@ -225,17 +225,41 @@ export const getWalletData = async (userAddress: string) => {
 };
 
 export const getDashboardStats = async (userAddress: string) => {
-  // Retornar valores zerados - stats devem vir de agregação de contratos no futuro
-  // Propriedades esperadas pelos componentes (stats-group.tsx, admin dashboard)
-  return {
-    liptPrice: 0,
-    totalValueLocked: 0,
-    totalVolume: 0,
-    totalUsers: 0,
-    protocolRevenue: 0,
-    totalInvested: 0,
-    totalReturns: 0,
-  };
+  try {
+    // Buscar dados do pool de liquidez para calcular o preço do LIPT
+    const { getLiquidityPoolData } = await import('./web3-api');
+    const liquidityData = await getLiquidityPoolData(userAddress as any);
+    
+    // O preço do LIPT é calculado automaticamente baseado na proporção dos tokens no pool
+    // Preço = totalUSDT / totalLIPT
+    // Se o pool estiver vazio, o preço será 0
+    const liptPrice = liquidityData.liptPrice || 0;
+    
+    // TVL (Total Value Locked) = valor total dos tokens no pool
+    const totalValueLocked = (liquidityData.totalLipt * liptPrice) + liquidityData.totalUsdt;
+    
+    return {
+      liptPrice,
+      totalValueLocked,
+      totalVolume: 0, // TODO: Implementar histórico de volume
+      totalUsers: 0, // TODO: Implementar contagem de usuários
+      protocolRevenue: 0, // TODO: Implementar receita do protocolo
+      totalInvested: 0, // TODO: Implementar total investido
+      totalReturns: 0, // TODO: Implementar retornos totais
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard stats from contracts:', error);
+    // Retornar valores zerados em caso de erro
+    return {
+      liptPrice: 0,
+      totalValueLocked: 0,
+      totalVolume: 0,
+      totalUsers: 0,
+      protocolRevenue: 0,
+      totalInvested: 0,
+      totalReturns: 0,
+    };
+  }
 };
 
 export const getStakingData = async (userAddress: string) => {

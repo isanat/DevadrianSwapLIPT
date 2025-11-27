@@ -237,6 +237,7 @@ export async function getLiquidityPoolData(userAddress?: Address) {
       userLpBalance: 0,
       feesEarned: 0,
       poolShare: 0,
+      liptPrice: 0, // Preço zero quando não há conexão
     };
   }
 
@@ -276,9 +277,15 @@ export async function getLiquidityPoolData(userAddress?: Address) {
       getTokenDecimals(USDT_ADDRESS),
     ]);
 
+    // Calcular preço do LIPT baseado na proporção dos reserves
+    // Preço = totalUSDT / totalLIPT
+    const totalLiptFormatted = reserveLipt / 10 ** liptDecimals;
+    const totalUsdtFormatted = reserveUsdt / 10 ** usdtDecimals;
+    const liptPrice = totalLiptFormatted > 0 ? totalUsdtFormatted / totalLiptFormatted : 0;
+
     return {
-      totalLipt: reserveLipt / 10 ** liptDecimals,
-      totalUsdt: reserveUsdt / 10 ** usdtDecimals,
+      totalLipt: totalLiptFormatted,
+      totalUsdt: totalUsdtFormatted,
       totalLpTokens,
       volume24h: 0, // TODO: Implementar histórico de volume (requer eventos)
       userPoolShare,
@@ -287,6 +294,7 @@ export async function getLiquidityPoolData(userAddress?: Address) {
       userLpBalance,
       feesEarned: 0, // TODO: Implementar cálculo de fees (requer eventos)
       poolShare: userPoolShare,
+      liptPrice, // Preço calculado do LIPT baseado no pool
     };
   } catch (error) {
     console.error('Error fetching liquidity pool data:', error);
@@ -301,6 +309,7 @@ export async function getLiquidityPoolData(userAddress?: Address) {
       userLpBalance: 0,
       feesEarned: 0,
       poolShare: 0,
+      liptPrice: 0, // Preço zero quando pool está vazio ou erro
     };
   }
 }
