@@ -148,7 +148,7 @@ export function LiquidityPool() {
                 <div className="space-y-2">
                     <Label htmlFor="add-lipt-amount">{t('liquidityPool.liptAmount')}</Label>
                     <Input id="add-lipt-amount" type="number" placeholder="0.0" value={addLiptAmount} onChange={(e) => setAddLiptAmount(e.target.value)} disabled={isAdding} />
-                    <p className="text-xs text-muted-foreground">{t('liquidityPool.balance')}: {walletData?.liptBalance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
+                    <p className="text-xs text-muted-foreground">{t('liquidityPool.balance')}: {(walletData?.liptBalance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} LIPT</p>
                 </div>
                 <div className="flex justify-center">
                     <Plus className="h-5 w-5 text-muted-foreground" />
@@ -156,7 +156,7 @@ export function LiquidityPool() {
                 <div className="space-y-2">
                     <Label htmlFor="add-usdt-amount">{t('liquidityPool.usdtAmount')}</Label>
                     <Input id="add-usdt-amount" type="number" placeholder="0.0" value={addUsdtAmount} onChange={(e) => setAddUsdtAmount(e.target.value)} disabled={isAdding} />
-                    <p className="text-xs text-muted-foreground">{t('liquidityPool.balance')}: {walletData?.usdtBalance.toLocaleString('en-US')} USDT</p>
+                    <p className="text-xs text-muted-foreground">{t('liquidityPool.balance')}: {(walletData?.usdtBalance ?? 0).toLocaleString('en-US')} USDT</p>
                 </div>
                 <Button className="w-full mt-4" variant="default" onClick={handleAddLiquidity} disabled={isAdding}>
                     {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

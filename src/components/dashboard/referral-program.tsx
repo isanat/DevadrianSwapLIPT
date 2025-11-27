@@ -72,11 +72,11 @@ export function ReferralDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pt-4">
               <div className="p-4 bg-background/50 rounded-lg">
                   <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> {t('referralProgram.totalReferrals')}</p>
-                  <p className="text-2xl font-bold">{referralData?.totalReferrals}</p>
+                  <p className="text-2xl font-bold">{totalReferrals}</p>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
                   <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Award size={16}/> {t('referralProgram.totalRewards')}</p>
-                  <p className="text-2xl font-bold">{referralData?.totalRewards.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</p>
+                  <p className="text-2xl font-bold">{totalRewards.toLocaleString('en-US', { minimumFractionDigits: 2 })} LIPT</p>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
                   <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><Users size={16}/> {t('referralProgram.totalTeam')}</p>
@@ -112,7 +112,7 @@ export function ReferralDashboard() {
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-xs text-muted-foreground">{t('referralProgram.commission')}</span>
-                                <span className="text-xl font-bold text-primary">{referral.commission.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                <span className="text-xl font-bold text-primary">{(referral.commission ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
                     </div>
