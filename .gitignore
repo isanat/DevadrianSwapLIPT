@@ -38,7 +38,16 @@ yarn-error.log*
 next-env.d.ts
 
 .genkit/*
+
+# Environment variables - protect sensitive credentials
+# Pattern 1: Recursive pattern to ignore .env files in any directory
+**/.env*
+# Pattern 2: Explicit patterns for common locations
 .env*
+.env.local
+.env.*.local
+# Pattern 3: Explicit protection for contracts/.env (contains PRIVATE_KEY)
+contracts/.env
 
 # firebase
 firebase-debug.log
