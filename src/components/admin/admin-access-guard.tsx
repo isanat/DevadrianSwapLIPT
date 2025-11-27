@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,11 +19,7 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
-  useEffect(() => {
-    checkOwnerStatus();
-  }, [userAddress, isConnected]);
-
-  const checkOwnerStatus = async () => {
+  const checkOwnerStatus = useCallback(async () => {
     setIsChecking(true);
     
     if (!isConnected || !userAddress) {
@@ -41,7 +37,11 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [isConnected, userAddress]);
+
+  useEffect(() => {
+    checkOwnerStatus();
+  }, [checkOwnerStatus]);
 
   // Mostrar loading enquanto verifica
   if (isChecking) {
