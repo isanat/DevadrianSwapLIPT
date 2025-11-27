@@ -52,3 +52,9 @@ contracts/.env
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# Temporary scripts and debugging files
+*.ps1
+*SOLUCAO*.md
+fix-git*.ps1
+commit-fix.ps1

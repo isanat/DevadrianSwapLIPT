@@ -318,25 +318,36 @@ export const getMiningData = async (userAddress: string) => {
 };
 
 export const getLiquidityData = async (userAddress: string) => {
-  // Tentar usar o contrato real
+  if (!userAddress) {
+    // Se não há endereço, retornar dados mock
+    await wait(400);
+    const liquidity = getFromStorage('liquidity', initialLiquidity);
+    liquidity.userFeesEarned += Math.random() * 0.01;
+    saveToStorage('liquidity', liquidity);
+    return liquidity;
+  }
+
   try {
-    const { getLiquidityPoolData, getTokenDecimals } = await import('./web3-api');
+    // Importar funções do web3-api
+    const { getLiquidityPoolData } = await import('./web3-api');
     const poolData = await getLiquidityPoolData(userAddress as any);
     
-    if (poolData) {
-      const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
-      const usdtDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any);
-      
+    if (poolData && poolData.totalLpTokens > 0) {
       return {
-        totalLipt: Number(poolData.reserveLipt) / 10**liptDecimals,
-        totalUsdt: Number(poolData.reserveUsdt) / 10**usdtDecimals,
-        userLpTokens: Number(poolData.userLpBalance) / 10**18, // LP tokens geralmente têm 18 decimais
+        totalLipt: poolData.totalLipt,
+        totalUsdt: poolData.totalUsdt,
+        totalLpTokens: poolData.totalLpTokens,
+        volume24h: poolData.volume24h,
+        userPoolShare: poolData.userPoolShare,
+        userLpTokens: poolData.userLpTokens,
+        lpTokens: poolData.lpTokens,
+        userLpBalance: poolData.userLpBalance,
+        feesEarned: poolData.feesEarned,
         poolShare: poolData.poolShare,
-        userFeesEarned: 0, // TODO: Calcular fees do usuário
       };
     }
   } catch (error) {
-    console.error('Error getting liquidity data from contract:', error);
+    console.error('Error fetching liquidity data from contract, using fallback:', error);
   }
   
   // Fallback para mock
@@ -348,24 +359,22 @@ export const getLiquidityData = async (userAddress: string) => {
 };
 
 export const getLotteryData = async (userAddress: string) => {
-    // Tentar usar o contrato real
+    if (!userAddress) {
+        // Se não há endereço, retornar dados mock
+        await wait(500);
+        return getFromStorage('lottery', initialLottery);
+    }
+
     try {
-        const { getLotteryViewData, getTokenDecimals } = await import('./web3-api');
-        const lotteryData = await getLotteryViewData();
+        // Importar funções do web3-api
+        const { getLotteryData: getLotteryDataFromContract } = await import('./web3-api');
+        const lotteryData = await getLotteryDataFromContract(userAddress as any);
         
-        if (lotteryData) {
-            const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
-            
-            return {
-                currentDraw: lotteryData.currentDrawId,
-                ticketPrice: lotteryData.ticketPrice / 10**decimals,
-                prizePool: lotteryData.prizePool / 10**decimals,
-                drawTime: new Date(lotteryData.drawTime * 1000).toISOString(),
-                userTickets: 0, // TODO: Buscar tickets do usuário
-            };
+        if (lotteryData && lotteryData.currentDraw) {
+            return lotteryData;
         }
     } catch (error) {
-        console.error('Error getting lottery data from contract:', error);
+        console.error('Error fetching lottery data from contract, using fallback:', error);
     }
     
     // Fallback para mock

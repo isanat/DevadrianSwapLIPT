@@ -222,6 +222,162 @@ export async function getUserMiners(userAddress: Address) {
   }
 }
 
+// Buscar dados da pool de liquidez
+export async function getLiquidityPoolData(userAddress?: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) {
+    return {
+      totalLipt: 0,
+      totalUsdt: 0,
+      totalLpTokens: 0,
+      volume24h: 0,
+      userPoolShare: 0,
+      userLpTokens: 0,
+      lpTokens: 0,
+      userLpBalance: 0,
+      feesEarned: 0,
+      poolShare: 0,
+    };
+  }
+
+  try {
+    const swapContract = getContract({
+      address: SWAP_ADDRESS,
+      abi: CONTRACT_ABIS.swapPool,
+      client: publicClient,
+    });
+
+    // Buscar reserves e total supply
+    const [reserves, totalSupply, lpDecimals] = await Promise.all([
+      swapContract.read.getReserves(),
+      swapContract.read.totalSupply(),
+      getTokenDecimals(SWAP_ADDRESS as Address),
+    ]);
+
+    const reserveLipt = Number(reserves[0]);
+    const reserveUsdt = Number(reserves[1]);
+    const totalLpTokens = Number(totalSupply) / 10 ** lpDecimals;
+
+    // Se houver endereço de usuário, buscar saldo de LP tokens
+    let userLpBalance = 0;
+    let userPoolShare = 0;
+    if (userAddress) {
+      const balance = await swapContract.read.balanceOf([userAddress]);
+      userLpBalance = Number(balance) / 10 ** lpDecimals;
+      
+      if (totalLpTokens > 0) {
+        userPoolShare = (userLpBalance / totalLpTokens) * 100;
+      }
+    }
+
+    // Buscar decimais dos tokens para converter corretamente
+    const [liptDecimals, usdtDecimals] = await Promise.all([
+      getTokenDecimals(LIPT_ADDRESS),
+      getTokenDecimals(USDT_ADDRESS),
+    ]);
+
+    return {
+      totalLipt: reserveLipt / 10 ** liptDecimals,
+      totalUsdt: reserveUsdt / 10 ** usdtDecimals,
+      totalLpTokens,
+      volume24h: 0, // TODO: Implementar histórico de volume (requer eventos)
+      userPoolShare,
+      userLpTokens: userLpBalance,
+      lpTokens: userLpBalance,
+      userLpBalance,
+      feesEarned: 0, // TODO: Implementar cálculo de fees (requer eventos)
+      poolShare: userPoolShare,
+    };
+  } catch (error) {
+    console.error('Error fetching liquidity pool data:', error);
+    return {
+      totalLipt: 0,
+      totalUsdt: 0,
+      totalLpTokens: 0,
+      volume24h: 0,
+      userPoolShare: 0,
+      userLpTokens: 0,
+      lpTokens: 0,
+      userLpBalance: 0,
+      feesEarned: 0,
+      poolShare: 0,
+    };
+  }
+}
+
+// Buscar dados da loteria
+export async function getLotteryData(userAddress?: Address) {
+  const { publicClient } = getClients();
+  if (!publicClient) {
+    return {
+      ticketPrice: 0,
+      totalTickets: 0,
+      userTickets: [],
+      currentDraw: {
+        id: 0,
+        prizePool: 0,
+        endTime: 0,
+        status: 'OPEN' as const,
+      },
+      previousDraws: [],
+    };
+  }
+
+  try {
+    const lotteryContract = getContract({
+      address: CONTRACT_ADDRESSES.lottery as Address,
+      abi: CONTRACT_ABIS.lottery,
+      client: publicClient,
+    });
+
+    // Buscar dados do sorteio atual
+    const currentDraw = await lotteryContract.read.currentDraw();
+    const ticketPrice = await lotteryContract.read.ticketPrice();
+    
+    const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
+    const prizePool = (Number(currentDraw.totalTickets) * Number(ticketPrice)) / 10 ** liptDecimals;
+
+    // Buscar tickets do usuário se fornecido
+    let userTickets: number[] = [];
+    if (userAddress) {
+      const ticketsBought = await lotteryContract.read.ticketsBought([userAddress]);
+      const numTickets = Number(ticketsBought);
+      // Gerar array de números de tickets do usuário (simplificado)
+      userTickets = Array.from({ length: numTickets }, (_, i) => i);
+    }
+
+    return {
+      ticketPrice: Number(ticketPrice) / 10 ** liptDecimals,
+      totalTickets: Number(currentDraw.totalTickets),
+      userTickets,
+      currentDraw: {
+        id: Number(currentDraw.drawId),
+        prizePool,
+        endTime: Date.now() + 24 * 60 * 60 * 1000, // TODO: Buscar do contrato se houver
+        status: (currentDraw.drawn ? 'CLOSED' : 'OPEN') as 'OPEN' | 'CLOSED',
+        winningTicket: currentDraw.drawn ? Number(currentDraw.totalTickets) : undefined,
+        winnerAddress: currentDraw.drawn ? currentDraw.winner : undefined,
+        prizeClaimed: false, // TODO: Implementar verificação
+      },
+      previousDraws: [], // TODO: Implementar histórico de sorteios (requer eventos)
+    };
+  } catch (error) {
+    console.error('Error fetching lottery data:', error);
+    return {
+      ticketPrice: 0,
+      totalTickets: 0,
+      userTickets: [],
+      currentDraw: {
+        id: 0,
+        prizePool: 0,
+        endTime: 0,
+        status: 'OPEN' as const,
+      },
+      previousDraws: [],
+    };
+  }
+}
+
 // Buscar segmentos da roda da fortuna
 export async function getWheelSegments() {
   const { publicClient } = getClients();
