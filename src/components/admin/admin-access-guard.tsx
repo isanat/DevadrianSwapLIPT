@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, ShieldX, AlertTriangle } from 'lucide-react';
+import { getOwnershipChain } from '@/services/web3-api';
 import { isLIPTOwner } from '@/services/web3-api';
 
 interface AdminAccessGuardProps {
@@ -18,6 +19,11 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
   const router = useRouter();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [ownershipChain, setOwnershipChain] = useState<{
+    finalOwner: string;
+    protocolControllerOwner: string | null;
+    isOwnerTransferredToController: boolean;
+  } | null>(null);
 
   const checkOwnerStatus = useCallback(async () => {
     setIsChecking(true);
@@ -33,6 +39,18 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
       const ownerStatus = await isLIPTOwner(userAddress);
       console.log('AdminAccessGuard: Resultado da verificação:', ownerStatus);
       setIsOwner(ownerStatus);
+      
+      // Buscar a cadeia de ownership para mostrar informações na mensagem de erro
+      try {
+        const chain = await getOwnershipChain();
+        setOwnershipChain({
+          finalOwner: chain.finalOwner,
+          protocolControllerOwner: chain.protocolControllerOwner,
+          isOwnerTransferredToController: chain.isOwnerTransferredToController,
+        });
+      } catch (error) {
+        console.error('Error fetching ownership chain:', error);
+      }
     } catch (error: any) {
       console.error('Error checking owner status:', error);
       console.error('Error details:', error?.message, error?.stack);
@@ -129,18 +147,52 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
                 <span className="font-mono text-xs">{userAddress}</span>
                 <br />
                 <br />
+                <strong>⚠️ IMPORTANTE:</strong>
+                <br />
+                O contrato foi criado via Codex/Hardhat e após várias transferências, a propriedade foi transferida para o ProtocolController.
+                <br />
+                <br />
+                Você precisa conectar a carteira que é o <strong>owner do ProtocolController</strong> para ter acesso.
+                <br />
+                <br />
+                {ownershipChain?.protocolControllerOwner ? (
+                  <>
+                    <strong>📌 Carteira que você precisa conectar:</strong>
+                    <br />
+                    <span className="font-mono text-xs bg-yellow-500/20 px-2 py-1 rounded block mt-1 mb-2">
+                      {ownershipChain.protocolControllerOwner}
+                    </span>
+                    <br />
+                    Esta é a carteira que atualmente controla o ProtocolController (e indiretamente o LIPT Token).
+                    <br />
+                    <br />
+                    <strong>Próximos passos:</strong>
+                    <br />
+                    1. Conecte essa carteira no MetaMask
+                    <br />
+                    2. Certifique-se de que está na rede Polygon Mainnet (Chain ID: 137)
+                    <br />
+                    3. Tente acessar novamente
+                  </>
+                ) : (
+                  <>
+                    <strong>Para descobrir qual carteira é o owner:</strong>
+                    <br />
+                    1. Verifique o console do navegador (F12) - os logs mostram o owner do ProtocolController
+                    <br />
+                    2. Ou acesse <code className="text-xs bg-muted px-1 py-0.5 rounded">/admin/settings</code> para ver as informações completas
+                    <br />
+                    3. Conecte essa carteira no MetaMask
+                  </>
+                )}
+                <br />
+                <br />
                 <strong>Endereço do contrato LIPT Token:</strong>
                 <br />
                 <span className="font-mono text-xs">0x15F6CAfD1fE68B0BCddecb28a739d14dB38947e6</span>
                 <br />
                 <br />
-                Se você é o owner, verifique:
-                <br />
-                1. Se está conectado com a carteira correta
-                <br />
-                2. Se a rede está configurada para Polygon Mainnet (Chain ID: 137)
-                <br />
-                3. Abra o console do navegador (F12) para ver logs de debug
+                Se a rede não estiver configurada para Polygon Mainnet (Chain ID: 137), configure primeiro.
               </AlertDescription>
             </Alert>
             <div className="flex gap-2">
@@ -160,4 +212,5 @@ export function AdminAccessGuard({ children }: AdminAccessGuardProps) {
   // Se é owner, mostrar o conteúdo
   return <>{children}</>;
 }
+
 
