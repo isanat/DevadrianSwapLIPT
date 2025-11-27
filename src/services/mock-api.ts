@@ -899,16 +899,18 @@ export const spinWheel = async (userAddress: string, bet: number) => {
     // Tentar usar o contrato real
     try {
         const web3Api = await import('./web3-api');
+        const { CONTRACT_ADDRESSES } = await import('../config/contracts');
         const decimals = await web3Api.getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
         const betAmount = BigInt(Math.floor(bet * 10**decimals));
         
-        // Chamar o contrato (ele decide o resultado)
-        const hash = await web3Api.spinWheel(userAddress as any, betAmount);
+        // Chamar o contrato (ele decide o resultado e retorna hash, multiplier e winnings)
+        const result = await web3Api.spinWheel(userAddress as any, betAmount);
         
-        // Aguardar a transação ser minerada
-        // TODO: Escutar evento WheelSpun para obter o resultado real
-        // Por enquanto, retornar hash da transação
-        return { hash, winnings: 0, multiplier: 0 }; // O frontend deve aguardar o evento
+        // Converter valores de BigInt para number (já estão em wei, precisam ser divididos por 10^decimals)
+        const multiplier = Number(result.multiplier) / 100; // multiplier vem em basis points (ex: 200 = 2x)
+        const winnings = Number(result.winnings) / 10**decimals;
+        
+        return { hash: result.hash, winnings, multiplier };
     } catch (error) {
         console.error('Error calling spinWheel contract:', error);
         // Fallback para mock se o contrato falhar

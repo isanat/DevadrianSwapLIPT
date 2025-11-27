@@ -1,4 +1,4 @@
-import { Address, createPublicClient, createWalletClient, custom, getContract, http } from 'viem';
+import { Address, createPublicClient, createWalletClient, custom, getContract, http, parseAbiItem, decodeEventLog } from 'viem';
 import { polygon } from 'viem/chains';
 import { CONTRACT_ADDRESSES, CONTRACT_ABIS } from '../config/contracts';
 
@@ -657,7 +657,7 @@ export async function claimMinedRewards(userAddress: Address, minerId: number) {
 
 export async function spinWheel(userAddress: Address, betAmount: bigint) {
   const { publicClient, walletClient } = getClients();
-  if (!walletClient) throw new Error('Wallet not connected');
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
 
   const wheelContract = getContract({
     address: CONTRACT_ADDRESSES.wheelOfFortune as Address,
@@ -667,7 +667,37 @@ export async function spinWheel(userAddress: Address, betAmount: bigint) {
 
   const { request } = await wheelContract.simulate.spinWheel([betAmount], { account: userAddress });
   const hash = await walletClient.writeContract(request);
-  return hash;
+  
+  // Aguardar o receipt para obter o evento WheelSpun
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  
+  // Extrair o evento WheelSpun do receipt
+  const wheelSpunEvent = parseAbiItem('event WheelSpun(address indexed user, uint256 betAmount, uint256 multiplier, uint256 winnings)');
+  
+  let multiplier = 0n;
+  let winnings = 0n;
+  
+  // Buscar o evento WheelSpun nos logs do receipt
+  for (const log of receipt.logs) {
+    try {
+      const decoded = decodeEventLog({
+        abi: [wheelSpunEvent],
+        data: log.data,
+        topics: log.topics,
+      });
+      
+      if (decoded.eventName === 'WheelSpun' && decoded.args.user?.toLowerCase() === userAddress.toLowerCase()) {
+        multiplier = decoded.args.multiplier || 0n;
+        winnings = decoded.args.winnings || 0n;
+        break;
+      }
+    } catch (error) {
+      // Log não corresponde ao evento, continuar
+      continue;
+    }
+  }
+  
+  return { hash, multiplier, winnings };
 }
 
 // Buscar dados da rodada atual do Rocket Game
