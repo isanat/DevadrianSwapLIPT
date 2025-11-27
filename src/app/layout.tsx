@@ -5,6 +5,7 @@ import { I18nProvider } from '@/context/i18n-context';
 import { SWRProvider } from '@/context/swr-provider';
 import { Web3Provider } from '@/context/web3-provider';
 import { ThemeProvider } from '@/context/theme-provider';
+import { Footer } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
   title: 'DevAdrian Swap',
@@ -38,6 +39,7 @@ export default function RootLayout({
             </I18nProvider>
           </Web3Provider>
           <Toaster />
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

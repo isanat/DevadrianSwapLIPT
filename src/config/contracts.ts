@@ -25,23 +25,23 @@ export const CONTRACT_ABIS = {
 };
 
 const ADDRESSES = {
-  // Endereços para a rede principal (Polygon Mainnet)
+  // Endere?os para a rede principal (Polygon Mainnet)
   mainnet: {
-    liptToken: '0x3113026cDdfE9145905003f5065A2BF815B82F91',
-    mockUsdt: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', // Endereço real do USDT (Tether USD) na Polygon Mainnet
-    protocolController: '0x6B99297aCc06a5b19387844864D0FbA79C3066a9',
-    taxHandler: '0x0dC4576f6a77Bc27B2026d17828E521F734FEE39',
-    swapPool: '0xF2d672c4985ba7F9bc8B4D7621D94f9fBE357197',
-    stakingPool: '0x2db77F5d7ce547f17F648e6E70296938539E7174',
-    miningPool: '0x745151FE81F1cfA2D4BB0942a7863551F0336A57',
-    referralProgram: '0xEB70c71b57F0c4f740c27e39e58eE4D9d59ebf64',
-    wheelOfFortune: '0xF0A209965F1F17CFA14a78b6D47e1F4F035aBA8a',
-    rocketGame: '0xf2089db174dd570346dD4E146EB2c81bf474f716',
-    lottery: '0x657a4685AA2F56F10d885d0F99284c421cD33308',
+    liptToken: '0x15F6CAfD1fE68B0BCddecb28a739d14dB38947e6',
+    mockUsdt: '0x47A50422F81327139A4796C7494E7B8725D3EB30',
+    protocolController: '0x5BC8aB3884aFEf2D4c361856Bb24EC286B395263',
+    taxHandler: '0x4D2bEaaBc3C4063319d11F9EB5184a05A3B956B0',
+    swapPool: '0xD22e4AcB94A063e929D0bA0b232475d297EE16c7',
+    stakingPool: '0x5B9F5e752596b7dFE1123EFdb5b86c2B7b86d8D3',
+    miningPool: '0xb56BaAa0f328cf09734862142bF42bA291017a08',
+    referralProgram: '0x839a9B70FCb941Ce6357C95eacd38a617DaDaE5a',
+    wheelOfFortune: '0x71aF40Dab1Eb76B0fAcB6A5eeC6B8F27e48d71be',
+    rocketGame: '0x1a189De97DfDa1B7231B1aD1E6c1c7c6C8E71dC6',
+    lottery: '0x4e67a5c97889863AC0794584f9c6e20F288fF1EA',
   },
-  // Endereços para a rede de testes (Polygon Amoy)
+  // Endere?os para a rede de testes (Polygon Amoy)
   amoy: {
-    liptToken: '0x...', // Preencher após implantação na Amoy
+    liptToken: '0x...',
     mockUsdt: '0x...',
     protocolController: '0x...',
     taxHandler: '0x...',
@@ -55,10 +55,10 @@ const ADDRESSES = {
   },
 };
 
-// Lógica para selecionar os endereços corretos com base na rede ativa
-const ACTIVE_NETWORK = process.env.NEXT_PUBLIC_ACTIVE_NETWORK as keyof typeof ADDRESSES || 'mainnet';
+// L?gica para selecionar os endere?os corretos com base na rede ativa
+const ACTIVE_NETWORK = (process.env.NEXT_PUBLIC_ACTIVE_NETWORK as keyof typeof ADDRESSES) || 'mainnet';
 
 export const CONTRACT_ADDRESSES = ADDRESSES[ACTIVE_NETWORK];
 
-// Exportar a configuração completa para compatibilidade
+// Exportar a configura??o completa para compatibilidade
 export const contractConfig = ADDRESSES;
