@@ -678,35 +678,74 @@ export async function addLiquidity(userAddress: Address, liptAmount: bigint, usd
   const { publicClient, walletClient } = getClients();
   if (!walletClient) throw new Error('Wallet not connected');
 
-  // 1. Aprovar LIPT
+  // Contratos
   const liptContract = getContract({
     address: LIPT_ADDRESS,
     abi: CONTRACT_ABIS.liptToken,
     client: { public: publicClient, wallet: walletClient },
   });
 
-  const { request: approveLiptRequest } = await liptContract.simulate.approve([SWAP_ADDRESS, liptAmount], { account: userAddress });
-  await walletClient.writeContract(approveLiptRequest);
-
-  // 2. Aprovar USDT
   const usdtContract = getContract({
     address: USDT_ADDRESS,
     abi: CONTRACT_ABIS.mockUsdt,
     client: { public: publicClient, wallet: walletClient },
   });
 
-  const { request: approveUsdtRequest } = await usdtContract.simulate.approve([SWAP_ADDRESS, usdtAmount], { account: userAddress });
-  await walletClient.writeContract(approveUsdtRequest);
-
-  // 3. Adicionar liquidez
   const swapContract = getContract({
     address: SWAP_ADDRESS,
     abi: CONTRACT_ABIS.swapPool,
     client: { public: publicClient, wallet: walletClient },
   });
 
+  // Verificar allowances atuais e aprovar apenas se necessário
+  const [currentLiptAllowance, currentUsdtAllowance] = await Promise.all([
+    liptContract.read.allowance([userAddress, SWAP_ADDRESS]),
+    usdtContract.read.allowance([userAddress, SWAP_ADDRESS]),
+  ]);
+
+  // Aprovar LIPT se necessário (adicionar 10% de margem de segurança)
+  if (currentLiptAllowance < liptAmount) {
+    const approveAmount = liptAmount + (liptAmount * BigInt(10) / BigInt(100)); // +10% margem
+    console.log(`Aprovando LIPT: ${approveAmount.toString()} (necessário: ${liptAmount.toString()}, atual: ${currentLiptAllowance.toString()})`);
+    const { request: approveLiptRequest } = await liptContract.simulate.approve([SWAP_ADDRESS, approveAmount], { account: userAddress });
+    const approveLiptHash = await walletClient.writeContract(approveLiptRequest);
+    console.log(`LIPT approved, hash: ${approveLiptHash}`);
+    
+    // Aguardar confirmação da transação de approve
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash: approveLiptHash });
+    }
+  } else {
+    console.log(`LIPT já tem allowance suficiente: ${currentLiptAllowance.toString()}`);
+  }
+
+  // Aprovar USDT se necessário (adicionar 10% de margem de segurança)
+  if (currentUsdtAllowance < usdtAmount) {
+    const approveAmount = usdtAmount + (usdtAmount * BigInt(10) / BigInt(100)); // +10% margem
+    console.log(`Aprovando USDT: ${approveAmount.toString()} (necessário: ${usdtAmount.toString()}, atual: ${currentUsdtAllowance.toString()})`);
+    const { request: approveUsdtRequest } = await usdtContract.simulate.approve([SWAP_ADDRESS, approveAmount], { account: userAddress });
+    const approveUsdtHash = await walletClient.writeContract(approveUsdtRequest);
+    console.log(`USDT approved, hash: ${approveUsdtHash}`);
+    
+    // Aguardar confirmação da transação de approve
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash: approveUsdtHash });
+    }
+  } else {
+    console.log(`USDT já tem allowance suficiente: ${currentUsdtAllowance.toString()}`);
+  }
+
+  // Adicionar liquidez
+  console.log(`Adicionando liquidez: LIPT=${liptAmount.toString()}, USDT=${usdtAmount.toString()}`);
   const { request } = await swapContract.simulate.addLiquidity([liptAmount, usdtAmount], { account: userAddress });
   const hash = await walletClient.writeContract(request);
+  console.log(`Liquidez adicionada, hash: ${hash}`);
+  
+  // Aguardar confirmação
+  if (publicClient) {
+    await publicClient.waitForTransactionReceipt({ hash });
+  }
+  
   return hash;
 }
 
