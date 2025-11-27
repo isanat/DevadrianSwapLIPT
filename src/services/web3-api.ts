@@ -677,6 +677,7 @@ export async function claimLotteryPrize(userAddress: Address, drawId: number) {
 export async function addLiquidity(userAddress: Address, liptAmount: bigint, usdtAmount: bigint) {
   const { publicClient, walletClient } = getClients();
   if (!walletClient) throw new Error('Wallet not connected');
+  if (!publicClient) throw new Error('Public client not available');
 
   // Contratos
   const liptContract = getContract({
@@ -712,9 +713,7 @@ export async function addLiquidity(userAddress: Address, liptAmount: bigint, usd
     console.log(`LIPT approved, hash: ${approveLiptHash}`);
     
     // Aguardar confirmação da transação de approve
-    if (publicClient) {
-      await publicClient.waitForTransactionReceipt({ hash: approveLiptHash });
-    }
+    await publicClient.waitForTransactionReceipt({ hash: approveLiptHash });
   } else {
     console.log(`LIPT já tem allowance suficiente: ${currentLiptAllowance.toString()}`);
   }
@@ -728,9 +727,7 @@ export async function addLiquidity(userAddress: Address, liptAmount: bigint, usd
     console.log(`USDT approved, hash: ${approveUsdtHash}`);
     
     // Aguardar confirmação da transação de approve
-    if (publicClient) {
-      await publicClient.waitForTransactionReceipt({ hash: approveUsdtHash });
-    }
+    await publicClient.waitForTransactionReceipt({ hash: approveUsdtHash });
   } else {
     console.log(`USDT já tem allowance suficiente: ${currentUsdtAllowance.toString()}`);
   }
@@ -742,9 +739,7 @@ export async function addLiquidity(userAddress: Address, liptAmount: bigint, usd
   console.log(`Liquidez adicionada, hash: ${hash}`);
   
   // Aguardar confirmação
-  if (publicClient) {
-    await publicClient.waitForTransactionReceipt({ hash });
-  }
+  await publicClient.waitForTransactionReceipt({ hash });
   
   return hash;
 }
