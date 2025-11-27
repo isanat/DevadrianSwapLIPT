@@ -21,12 +21,15 @@ export const MINING_PLANS = [
 
 export interface Stake {
   id: string;
+  stakeId?: number; // ID numérico para usar no contrato (opcional para compatibilidade)
   amount: number;
   startDate: number;
   plan: {
     duration: number;
     apy: number;
   };
+  availableRewards?: number; // Rewards disponíveis (opcional)
+  rewardsClaimed?: number; // Total já claimado (opcional)
 }
 
 export interface Miner {
@@ -291,12 +294,10 @@ export const getStakingData = async (userAddress: string) => {
       getEarlyUnstakePenalty(),
     ]);
     
-    // Calcular recompensas não reivindicadas
-    const now = Date.now();
+    // Usar os rewards já calculados pelo getUserStakes (que busca do contrato)
     const unclaimedRewards = stakes.reduce((total, stake) => {
-      const elapsed = (now - stake.startDate) / (1000 * 60 * 60 * 24); // dias
-      const dailyReward = (stake.amount * stake.plan.apy / 100) / stake.plan.duration;
-      return total + (dailyReward * elapsed);
+      // availableRewards já vem calculado corretamente do getUserStakes
+      return total + (stake.availableRewards || 0);
     }, 0);
     
     return {
@@ -729,48 +730,34 @@ export const unstakeLipt = async (userAddress: string, stakeId: string) => {
     }
 };
 
-export const claimStakingRewards = async (userAddress: string) => {
-    if (!userAddress) {
-        // Fallback para mock se não há endereço
-        await wait(800);
-        const wallet = getFromStorage('wallet', initialWallet);
-        const staking = getFromStorage('staking', initialStaking);
-
-        wallet.liptBalance += staking.unclaimedRewards;
-        staking.unclaimedRewards = 0;
-
-        saveToStorage('wallet', wallet);
-        saveToStorage('staking', staking);
-        return { wallet, staking };
-    }
-
+export const claimStakingRewards = async (userAddress: string, stakeId: number) => {
     try {
         // Importar função do web3-api
-        const { claimStakingRewards: web3ClaimStakingRewards, getUserStakes } = await import('./web3-api');
+        const { claimStakingRewards: web3ClaimStakingRewards } = await import('./web3-api');
         
-        // Buscar stakes do usuário para obter stakeId
-        const stakes = await getUserStakes(userAddress as any);
-        if (stakes.length === 0) {
-            throw new Error('No stakes found');
-        }
-        
-        // Por enquanto, claim do primeiro stake. Idealmente deveria ter uma UI para selecionar qual stake
-        const stakeId = parseInt(stakes[0].id);
         const hash = await web3ClaimStakingRewards(userAddress as any, stakeId);
         return { hash }; // Retorna o hash da transação
     } catch (error) {
         console.error('Error claiming staking rewards from contract, using fallback:', error);
-        // Fallback para mock
+        // Fallback para mock (deprecated - usar apenas para desenvolvimento)
         await wait(800);
         const wallet = getFromStorage('wallet', initialWallet);
         const staking = getFromStorage('staking', initialStaking);
 
-        wallet.liptBalance += staking.unclaimedRewards;
-        staking.unclaimedRewards = 0;
+        // Claimar rewards do stake específico
+        if (stakeId < 0 || stakeId >= staking.stakes.length) {
+            throw new Error('Invalid stake ID');
+        }
 
-        saveToStorage('wallet', wallet);
-        saveToStorage('staking', staking);
-        return { wallet, staking };
+        const stake = staking.stakes[stakeId];
+        if (stake && stake.availableRewards && stake.availableRewards > 0) {
+            wallet.liptBalance += stake.availableRewards;
+            stake.availableRewards = 0;
+            saveToStorage('wallet', wallet);
+            saveToStorage('staking', staking);
+        }
+
+        return { success: true };
     }
 };
 

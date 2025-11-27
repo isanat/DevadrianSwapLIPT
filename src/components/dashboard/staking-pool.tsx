@@ -20,10 +20,11 @@ import { getStakingData, getWalletData, stakeLipt, unstakeLipt, claimStakingRewa
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
-const StakedPosition = ({ stake, onUnstake, userAddress }: { stake: Stake; onUnstake: (id: string, penalty: number) => void; userAddress: string; }) => {
+const StakedPosition = ({ stake, onUnstake, onClaim, userAddress }: { stake: Stake; onUnstake: (id: string, penalty: number) => void; onClaim?: (stakeId: number) => void; userAddress: string; }) => {
   const { t } = useI18n();
   const { mutate } = useSWRConfig();
   const [isUnstaking, setIsUnstaking] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
   const { toast } = useToast();
 
   const [progress, setProgress] = useState(0);
@@ -72,6 +73,9 @@ const StakedPosition = ({ stake, onUnstake, userAddress }: { stake: Stake; onUns
   
   const isMature = progress >= 100;
 
+  const availableRewards = stake.availableRewards || 0;
+  const hasRewards = availableRewards > 0;
+
   return (
     <div className="flex flex-col gap-3 p-3 rounded-lg border bg-background/50">
       <div className="flex justify-between items-start">
@@ -80,6 +84,11 @@ const StakedPosition = ({ stake, onUnstake, userAddress }: { stake: Stake; onUns
           <p className="text-xs text-muted-foreground">
             {stake.plan.duration} {t('stakingPool.days')} @ {stake.plan.apy}% {t('stakingPool.apy')}
           </p>
+          {hasRewards && (
+            <p className="text-xs text-green-400 font-semibold mt-1">
+              {t('stakingPool.unclaimedRewards')}: {availableRewards.toFixed(4)} LIPT
+            </p>
+          )}
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -121,6 +130,25 @@ const StakedPosition = ({ stake, onUnstake, userAddress }: { stake: Stake; onUns
             ) : <Skeleton className="h-4 w-16" />}
         </div>
       </div>
+      {hasRewards && onClaim && (
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          className="w-full mt-2" 
+          onClick={async () => {
+            if (onClaim) {
+              setIsClaiming(true);
+              const stakeId = stake.stakeId ?? Number(stake.id);
+              await onClaim(stakeId);
+              setIsClaiming(false);
+            }
+          }} 
+          disabled={isClaiming}
+        >
+          {isClaiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isClaiming ? t('stakingPool.claiming') : `${t('stakingPool.claimRewardsButton')} ${availableRewards.toFixed(4)} LIPT`}
+        </Button>
+      )}
     </div>
   );
 };
@@ -179,22 +207,24 @@ export function StakingPool() {
       });
   };
 
-  const handleClaim = async () => {
-    if(stakingData && stakingData.unclaimedRewards > 0 && userAddress) {
-      setIsClaiming(true);
-      const amount = stakingData.unclaimedRewards.toFixed(2);
-      try {
-        await claimStakingRewards(userAddress);
-        mutate(['staking', userAddress]);
-        mutate(['wallet', userAddress]);
-        toast({ title: t('stakingPool.toast.rewardsClaimed.title'), description: t('stakingPool.toast.rewardsClaimed.description', { amount }) });
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
-      } finally {
-        setIsClaiming(false);
-      }
-    } else {
+  const handleClaimStake = async (stakeId: number) => {
+    const stake = stakingData?.stakes?.find(s => s.stakeId === stakeId || Number(s.id) === stakeId);
+    if (!stake || (stake.availableRewards || 0) <= 0) {
       toast({ variant: 'destructive', title: t('stakingPool.toast.noRewards.title'), description: t('stakingPool.toast.noRewards.description') });
+      return;
+    }
+    
+    setIsClaiming(true);
+    const amount = (stake.availableRewards || 0).toFixed(4);
+    try {
+      await claimStakingRewards(userAddress!, stakeId);
+      mutate(['staking', userAddress]);
+      mutate(['wallet', userAddress]);
+      toast({ title: t('stakingPool.toast.rewardsClaimed.title'), description: t('stakingPool.toast.rewardsClaimed.description', { amount }) });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
+    } finally {
+      setIsClaiming(false);
     }
   };
   
@@ -302,7 +332,7 @@ export function StakingPool() {
                 {stakingData && stakingData.stakes.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                     {stakingData.stakes.map(stake => (
-                        <StakedPosition key={stake.id} stake={stake} onUnstake={handleUnstake} userAddress={userAddress!} />
+                        <StakedPosition key={stake.id} stake={stake} onUnstake={handleUnstake} onClaim={handleClaimStake} userAddress={userAddress!} />
                     ))}
                     </div>
                 ) : (
@@ -314,17 +344,6 @@ export function StakingPool() {
         </>
         )}
       </CardContent>
-      <CardFooter>
-        <Button variant="outline" className="w-full" onClick={handleClaim} disabled={isClaiming}>
-            {isClaiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isClaiming ? t('stakingPool.claiming') : (
-                <>
-                    <Download className="mr-2 h-4 w-4" />
-                    {t('stakingPool.claimRewardsButton')}
-                </>
-            )}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

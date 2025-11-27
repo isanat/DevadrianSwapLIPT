@@ -148,6 +148,28 @@ export async function getEarlyUnstakePenalty() {
   }
 }
 
+// Calcular rewards disponíveis para um stake específico
+export async function calculateStakingRewards(userAddress: Address, stakeId: number) {
+  const { publicClient } = getClients();
+  if (!publicClient) return 0n;
+
+  try {
+    const stakingContract = getContract({
+      address: STAKING_ADDRESS,
+      abi: CONTRACT_ABIS.stakingPool,
+      client: publicClient,
+    });
+
+    const rewards = await stakingContract.read.calculateRewards([stakeId], {
+      account: userAddress,
+    });
+    return rewards;
+  } catch (error) {
+    console.error('Error calculating staking rewards:', error);
+    return 0n;
+  }
+}
+
 // Buscar stakes do usuário
 export async function getUserStakes(userAddress: Address) {
   const { publicClient } = getClients();
@@ -165,19 +187,41 @@ export async function getUserStakes(userAddress: Address) {
       stakingContract.read.getStakingPlans(),
     ]);
 
-    return stakes.map((stake: any, index: number) => {
-      const planId = Number(stake.planId);
-      const plan = plans[planId] || { duration: 0, apy: 0 };
-      return {
-        id: index.toString(),
-        amount: Number(stake.amount),
-        startDate: Number(stake.startDate) * 1000,
-        plan: {
-          duration: Number(plan.duration),
-          apy: Number(plan.apy),
-        },
-      };
-    });
+    // Buscar rewards disponíveis para cada stake
+    const stakesWithRewards = await Promise.all(
+      stakes.map(async (stake: any, index: number) => {
+        const planId = Number(stake.planId);
+        const plan = plans[planId] || { duration: 0, apy: 0 };
+        
+        // Calcular rewards disponíveis
+        let availableRewards = 0n;
+        try {
+          availableRewards = await stakingContract.read.calculateRewards([index], {
+            account: userAddress,
+          });
+        } catch (error) {
+          console.error(`Error calculating rewards for stake ${index}:`, error);
+        }
+
+        // Buscar decimais do LIPT para converter corretamente
+        const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
+        
+        return {
+          id: index.toString(),
+          stakeId: index, // ID numérico para usar no claim
+          amount: Number(stake.amount) / 10 ** liptDecimals,
+          startDate: Number(stake.startDate) * 1000,
+          plan: {
+            duration: Number(plan.duration) / (24 * 60 * 60), // Converter segundos para dias
+            apy: Number(plan.apy) / 100, // Converter basis points para porcentagem
+          },
+          availableRewards: Number(availableRewards) / 10 ** liptDecimals, // Rewards disponíveis
+          rewardsClaimed: Number(stake.rewardsClaimed || 0) / 10 ** liptDecimals, // Total já claimado
+        };
+      })
+    );
+
+    return stakesWithRewards;
   } catch (error) {
     console.error('Error fetching user stakes:', error);
     return []; // Fallback
