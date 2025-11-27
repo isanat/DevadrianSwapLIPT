@@ -969,3 +969,39 @@ export async function checkContractOwner(contractAddress: Address, userAddress: 
 export async function isLIPTOwner(userAddress: Address): Promise<boolean> {
   return checkContractOwner(LIPT_ADDRESS, userAddress);
 }
+
+/**
+ * Buscar o endereço do owner de um contrato
+ */
+export async function getContractOwnerAddress(contractAddress: Address): Promise<string | null> {
+  const { publicClient } = getClients();
+  if (!publicClient) return null;
+
+  try {
+    // Tentar ler o owner usando Ownable
+    const contract = getContract({
+      address: contractAddress,
+      abi: [{ 
+        inputs: [], 
+        name: 'owner', 
+        outputs: [{ internalType: 'address', name: '', type: 'address' }], 
+        stateMutability: 'view', 
+        type: 'function' 
+      }],
+      client: publicClient,
+    });
+
+    const owner = await contract.read.owner();
+    return owner as string;
+  } catch (error) {
+    console.error('Error getting contract owner address:', error);
+    return null;
+  }
+}
+
+/**
+ * Buscar o endereço do owner do LIPT Token
+ */
+export async function getLIPTOwnerAddress(): Promise<string | null> {
+  return getContractOwnerAddress(LIPT_ADDRESS);
+}
