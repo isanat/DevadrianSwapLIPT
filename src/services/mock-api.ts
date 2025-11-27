@@ -178,9 +178,10 @@ const initializeMockData = () => {
 initializeMockData();
 
 // Price history for chart
+// Deterministic price history to avoid hydration mismatches
 export const priceHistory = Array.from({ length: 20 }, (_, i) => ({
   time: `T-${20 - i}`,
-  price: 1.25 + (Math.random() - 0.5) * 0.2 + i * 0.01,
+  price: 1.25 + i * 0.01,
 }));
 
 
