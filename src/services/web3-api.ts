@@ -67,18 +67,25 @@ export async function getStakingPlans() {
   const { publicClient } = getClients();
   if (!publicClient) return [];
 
-  const stakingContract = getContract({
-    address: STAKING_ADDRESS,
-    abi: CONTRACT_ABIS.stakingPool,
-    client: publicClient,
-  });
+  try {
+    const stakingContract = getContract({
+      address: STAKING_ADDRESS,
+      abi: CONTRACT_ABIS.stakingPool,
+      client: publicClient,
+    });
 
-  const plans = await stakingContract.read.getStakingPlans();
-  return plans.map((plan: any) => ({
-    duration: Number(plan.duration),
-    apy: Number(plan.apy),
-    cost: Number(plan.cost),
-  }));
+    const plans = await stakingContract.read.getStakingPlans();
+    
+    // Converter planos do contrato para o formato esperado pelo frontend
+    return plans.map((plan: any) => ({
+      duration: Number(plan.duration) / (24 * 60 * 60), // Converter segundos para dias
+      apy: Number(plan.apy) / 100, // Converter basis points para porcentagem
+      cost: Number(plan.cost || 0),
+    }));
+  } catch (error) {
+    console.error('Error fetching staking plans from contract:', error);
+    return []; // Retornar array vazio, o fallback será usado no mock-api
+  }
 }
 
 // Buscar decimais de um token

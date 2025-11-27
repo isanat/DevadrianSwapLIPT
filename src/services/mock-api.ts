@@ -294,6 +294,9 @@ export const getStakingData = async (userAddress: string) => {
       getEarlyUnstakePenalty(),
     ]);
     
+    // Se não houver planos do contrato, usar fallback
+    const finalPlans = plans && plans.length > 0 ? plans : STAKING_PLANS;
+    
     // Usar os rewards já calculados pelo getUserStakes (que busca do contrato)
     const unclaimedRewards = stakes.reduce((total, stake) => {
       // availableRewards já vem calculado corretamente do getUserStakes
@@ -302,20 +305,20 @@ export const getStakingData = async (userAddress: string) => {
     
     return {
       stakes,
-      plans,
+      plans: finalPlans,
       stakedBalance: stakes.reduce((sum, s) => sum + s.amount, 0),
       unclaimedRewards: Math.max(0, unclaimedRewards),
       earlyUnstakePenalty: penalty || 0,
     };
   } catch (error) {
     console.error('Error fetching staking data from contract:', error);
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estrutura com planos do fallback em caso de erro
     return {
       stakes: [],
-      plans: [],
+      plans: STAKING_PLANS, // Usar planos do fallback
       stakedBalance: 0,
       unclaimedRewards: 0,
-      earlyUnstakePenalty: 0,
+      earlyUnstakePenalty: EARLY_UNSTAKE_PENALTY_PERCENTAGE,
     };
   }
 };

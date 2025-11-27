@@ -285,15 +285,16 @@ export function StakingPool() {
                 <div className="space-y-4">
                 <div>
                     <Label>{t('stakingPool.selectPlan')}</Label>
-                    <RadioGroup 
-                      value={selectedPlan ? String(selectedPlan.duration) : undefined} 
-                      onValueChange={(val) => {
-                        const plan = stakingData?.plans?.find(p => p.duration === parseInt(val));
-                        if (plan) setSelectedPlan(plan);
-                      }} 
-                      className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2"
-                    >
-                        {stakingData?.plans?.map(plan => (
+                    {stakingData?.plans && stakingData.plans.length > 0 ? (
+                      <RadioGroup 
+                        value={selectedPlan ? String(selectedPlan.duration) : undefined} 
+                        onValueChange={(val) => {
+                          const plan = stakingData?.plans?.find(p => p.duration === parseInt(val));
+                          if (plan) setSelectedPlan(plan);
+                        }} 
+                        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2"
+                      >
+                        {stakingData.plans.map(plan => (
                             <Label 
                                 key={plan.duration} 
                                 htmlFor={`plan-${plan.duration}`} 
@@ -311,7 +312,12 @@ export function StakingPool() {
                                 <div className="text-xs text-muted-foreground">{t('stakingPool.apy')}</div>
                             </Label>
                         ))}
-                    </RadioGroup>
+                      </RadioGroup>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-2 text-center py-4">
+                        {t('stakingPool.noPlansAvailable') || 'Nenhum plano de staking disponível no momento.'}
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="stake-amount">{t('stakingPool.amountToStake')}</Label>
