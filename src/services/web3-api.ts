@@ -775,65 +775,38 @@ export async function playRocket(userAddress: Address, betAmount: bigint) {
   // Aguardar confirmação da transação
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   
-  // Buscar betIndex através da contagem de eventos RocketBetPlaced desta rodada
-  // Como o contrato adiciona bets sequencialmente no array, podemos contar os eventos
-  const rocketBetPlacedEvent = parseAbiItem('event RocketBetPlaced(address indexed user, uint256 amount)');
-  
   // Obter informações da rodada para filtrar eventos desta rodada
   const currentRound = await rocketContract.read.currentRound();
   const roundStartTime = Number(currentRound[1]); // startTime em segundos
   
+  // O betIndex é simplesmente o índice do bet no array currentRound.bets[]
+  // Como nosso bet foi adicionado com push(), o índice é o número de bets ANTES dele
+  // Contamos todos os eventos RocketBetPlaced desta rodada até agora
   let betIndex = 0;
   try {
-    // Buscar eventos RocketBetPlaced desde o início da rodada até agora
+    const rocketBetPlacedEvent = parseAbiItem('event RocketBetPlaced(address indexed user, uint256 amount)');
+    
+    // Buscar eventos desde o início da rodada (usar roundStartTime para filtrar)
     // Usar um range de blocos razoável (últimos 1000 blocos) para evitar busca muito lenta
-    const currentBlock = await publicClient.getBlockNumber();
-    const fromBlock = currentBlock - 1000n > 0n ? currentBlock - 1000n : 0n;
+    const receiptBlock = receipt.blockNumber;
+    const fromBlock = receiptBlock - 1000n > 0n ? receiptBlock - 1000n : 0n;
     
     const events = await publicClient.getLogs({
       address: CONTRACT_ADDRESSES.rocketGame as Address,
       event: rocketBetPlacedEvent,
       fromBlock,
-      toBlock: 'latest',
+      toBlock: receiptBlock, // Até o bloco da nossa transação (incluindo ela)
     });
     
     // Contar eventos desta rodada (block timestamp >= roundStartTime)
-    for (const eventLog of events) {
-      if (eventLog.blockNumber) {
-        try {
-          const block = await publicClient.getBlock({ blockNumber: eventLog.blockNumber });
-          if (block && block.timestamp >= BigInt(roundStartTime)) {
-            betIndex++;
-            // Se encontramos nosso evento no receipt, parar a contagem
-            if (eventLog.transactionHash === hash) {
-              break;
-            }
-          }
-        } catch {
-          // Ignorar erros ao buscar block
-          continue;
-        }
-      }
-    }
-    
-    // O betIndex deve ser o índice do nosso bet no array de bets da rodada
-    // Se encontramos nosso evento no loop, betIndex já está correto (contagem até encontrar)
-    // Se não encontramos, precisamos contar todos os eventos da rodada
-    let foundOurEvent = false;
+    // O número total de eventos será o betIndex (0-indexed, então último = total - 1)
     let totalBetsInRound = 0;
-    
     for (const eventLog of events) {
       if (eventLog.blockNumber) {
         try {
           const block = await publicClient.getBlock({ blockNumber: eventLog.blockNumber });
           if (block && block.timestamp >= BigInt(roundStartTime)) {
             totalBetsInRound++;
-            if (eventLog.transactionHash === hash) {
-              // Encontramos nosso evento, betIndex é o número de eventos ANTES dele
-              betIndex = totalBetsInRound - 1;
-              foundOurEvent = true;
-              break;
-            }
           }
         } catch {
           continue;
@@ -841,24 +814,13 @@ export async function playRocket(userAddress: Address, betAmount: bigint) {
       }
     }
     
-    // Se não encontramos nosso evento nos logs, usar o total de bets como índice
-    // (nosso bet foi adicionado como último)
-    if (!foundOurEvent && totalBetsInRound > 0) {
-      betIndex = totalBetsInRound - 1;
-    } else if (!foundOurEvent) {
-      // Se não encontramos nenhum evento e não encontramos o nosso, usar 0
-      // (pode ser o primeiro bet ou race condition)
-      betIndex = 0;
-    }
+    // Nosso bet é o último adicionado, então betIndex = total - 1 (0-indexed)
+    // Se totalBetsInRound = 1, nosso betIndex = 0 (primeiro bet)
+    betIndex = totalBetsInRound > 0 ? totalBetsInRound - 1 : 0;
+    
   } catch (error) {
     console.error('Error counting bets for betIndex:', error);
-    // Se falhar completamente, retornar -1 para indicar erro
-    betIndex = -1;
-  }
-  
-  // Se betIndex ainda for inválido após todas as tentativas, usar 0 como último recurso
-  if (betIndex < 0) {
-    console.warn('Could not determine betIndex, using 0 as fallback');
+    // Se falhar, assumir que é o primeiro bet (betIndex = 0)
     betIndex = 0;
   }
   
@@ -1482,4 +1444,170 @@ export async function getOwnershipChain(): Promise<{
     console.error('Error fetching ownership chain:', error);
     throw error;
   }
+}
+
+// --- FUNÇÕES ADMINISTRATIVAS ---
+
+/**
+ * Adicionar novo plano de staking (apenas owner)
+ * duration: em dias (será convertido para segundos)
+ * apy: em porcentagem (será convertido para basis points)
+ */
+export async function addStakingPlan(userAddress: Address, durationDays: number, apyPercent: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
+
+  const stakingContract = getContract({
+    address: STAKING_ADDRESS,
+    abi: CONTRACT_ABIS.stakingPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  // Converter dias para segundos
+  const durationSeconds = BigInt(durationDays * 24 * 60 * 60);
+  // Converter porcentagem para basis points (ex: 12.5% = 1250)
+  const apyBasisPoints = BigInt(Math.round(apyPercent * 100));
+
+  const { request } = await stakingContract.simulate.addStakingPlan([durationSeconds, apyBasisPoints], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
+}
+
+/**
+ * Modificar plano de staking existente (apenas owner)
+ */
+export async function modifyStakingPlan(
+  userAddress: Address,
+  planId: number,
+  durationDays: number,
+  apyPercent: number,
+  active: boolean
+) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
+
+  const stakingContract = getContract({
+    address: STAKING_ADDRESS,
+    abi: CONTRACT_ABIS.stakingPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  // Converter dias para segundos
+  const durationSeconds = BigInt(durationDays * 24 * 60 * 60);
+  // Converter porcentagem para basis points
+  const apyBasisPoints = BigInt(Math.round(apyPercent * 100));
+
+  const { request } = await stakingContract.simulate.modifyStakingPlan([planId, durationSeconds, apyBasisPoints, active], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
+}
+
+/**
+ * Adicionar novo plano de mineração (apenas owner)
+ * cost: em LIPT (será convertido para wei usando decimais)
+ * power: em LIPT por segundo (será convertido para wei por segundo)
+ * duration: em dias (será convertido para segundos)
+ */
+export async function addMiningPlan(userAddress: Address, cost: number, power: number, durationDays: number) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
+
+  const miningContract = getContract({
+    address: MINING_ADDRESS,
+    abi: CONTRACT_ABIS.miningPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  // Buscar decimais do LIPT para converter corretamente
+  const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
+  
+  // Converter cost e power para wei
+  const costWei = BigInt(Math.floor(cost * (10 ** liptDecimals)));
+  const powerWeiPerSecond = BigInt(Math.floor(power * (10 ** 18))); // Power em tokens por segundo, usar 18 decimais
+  
+  // Converter dias para segundos
+  const durationSeconds = BigInt(durationDays * 24 * 60 * 60);
+
+  const { request } = await miningContract.simulate.addMiningPlan([costWei, powerWeiPerSecond, durationSeconds], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
+}
+
+/**
+ * Modificar plano de mineração existente (apenas owner)
+ */
+export async function modifyMiningPlan(
+  userAddress: Address,
+  planId: number,
+  cost: number,
+  power: number,
+  durationDays: number,
+  active: boolean
+) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
+
+  const miningContract = getContract({
+    address: MINING_ADDRESS,
+    abi: CONTRACT_ABIS.miningPool,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  // Buscar decimais do LIPT para converter corretamente
+  const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
+  
+  // Converter cost e power para wei
+  const costWei = BigInt(Math.floor(cost * (10 ** liptDecimals)));
+  const powerWeiPerSecond = BigInt(Math.floor(power * (10 ** 18)));
+  
+  // Converter dias para segundos
+  const durationSeconds = BigInt(durationDays * 24 * 60 * 60);
+
+  const { request } = await miningContract.simulate.modifyMiningPlan([planId, costWei, powerWeiPerSecond, durationSeconds, active], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
+}
+
+/**
+ * Configurar segmentos da roda da fortuna (apenas owner)
+ * multipliers: array de multiplicadores (ex: [150, 200] = 1.5x, 2.0x) em basis points
+ * weights: array de pesos para probabilidade
+ */
+export async function setWheelSegments(userAddress: Address, multipliers: number[], weights: number[]) {
+  const { publicClient, walletClient } = getClients();
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
+
+  const wheelContract = getContract({
+    address: CONTRACT_ADDRESSES.wheelOfFortune as Address,
+    abi: CONTRACT_ABIS.wheelOfFortune,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
+  // Converter multipliers de decimal para basis points (ex: 1.5x = 150)
+  const multipliersBasisPoints = multipliers.map(m => BigInt(Math.round(m * 100)));
+  const weightsBigInt = weights.map(w => BigInt(w));
+
+  const { request } = await wheelContract.simulate.setWheelSegments([multipliersBasisPoints, weightsBigInt], { account: userAddress });
+  const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação
+  await publicClient.waitForTransactionReceipt({ hash });
+  
+  return hash;
 }
