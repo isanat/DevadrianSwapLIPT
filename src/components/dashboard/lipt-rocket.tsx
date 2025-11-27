@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import * as PIXI from 'pixi.js';
 import useSWR, { useSWRConfig } from 'swr';
 import { getWalletData, placeRocketBet, cashOutRocket } from '@/services/mock-api';
+import { getRocketCurrentRound } from '@/services/web3-api';
 import { useAccount } from 'wagmi';
 import { Skeleton } from '../ui/skeleton';
 
@@ -189,6 +190,16 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
 
   const { address: userAddress } = useAccount();
   const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
+  const { data: currentRound, mutate: mutateRound } = useSWR('rocketCurrentRound', getRocketCurrentRound, {
+    refreshInterval: 3000, // Atualizar a cada 3 segundos
+  });
+  
+  // Atualizar crashPoint quando currentRound mudar
+  useEffect(() => {
+    if (currentRound && currentRound.active && currentRound.crashPoint > 0) {
+      crashPointRef.current = currentRound.crashPoint;
+    }
+  }, [currentRound]);
 
   const [betAmount, setBetAmount] = useState('');
   const [displayMultiplier, setDisplayMultiplier] = useState(1.0);
@@ -403,20 +414,33 @@ export function LiptRocket({ onGameEnd }: LiptRocketProps) {
       return;
     }
     
+    // Verificar se há uma rodada ativa e crash point disponível ANTES de fazer a aposta
+    if (!currentRound || !currentRound.active || currentRound.crashPoint <= 0) {
+        toast({
+            variant: 'destructive',
+            title: 'Rodada não disponível',
+            description: 'Aguardando uma nova rodada começar. Por favor, tente novamente em breve.',
+        });
+        await mutateRound(); // Tentar atualizar os dados da rodada
+        return;
+    }
+    
+    // O crash point vem do contrato, não mais hardcoded
+    crashPointRef.current = currentRound.crashPoint;
+    
     setIsLoadingAction(true);
-    // O contrato decide o crash point, não o frontend
-    // TODO: Obter crash point do evento RocketPlayed
-    crashPointRef.current = 2.0; // Valor temporário para animação
-    
-    try {
+    
+    try {
         await placeRocketBet(userAddress!, bet);
-        mutate('wallet');
-        setGameStatus('waiting');
-        toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
-    } catch (e: any) {
-        toast({ variant: 'destructive', title: e.message });
-        setIsLoadingAction(false);
-    }
+        
+        mutate('wallet');
+        setGameStatus('waiting');
+        setIsLoadingAction(false);
+        toast({ title: t('gameZone.rocket.toast.betPlaced.title'), description: t('gameZone.rocket.toast.betPlaced.description', { amount: bet }) });
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: e.message });
+        setIsLoadingAction(false);
+    }
   };
 
   const handleCashOut = async () => {

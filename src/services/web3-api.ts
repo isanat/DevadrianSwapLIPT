@@ -589,6 +589,12 @@ export async function playRocket(userAddress: Address, betAmount: bigint) {
 
   const { request } = await rocketContract.simulate.playRocket([betAmount], { account: userAddress });
   const hash = await walletClient.writeContract(request);
+  
+  // Aguardar confirmação e obter o crash point da rodada atual
+  if (publicClient) {
+    await publicClient.waitForTransactionReceipt({ hash });
+  }
+  
   return hash;
 }
 
@@ -602,7 +608,10 @@ export async function cashOutRocket(userAddress: Address, betIndex: number, mult
     client: { public: publicClient, wallet: walletClient },
   });
 
-  const { request } = await rocketContract.simulate.cashOutRocket([betIndex, multiplier], { account: userAddress });
+  // Multiplicador deve estar em basis points (ex: 150 = 1.5x)
+  const multiplierBasisPoints = Math.round(multiplier * 100);
+  
+  const { request } = await rocketContract.simulate.cashOutRocket([betIndex, multiplierBasisPoints], { account: userAddress });
   const hash = await walletClient.writeContract(request);
   return hash;
 }
