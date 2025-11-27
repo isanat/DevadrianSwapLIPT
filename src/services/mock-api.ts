@@ -528,43 +528,51 @@ export const getLeaderboardData = async (userAddress: string) => {
 // --- ACTIONS (MUTATIONS) ---
 
 export const purchaseLipt = async (userAddress: string, amount: number) => {
+  // IMPORTANTE: 'amount' agora é USDT amount (valor a pagar em USDT)
   if (!userAddress) {
     // Fallback para mock se não há endereço
     await wait(1000);
     const wallet = getFromStorage('wallet', initialWallet);
     const stats = getFromStorage('stats', initialStats);
-    const cost = amount * stats.liptPrice;
+    const cost = amount; // amount já é o custo em USDT
     if (wallet.usdtBalance < cost) {
       throw new Error('Insufficient USDT balance');
     }
+    // Calcular quantos LIPT serão recebidos baseado no preço
+    const liptReceived = cost / stats.liptPrice;
     wallet.usdtBalance -= cost;
-    wallet.liptBalance += amount;
+    wallet.liptBalance += liptReceived;
     saveToStorage('wallet', wallet);
     return wallet;
   }
 
   try {
     // Importar funções do web3-api
+    // IMPORTANTE: 'amount' agora é USDT amount (não LIPT amount)
     const { purchaseLipt: web3PurchaseLipt, getTokenDecimals } = await import('./web3-api');
     const { CONTRACT_ADDRESSES } = await import('../config/contracts');
     
     const usdtDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any);
-    const usdtAmountBigInt = BigInt(amount * (10 ** usdtDecimals));
+    const usdtAmountBigInt = BigInt(Math.floor(amount * (10 ** usdtDecimals)));
     
     const hash = await web3PurchaseLipt(userAddress as any, usdtAmountBigInt);
     return { hash }; // Retorna o hash da transação
   } catch (error) {
     console.error('Error purchasing LIPT from contract, using fallback:', error);
     // Fallback para mock
+    // IMPORTANTE: 'amount' agora é USDT amount
     await wait(1000);
     const wallet = getFromStorage('wallet', initialWallet);
     const stats = getFromStorage('stats', initialStats);
-    const cost = amount * stats.liptPrice;
+    const cost = amount; // amount já é o custo em USDT
     if (wallet.usdtBalance < cost) {
       throw new Error('Insufficient USDT balance');
     }
+    // Calcular quantos LIPT serão recebidos baseado no preço
+    const stats = getFromStorage('stats', initialStats);
+    const liptReceived = cost / stats.liptPrice;
     wallet.usdtBalance -= cost;
-    wallet.liptBalance += amount;
+    wallet.liptBalance += liptReceived;
     saveToStorage('wallet', wallet);
     return wallet;
   }
@@ -1007,17 +1015,27 @@ export const buyLotteryTickets = async (userAddress: string, quantity: number) =
     return { success: true };
 };
 
-export const claimLotteryPrize = async (userAddress: string) => {
-    await wait(1100);
-    const wallet = getFromStorage('wallet', initialWallet);
-    const lottery = getFromStorage('lottery', initialLottery);
-    
-    if (lottery.currentDraw.status === 'CLOSED' && lottery.currentDraw.winnerAddress === 'user123' && !lottery.currentDraw.prizeClaimed) {
-        wallet.liptBalance += lottery.currentDraw.prizePool;
-        lottery.currentDraw.prizeClaimed = true;
-        saveToStorage('wallet', wallet);
-        saveToStorage('lottery', lottery);
-        return { success: true };
+export const claimLotteryPrize = async (userAddress: string, drawId: number) => {
+    try {
+        // Importar função do web3-api
+        const { claimLotteryPrize: web3ClaimLotteryPrize } = await import('./web3-api');
+        
+        const hash = await web3ClaimLotteryPrize(userAddress as any, drawId);
+        return { hash }; // Retorna o hash da transação
+    } catch (error) {
+        console.error('Error claiming lottery prize from contract, using fallback:', error);
+        // Fallback para mock (deprecated - usar apenas para desenvolvimento)
+        await wait(1100);
+        const wallet = getFromStorage('wallet', initialWallet);
+        const lottery = getFromStorage('lottery', initialLottery);
+        
+        if (lottery.currentDraw.status === 'CLOSED' && userAddress && lottery.currentDraw.winnerAddress?.toLowerCase() === userAddress.toLowerCase() && !lottery.currentDraw.prizeClaimed) {
+            wallet.liptBalance += lottery.currentDraw.prizePool;
+            lottery.currentDraw.prizeClaimed = true;
+            saveToStorage('wallet', wallet);
+            saveToStorage('lottery', lottery);
+            return { success: true };
+        }
+        throw new Error("Not a winner or prize already claimed");
     }
-    throw new Error("Not a winner or prize already claimed");
 };

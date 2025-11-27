@@ -45,11 +45,14 @@ export function TokenPurchase() {
   const handlePurchase = async () => {
     const amountToBuy = parseFloat(liptAmount);
     const cost = parseFloat(usdtAmount);
-    if (wallet && amountToBuy > 0 && wallet.usdtBalance >= cost) {
+    if (wallet && cost > 0 && wallet.usdtBalance >= cost) {
         setIsPurchasing(true);
         try {
-            await purchaseLipt(userAddress!, amountToBuy);
+            // Passar cost (USDT amount) ao invés de amountToBuy (LIPT amount)
+            // O contrato faz swap de USDT -> LIPT, então precisa do valor em USDT
+            await purchaseLipt(userAddress!, cost);
             mutate('wallet'); // Re-fetch wallet data
+            mutate(['stats', userAddress]); // Re-fetch stats para atualizar preço
             toast({
                 title: t('tokenPurchase.toast.success.title'),
                 description: t('tokenPurchase.toast.success.description', { amount: amountToBuy.toFixed(2) }),

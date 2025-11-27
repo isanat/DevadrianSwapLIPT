@@ -84,9 +84,9 @@ export function DailyLottery() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
-  
-  const { data: lottery, isLoading: isLoadingLottery } = useSWR<LotteryState>('lottery', getLotteryData);
   const { address: userAddress } = useAccount();
+  
+  const { data: lottery, isLoading: isLoadingLottery } = useSWR<LotteryState>(userAddress ? ['lottery', userAddress] : null, () => getLotteryData(userAddress!));
   const { data: wallet, isLoading: isLoadingWallet } = useSWR(userAddress ? ['wallet', userAddress] : null, () => getWalletData(userAddress!));
 
   const [ticketAmount, setTicketAmount] = useState('1');
@@ -99,14 +99,14 @@ export function DailyLottery() {
       const timeUntilEnd = lottery.currentDraw.endTime - Date.now();
       if (timeUntilEnd > 0) {
         const timer = setTimeout(() => {
-          mutate('lottery');
+          mutate(['lottery', userAddress]);
         }, timeUntilEnd + 2000); // add a 2s buffer
         return () => clearTimeout(timer);
       }
     }
   }, [lottery, mutate]);
   
-  const isWinner = lottery?.currentDraw.status === 'CLOSED' && lottery?.currentDraw.winnerAddress === 'user123';
+  const isWinner = lottery?.currentDraw.status === 'CLOSED' && userAddress && lottery?.currentDraw.winnerAddress?.toLowerCase() === userAddress.toLowerCase();
   const canClaim = isWinner && !lottery?.currentDraw.prizeClaimed;
 
   const handleBuyTickets = async () => {
@@ -119,8 +119,8 @@ export function DailyLottery() {
     setIsBuying(true);
     try {
       await buyLotteryTickets(userAddress!, amount);
-      mutate('lottery');
-      mutate('wallet');
+      mutate(['lottery', userAddress]);
+      mutate(['wallet', userAddress]);
       toast({ title: t('gameZone.lottery.toast.success.title'), description: t('gameZone.lottery.toast.success.description', { amount }) });
       setTicketAmount('1');
     } catch (error: any) {
@@ -139,9 +139,10 @@ export function DailyLottery() {
     setIsClaiming(true);
     const prizeAmount = lottery.currentDraw.prizePool;
     try {
-        await claimLotteryPrize();
-        mutate('lottery');
-        mutate('wallet');
+        // claimLotteryPrize requer drawId (ID do sorteio)
+        await claimLotteryPrize(userAddress!, lottery.currentDraw.id);
+        mutate(['lottery', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ 
             title: t('gameZone.lottery.toast.claimed.title'), 
             description: t('gameZone.lottery.toast.claimed.description', { amount: prizeAmount.toLocaleString() }) 
