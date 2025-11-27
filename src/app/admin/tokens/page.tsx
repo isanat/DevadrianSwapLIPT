@@ -11,7 +11,7 @@ import { useAccount } from 'wagmi';
 import { Loader2, Coins, ArrowRight, ShieldCheck, ShieldX, Copy } from 'lucide-react';
 import { mintMockUSDT, transferLIPT, mintLIPT, isLIPTOwner, getTokenDecimals } from '@/services/web3-api';
 import { CONTRACT_ADDRESSES } from '@/config/contracts';
-import { parseEther } from 'viem';
+import { parseUnits } from 'viem';
 
 export default function AdminTokensPage() {
   const { address: userAddress, isConnected } = useAccount();
@@ -92,7 +92,7 @@ export default function AdminTokensPage() {
 
       // Obter decimais do MockUSDT
       const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.mockUsdt as any);
-      const amountBigInt = parseEther(mockUsdtAmount);
+      const amountBigInt = parseUnits(mockUsdtAmount, decimals);
 
       // Mintar MockUSDT
       const hash = await mintMockUSDT(userAddress, mockUsdtToAddress as any, amountBigInt);
@@ -145,7 +145,7 @@ export default function AdminTokensPage() {
 
       // Obter decimais do LIPT
       const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
-      const amountBigInt = parseEther(transferLiptAmount);
+      const amountBigInt = parseUnits(transferLiptAmount, decimals);
 
       // Transferir LIPT
       const hash = await transferLIPT(userAddress, transferLiptToAddress as any, amountBigInt);
@@ -207,7 +207,7 @@ export default function AdminTokensPage() {
 
       // Obter decimais do LIPT
       const decimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
-      const amountBigInt = parseEther(mintLiptAmount);
+      const amountBigInt = parseUnits(mintLiptAmount, decimals);
 
       // Mintar LIPT
       const hash = await mintLIPT(userAddress, mintLiptToAddress as any, amountBigInt);
