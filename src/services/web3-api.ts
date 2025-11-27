@@ -703,7 +703,7 @@ export async function removeLiquidity(userAddress: Address, lpTokenAmount: bigin
 
 export async function getSwapFee() {
   const { publicClient } = getClients();
-  if (!publicClient) return 30; // Default 0.3% (30 basis points)
+  if (!publicClient) return null;
 
   try {
     const swapContract = getContract({
@@ -716,13 +716,13 @@ export async function getSwapFee() {
     return Number(feeBasisPoints);
   } catch (error) {
     console.error('Error getting swap fee:', error);
-    return 30; // Fallback
+    return null;
   }
 }
 
 export async function getCommissionRates() {
   const { publicClient } = getClients();
-  if (!publicClient) return [10, 5, 3]; // Default rates
+  if (!publicClient) return null;
 
   try {
     const referralContract = getContract({
@@ -733,19 +733,15 @@ export async function getCommissionRates() {
 
     const rates = await referralContract.read.getCommissionRates();
     return rates.map((r: any) => Number(r));
-
-
-
-
   } catch (error) {
     console.error('Error getting commission rates:', error);
-    return [10, 5, 3]; // Fallback
+    return null;
   }
 }
 
 export async function getHouseEdge(gameType: 'wheel' | 'rocket') {
   const { publicClient } = getClients();
-  if (!publicClient) return 200; // Default 2% (200 basis points)
+  if (!publicClient) return null;
 
   try {
     const contractAddress = gameType === 'wheel' 
@@ -766,7 +762,7 @@ export async function getHouseEdge(gameType: 'wheel' | 'rocket') {
     return Number(houseEdgeBasisPoints);
   } catch (error) {
     console.error(`Error getting house edge for ${gameType}:`, error);
-    return 200; // Fallback
+    return null;
   }
 }
 
