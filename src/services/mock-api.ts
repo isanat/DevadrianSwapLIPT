@@ -351,18 +351,21 @@ export const getMiningData = async (userAddress: string) => {
       return total + (miner.minedAmount || 0);
     }, 0);
     
+    // Se não houver planos do contrato, usar fallback
+    const finalPlans = plans && plans.length > 0 ? plans : MINING_PLANS;
+    
     return {
       miners,
-      plans: plans.length > 0 ? plans : [], // Não usar fallback hardcoded
+      plans: finalPlans,
       miningPower,
       minedRewards: Math.max(0, minedRewards),
     };
   } catch (error) {
     console.error('Error fetching mining data from contract:', error);
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estrutura com planos do fallback em caso de erro
     return {
       miners: [],
-      plans: [],
+      plans: MINING_PLANS, // Usar planos do fallback
       miningPower: 0,
       minedRewards: 0,
     };

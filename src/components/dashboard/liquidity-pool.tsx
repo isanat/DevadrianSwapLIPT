@@ -43,8 +43,8 @@ export function LiquidityPool() {
       setIsAdding(true);
       try {
         await addLiquidity(userAddress!, lipt, usdt);
-        mutate('liquidity');
-        mutate('wallet');
+        mutate(['liquidity', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ title: t('liquidityPool.toast.added.title'), description: t('liquidityPool.toast.added.description', { lipt, usdt }) });
         setAddLiptAmount('');
         setAddUsdtAmount('');
@@ -66,8 +66,8 @@ export function LiquidityPool() {
       setIsRemoving(true);
       try {
         await removeLiquidity(userAddress!, amount);
-        mutate('liquidity');
-        mutate('wallet');
+        mutate(['liquidity', userAddress]);
+        mutate(['wallet', userAddress]);
         toast({ title: t('liquidityPool.toast.removed.title'), description: t('liquidityPool.toast.removed.description', { amount }) });
         setRemoveLpAmount('');
       } catch (error: any) {

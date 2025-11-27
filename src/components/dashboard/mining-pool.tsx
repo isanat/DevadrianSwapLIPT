@@ -245,15 +245,16 @@ export function MiningPool() {
                 <div className="space-y-4">
                 <div>
                     <Label>{t('miningPool.selectMiner')}</Label>
-                    <RadioGroup 
-                      value={selectedPlan?.name} 
-                      onValueChange={(val) => {
-                        const plan = miningData?.plans?.find(p => p.name === val);
-                        if (plan) setSelectedPlan(plan);
-                      }} 
-                      className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2"
-                    >
-                        {miningData?.plans?.map(plan => (
+                    {miningData?.plans && miningData.plans.length > 0 ? (
+                      <RadioGroup 
+                        value={selectedPlan?.name} 
+                        onValueChange={(val) => {
+                          const plan = miningData?.plans?.find(p => p.name === val);
+                          if (plan) setSelectedPlan(plan);
+                        }} 
+                        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2"
+                      >
+                        {miningData.plans.map(plan => (
                             <Label 
                                 key={plan.name} 
                                 htmlFor={`miner-${plan.name}`} 
@@ -272,7 +273,12 @@ export function MiningPool() {
                                 <div className="text-xs text-muted-foreground">{plan.duration} {t('stakingPool.days')}</div>
                             </Label>
                         ))}
-                    </RadioGroup>
+                      </RadioGroup>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-2 text-center py-4">
+                        {t('miningPool.noPlansAvailable') || 'Nenhum plano de mineração disponível no momento.'}
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                     <Button className="w-full" variant="default" onClick={handleActivateMiner} disabled={isActivating || !selectedPlan}>
