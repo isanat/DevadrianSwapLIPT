@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Users, Award, Percent, Save } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
+type NetworkItem = { id?: number; level: number; members: number; commission: number };
+
 const initialCommissionLevels = [
     { level: 1, percentage: 5.0 },
     { level: 2, percentage: 3.0 },
@@ -36,9 +38,10 @@ export default function AdminReferralsPage() {
         setCommissionLevels(newLevels);
     };
 
-    type NetworkItem = { id?: number; level: number; members: number; commission: number };
-    const network: NetworkItem[] = Array.isArray(data?.network) ? (data.network as NetworkItem[]) : [];
-    const totalTeamMembers = network.reduce((sum: number, ref: NetworkItem) => {
+    const network: NetworkItem[] = (data && Array.isArray(data.network))
+        ? (data.network as unknown as NetworkItem[])
+        : [];
+    const totalTeamMembers: number = network.reduce((sum: number, ref: NetworkItem) => {
         return sum + (typeof ref?.members === 'number' ? ref.members : 0);
     }, 0);
 
