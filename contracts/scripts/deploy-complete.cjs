@@ -57,8 +57,40 @@ async function waitForConfirmations(txHash, confirmations = 1) {
     log(`   ✅ Transação confirmada! Hash: ${txHash}`, 'green');
     return receipt;
   } catch (error) {
-    log(`   ⚠️  Timeout aguardando confirmações. Continuando...`, 'yellow');
+    log(`   ❌ Erro ao aguardar confirmações: ${error.message}`, 'red');
     throw error;
+  }
+}
+
+async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 120000) {
+  log(`   Deployando ${contractName}...`, 'yellow');
+  const deployTx = await contractFactory.deploy(...constructorArgs);
+  const txHash = await deployTx.deploymentTransaction()?.hash;
+  log(`   ✅ Transação enviada! Hash: ${txHash || 'pending'}`, 'green');
+  if (txHash) {
+    log(`   🔗 Ver: https://polygonscan.com/tx/${txHash}`, 'cyan');
+  }
+  log(`   ⏳ Aguardando confirmação (máximo ${timeout/1000}s)...`, 'yellow');
+  
+  try {
+    await deployTx.waitForDeployment({ timeout });
+    const address = await deployTx.getAddress();
+    log(`   ✅ ${contractName} confirmado em: ${address}`, 'green');
+    return address;
+  } catch (error) {
+    log(`   ⚠️  Timeout aguardando confirmação de ${contractName}.`, 'yellow');
+    if (txHash) {
+      log(`   🔗 Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    }
+    // Tentar obter endereço mesmo assim
+    try {
+      const address = await deployTx.getAddress();
+      log(`   ✅ Endereço obtido: ${address}`, 'green');
+      return address;
+    } catch (e) {
+      log(`   ❌ Não foi possível obter endereço. Erro: ${e.message}`, 'red');
+      throw new Error(`${contractName} deployment failed. Check: https://polygonscan.com/tx/${txHash || 'N/A'}`);
+    }
   }
 }
 
@@ -97,14 +129,9 @@ async function main() {
     logSection('1️⃣  Deploy MockUSDT');
     const MockUSDT = await hre.ethers.getContractFactory("MockUSDT");
     const initialSupply = hre.ethers.parseUnits("1000000000", 18); // 1 bilhão
-    log("   Deployando MockUSDT...", 'yellow');
-    const deployTx = await MockUSDT.deploy(initialSupply);
-    log("   ⏳ Transação de deploy enviada. Aguardando confirmação...", 'yellow');
-    log("   Hash da transação: " + (await deployTx.deploymentTransaction()?.hash || 'pending'), 'cyan');
-    await deployTx.waitForDeployment({ timeout: 600000 }); // 10 minutos timeout
-    const mockUSDTAddress = await deployTx.getAddress();
+    const mockUSDTAddress = await deployWithTimeout(MockUSDT, [initialSupply], 'MockUSDT');
     deploymentAddresses.mockUsdt = mockUSDTAddress;
-    log(`   ✅ MockUSDT deployado em: ${mockUSDTAddress}`, 'green');
+    const mockUSDT = await MockUSDT.attach(mockUSDTAddress);
     
     // ============================================================================
     // 2. DEPLOY LIPT TOKEN
@@ -112,120 +139,89 @@ async function main() {
     logSection('2️⃣  Deploy LIPT Token');
     const LIPTToken = await hre.ethers.getContractFactory("LIPTToken");
     const liptInitialSupply = hre.ethers.parseUnits("1000000000", 18); // 1 bilhão
-    log("   Deployando LIPTToken...", 'yellow');
-    const liptToken = await LIPTToken.deploy(liptInitialSupply);
-    await liptToken.waitForDeployment();
-    const liptTokenAddress = await liptToken.getAddress();
+    const liptTokenAddress = await deployWithTimeout(LIPTToken, [liptInitialSupply], 'LIPTToken');
     deploymentAddresses.liptToken = liptTokenAddress;
-    log(`   ✅ LIPTToken deployado em: ${liptTokenAddress}`, 'green');
     
     // ============================================================================
     // 3. DEPLOY PROTOCOL CONTROLLER (COM FUNÇÕES PROXY)
     // ============================================================================
     logSection('3️⃣  Deploy ProtocolController (Com Funções Proxy)');
     const ProtocolController = await hre.ethers.getContractFactory("ProtocolController");
-    log("   Deployando ProtocolController...", 'yellow');
-    const protocolController = await ProtocolController.deploy();
-    await protocolController.waitForDeployment();
-    const protocolControllerAddress = await protocolController.getAddress();
+    const protocolControllerAddress = await deployWithTimeout(ProtocolController, [], 'ProtocolController');
     deploymentAddresses.protocolController = protocolControllerAddress;
-    log(`   ✅ ProtocolController deployado em: ${protocolControllerAddress}`, 'green');
+    const protocolController = await ProtocolController.attach(protocolControllerAddress);
     
     // ============================================================================
     // 4. DEPLOY TAX HANDLER
     // ============================================================================
     logSection('4️⃣  Deploy TaxHandler');
     const TaxHandler = await hre.ethers.getContractFactory("TaxHandler");
-    log("   Deployando TaxHandler...", 'yellow');
-    const taxHandler = await TaxHandler.deploy(liptTokenAddress);
-    await taxHandler.waitForDeployment();
-    const taxHandlerAddress = await taxHandler.getAddress();
+    const taxHandlerAddress = await deployWithTimeout(TaxHandler, [liptTokenAddress], 'TaxHandler');
     deploymentAddresses.taxHandler = taxHandlerAddress;
-    log(`   ✅ TaxHandler deployado em: ${taxHandlerAddress}`, 'green');
+    const taxHandler = await TaxHandler.attach(taxHandlerAddress);
     
     // ============================================================================
     // 5. DEPLOY SWAP POOL
     // ============================================================================
     logSection('5️⃣  Deploy DevAdrianSwapPool');
     const DevAdrianSwapPool = await hre.ethers.getContractFactory("DevAdrianSwapPool");
-    log("   Deployando DevAdrianSwapPool...", 'yellow');
-    const swapPool = await DevAdrianSwapPool.deploy(liptTokenAddress, mockUSDTAddress);
-    await swapPool.waitForDeployment();
-    const swapPoolAddress = await swapPool.getAddress();
+    const swapPoolAddress = await deployWithTimeout(DevAdrianSwapPool, [liptTokenAddress, deploymentAddresses.mockUsdt], 'DevAdrianSwapPool');
     deploymentAddresses.swapPool = swapPoolAddress;
-    log(`   ✅ DevAdrianSwapPool deployado em: ${swapPoolAddress}`, 'green');
+    const swapPool = await DevAdrianSwapPool.attach(swapPoolAddress);
     
     // ============================================================================
     // 6. DEPLOY STAKING POOL
     // ============================================================================
     logSection('6️⃣  Deploy StakingPool');
     const StakingPool = await hre.ethers.getContractFactory("StakingPool");
-    log("   Deployando StakingPool...", 'yellow');
-    const stakingPool = await StakingPool.deploy(liptTokenAddress);
-    await stakingPool.waitForDeployment();
-    const stakingPoolAddress = await stakingPool.getAddress();
+    const stakingPoolAddress = await deployWithTimeout(StakingPool, [liptTokenAddress], 'StakingPool');
     deploymentAddresses.stakingPool = stakingPoolAddress;
-    log(`   ✅ StakingPool deployado em: ${stakingPoolAddress}`, 'green');
+    const stakingPool = await StakingPool.attach(stakingPoolAddress);
     
     // ============================================================================
     // 7. DEPLOY MINING POOL
     // ============================================================================
     logSection('7️⃣  Deploy MiningPool');
     const MiningPool = await hre.ethers.getContractFactory("MiningPool");
-    log("   Deployando MiningPool...", 'yellow');
-    const miningPool = await MiningPool.deploy(liptTokenAddress);
-    await miningPool.waitForDeployment();
-    const miningPoolAddress = await miningPool.getAddress();
+    const miningPoolAddress = await deployWithTimeout(MiningPool, [liptTokenAddress], 'MiningPool');
     deploymentAddresses.miningPool = miningPoolAddress;
-    log(`   ✅ MiningPool deployado em: ${miningPoolAddress}`, 'green');
+    const miningPool = await MiningPool.attach(miningPoolAddress);
     
     // ============================================================================
     // 8. DEPLOY REFERRAL PROGRAM
     // ============================================================================
     logSection('8️⃣  Deploy ReferralProgram');
     const ReferralProgram = await hre.ethers.getContractFactory("ReferralProgram");
-    log("   Deployando ReferralProgram...", 'yellow');
-    const referralProgram = await ReferralProgram.deploy(liptTokenAddress);
-    await referralProgram.waitForDeployment();
-    const referralProgramAddress = await referralProgram.getAddress();
+    const referralProgramAddress = await deployWithTimeout(ReferralProgram, [liptTokenAddress], 'ReferralProgram');
     deploymentAddresses.referralProgram = referralProgramAddress;
-    log(`   ✅ ReferralProgram deployado em: ${referralProgramAddress}`, 'green');
+    const referralProgram = await ReferralProgram.attach(referralProgramAddress);
     
     // ============================================================================
     // 9. DEPLOY WHEEL OF FORTUNE
     // ============================================================================
     logSection('9️⃣  Deploy WheelOfFortune');
     const WheelOfFortune = await hre.ethers.getContractFactory("WheelOfFortune");
-    log("   Deployando WheelOfFortune...", 'yellow');
-    const wheelOfFortune = await WheelOfFortune.deploy(liptTokenAddress);
-    await wheelOfFortune.waitForDeployment();
-    const wheelOfFortuneAddress = await wheelOfFortune.getAddress();
+    const wheelOfFortuneAddress = await deployWithTimeout(WheelOfFortune, [liptTokenAddress], 'WheelOfFortune');
     deploymentAddresses.wheelOfFortune = wheelOfFortuneAddress;
-    log(`   ✅ WheelOfFortune deployado em: ${wheelOfFortuneAddress}`, 'green');
+    const wheelOfFortune = await WheelOfFortune.attach(wheelOfFortuneAddress);
     
     // ============================================================================
     // 10. DEPLOY ROCKET GAME
     // ============================================================================
     logSection('🔟 Deploy RocketGame');
     const RocketGame = await hre.ethers.getContractFactory("RocketGame");
-    log("   Deployando RocketGame...", 'yellow');
-    const rocketGame = await RocketGame.deploy(liptTokenAddress);
-    await rocketGame.waitForDeployment();
-    const rocketGameAddress = await rocketGame.getAddress();
+    const rocketGameAddress = await deployWithTimeout(RocketGame, [liptTokenAddress], 'RocketGame');
     deploymentAddresses.rocketGame = rocketGameAddress;
-    log(`   ✅ RocketGame deployado em: ${rocketGameAddress}`, 'green');
+    const rocketGame = await RocketGame.attach(rocketGameAddress);
     
     // ============================================================================
     // 11. DEPLOY LOTTERY
     // ============================================================================
     logSection('1️⃣1️⃣ Deploy Lottery');
     const Lottery = await hre.ethers.getContractFactory("Lottery");
-    log("   Deployando Lottery...", 'yellow');
-    const lottery = await Lottery.deploy(liptTokenAddress);
-    await lottery.waitForDeployment();
-    const lotteryAddress = await lottery.getAddress();
+    const lotteryAddress = await deployWithTimeout(Lottery, [liptTokenAddress], 'Lottery');
     deploymentAddresses.lottery = lotteryAddress;
-    log(`   ✅ Lottery deployado em: ${lotteryAddress}`, 'green');
+    const lottery = await Lottery.attach(lotteryAddress);
     
     // ============================================================================
     // 12. CONFIGURAÇÃO PÓS-DEPLOY
@@ -234,6 +230,7 @@ async function main() {
     
     // 12.1. Configurar ProtocolController
     log("   Configurando ProtocolController com endereços...", 'yellow');
+    const protocolController = await ProtocolController.attach(protocolControllerAddress);
     const tx1 = await protocolController.setLiptToken(liptTokenAddress);
     await waitForConfirmations(tx1.hash);
     const tx2 = await protocolController.setSwapPool(swapPoolAddress);
@@ -254,6 +251,7 @@ async function main() {
     
     // 12.2. Configurar TaxHandler
     log("   Configurando TaxHandler...", 'yellow');
+    const taxHandler = await TaxHandler.attach(taxHandlerAddress);
     const tx9 = await taxHandler.setLiquidityPoolAddress(swapPoolAddress);
     await waitForConfirmations(tx9.hash);
     log("   ✅ TaxHandler configurado!", 'green');
