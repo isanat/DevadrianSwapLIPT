@@ -77,7 +77,11 @@ async function deployWithTimeout(contractFactory, constructorArgs, contractName,
     }
     
     log(`   ⚠️  Ainda aguardando mineração. Continuando...`, 'yellow');
-    log(`   💡 A transação está pendente. Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    if (txHash) {
+      log(`   💡 A transação está pendente. Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    } else {
+      log(`   💡 Transação pendente. Verifique o endereço: ${address}`, 'cyan');
+    }
     
     return address;
   }
@@ -311,10 +315,9 @@ async function main() {
     }
     
     // ============================================================================
-    // CONFIGURAÇÃO PÓS-DEPLOY (só se ProtocolController foi deployado/atualizado)
+    // CONFIGURAÇÃO PÓS-DEPLOY (só se ProtocolController foi RECÉM-DEPLOYADO)
     // ============================================================================
-    if (contractsToDeploy.find(c => c.key === 'protocolController') || 
-        contractsReused.find(c => c.key === 'protocolController')) {
+    if (contractsToDeploy.find(c => c.key === 'protocolController')) {
       
       logSection('⚙️  Configuração Pós-Deploy');
       
