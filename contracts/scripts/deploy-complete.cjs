@@ -73,7 +73,7 @@ async function waitForContractCode(address, maxRetries = 30, delay = 2000) {
   return false;
 }
 
-async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 120000) {
+async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 60000) {
   log(`   Deployando ${contractName}...`, 'yellow');
   const deployTx = await contractFactory.deploy(...constructorArgs);
   
@@ -87,26 +87,32 @@ async function deployWithTimeout(contractFactory, constructorArgs, contractName,
     log(`   🔗 Ver: https://polygonscan.com/tx/${txHash}`, 'cyan');
   }
   
-  // AGUARDAR confirmação do deploy (necessário para usar o contrato depois)
-  log(`   ⏳ Aguardando confirmação do deploy (timeout ${timeout/1000}s)...`, 'yellow');
+  // AGUARDAR confirmação do deploy com timeout reduzido
+  log(`   ⏳ Aguardando confirmação (timeout ${timeout/1000}s)...`, 'yellow');
   
   try {
+    // Aguardar com timeout menor, mas verificar periodicamente
     await deployTx.waitForDeployment({ timeout });
     log(`   ✅ ${contractName} deployado e confirmado!`, 'green');
     return address;
   } catch (error) {
-    log(`   ⚠️  Timeout aguardando confirmação. Verificando se contrato existe...`, 'yellow');
+    // Se timeout, verificar rapidamente se já foi minerado
+    log(`   ⏱️  Timeout aguardando confirmação. Verificando se contrato existe...`, 'yellow');
     
-    // Tentar verificar se o código já foi minerado
-    const codeExists = await waitForContractCode(address, 10, 3000);
+    // Verificação rápida (menos tentativas)
+    const codeExists = await waitForContractCode(address, 5, 2000);
     if (codeExists) {
-      log(`   ✅ Código do contrato encontrado em ${address}`, 'green');
+      log(`   ✅ Código do contrato encontrado! Deploy confirmado.`, 'green');
       return address;
     }
     
-    log(`   ❌ Contrato ainda não foi minerado. Hash: ${txHash}`, 'red');
-    log(`   🔗 Verifique no Polygonscan: https://polygonscan.com/tx/${txHash}`, 'cyan');
-    throw new Error(`${contractName} deployment not confirmed. Contract code not found at ${address}. Check transaction: ${txHash}`);
+    // Se não encontrou, continuar mesmo assim (a transação está na blockchain)
+    log(`   ⚠️  Ainda aguardando mineração. Continuando...`, 'yellow');
+    log(`   💡 A transação está pendente. Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    
+    // Retornar o endereço mesmo sem confirmação (a transação foi enviada)
+    // O script vai tentar anexar depois e falhará se necessário
+    return address;
   }
 }
 

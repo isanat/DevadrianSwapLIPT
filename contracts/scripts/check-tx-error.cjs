@@ -34,11 +34,58 @@ async function main() {
         const tx = await hre.ethers.provider.getTransaction(TX_HASH);
         console.log('🔍 Tentando obter razão do revert...');
         
-        // Tentar fazer a chamada novamente para ver o erro
-        const code = await hre.ethers.provider.call(tx);
-        console.log(`Code retornado: ${code}`);
+        // Verificar se é uma criação de contrato (to é null ou undefined)
+        const isContractCreation = !tx.to || tx.to === null;
+        
+        if (isContractCreation) {
+          console.log('ℹ️  Esta é uma transação de criação de contrato');
+          console.log('   Para criação de contrato, não é possível usar provider.call()');
+          console.log('   Verifique o erro nos logs do Hardhat ou no Polygonscan');
+        } else {
+          // Construir objeto de transação no formato correto para provider.call()
+          // Remover campos undefined/null
+          const callTx = {
+            to: tx.to,
+            from: tx.from,
+            data: tx.data || "0x",
+            value: tx.value || 0,
+          };
+          
+          // Adicionar gasLimit apenas se disponível
+          if (tx.gasLimit) {
+            callTx.gasLimit = tx.gasLimit;
+          } else if (tx.gas) {
+            callTx.gasLimit = tx.gas;
+          }
+          
+          // Tentar fazer a chamada novamente para ver o erro (no bloco anterior ao que falhou)
+          const blockNumber = receipt.blockNumber > 0 ? receipt.blockNumber - 1 : "latest";
+          try {
+            const result = await hre.ethers.provider.call(callTx, blockNumber);
+            console.log(`✅ Call bem-sucedido. Resultado: ${result}`);
+          } catch (callError) {
+            // O erro pode conter a mensagem de revert
+            console.log(`⚠️  Erro ao chamar: ${callError.message}`);
+            
+            // Tentar extrair mensagem de revert se disponível
+            if (callError.reason) {
+              console.log(`   Razão do revert: ${callError.reason}`);
+            }
+            if (callError.data && callError.data !== callError.message) {
+              console.log(`   Dados do erro: ${callError.data}`);
+            }
+            
+            // Tentar decodificar erro se for um revert customizado
+            if (callError.error) {
+              console.log(`   Erro detalhado: ${JSON.stringify(callError.error, null, 2)}`);
+            }
+          }
+        }
       } catch (error) {
         console.log(`⚠️  Erro ao obter detalhes: ${error.message}`);
+        if (error.stack) {
+          console.log(`   Stack: ${error.stack.split('\n').slice(0, 3).join('\n')}`);
+        }
       }
       
       console.log('\n💡 POSSÍVEIS CAUSAS:');
