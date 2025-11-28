@@ -4,12 +4,49 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
+// Interfaces para os contratos filhos
+interface IStakingPool {
+    function transferOwnership(address newOwner) external;
+    function addStakingPlan(uint256 _duration, uint256 _apy) external;
+    function modifyStakingPlan(uint256 planId, uint256 _duration, uint256 _apy, bool _active) external;
+}
+
+interface IMiningPool {
+    function transferOwnership(address newOwner) external;
+    function addMiningPlan(uint256 _cost, uint256 _power, uint256 _duration) external;
+    function modifyMiningPlan(uint256 planId, uint256 _cost, uint256 _power, uint256 _duration, bool _active) external;
+}
+
+interface IWheelOfFortune {
+    function transferOwnership(address newOwner) external;
+    function setWheelSegments(uint256[] calldata multipliers, uint256[] calldata probabilities) external;
+}
+
+interface IRocketGame {
+    function transferOwnership(address newOwner) external;
+}
+
+interface ILottery {
+    function transferOwnership(address newOwner) external;
+}
+
+interface IReferralProgram {
+    function transferOwnership(address newOwner) external;
+}
+
+interface ILIPTToken {
+    function transferOwnership(address newOwner) external;
+}
+
+interface ISwapPool {
+    function transferOwnership(address newOwner) external;
+}
+
 /**
- * @title ProtocolController
- * @dev Contrato de controle central que gerencia a propriedade e o estado de pausa
- *      de todos os outros contratos do protocolo.
+ * @title ProtocolControllerV2
+ * @dev Versão melhorada do ProtocolController com funções proxy para gerenciar contratos filhos
  */
-contract ProtocolController is Ownable, Pausable {
+contract ProtocolControllerV2 is Ownable, Pausable {
     // Endereços dos contratos do protocolo
     address public liptToken;
     address public swapPool;
@@ -22,9 +59,8 @@ contract ProtocolController is Ownable, Pausable {
 
     constructor() Ownable(msg.sender) {}
 
-    // --- Funções de Administração (Owner-Only) ---
-
-    // Funções para configurar os endereços dos contratos
+    // --- Funções para configurar os endereços dos contratos ---
+    
     function setLiptToken(address _liptToken) public onlyOwner {
         liptToken = _liptToken;
     }
@@ -57,46 +93,14 @@ contract ProtocolController is Ownable, Pausable {
         lottery = _lottery;
     }
 
-    // Funções de Pausa/Despausa
+    // --- Funções de Pausa/Despausa ---
+    
     function pauseProtocol() public onlyOwner {
         _pause();
     }
 
     function unpauseProtocol() public onlyOwner {
         _unpause();
-    }
-
-    // --- INTERFACES PARA OS CONTRATOS FILHOS ---
-    interface IStakingPool {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IMiningPool {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface ILIPTToken {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface ISwapPool {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IWheelOfFortune {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IRocketGame {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface ILottery {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IReferralProgram {
-        function transferOwnership(address newOwner) external;
     }
 
     // --- FUNÇÕES PROXY PARA TRANSFERIR OWNERSHIP DOS CONTRATOS FILHOS ---
@@ -141,7 +145,7 @@ contract ProtocolController is Ownable, Pausable {
         IReferralProgram(referralProgram).transferOwnership(newOwner);
     }
 
-    // Função para transferir ownership de todos os contratos filhos de uma vez
+    // Função para transferir ownership de todos os contratos de uma vez
     function transferAllChildContractsOwnership(address newOwner) public onlyOwner {
         if (stakingPool != address(0)) {
             try IStakingPool(stakingPool).transferOwnership(newOwner) {} catch {}
@@ -169,9 +173,40 @@ contract ProtocolController is Ownable, Pausable {
         }
     }
 
+    // --- FUNÇÕES PROXY PARA GERENCIAR CONTRATOS FILHOS ---
+    
+    // Staking Pool
+    function addStakingPlan(uint256 _duration, uint256 _apy) public onlyOwner {
+        require(stakingPool != address(0), "StakingPool not set");
+        IStakingPool(stakingPool).addStakingPlan(_duration, _apy);
+    }
+
+    function modifyStakingPlan(uint256 planId, uint256 _duration, uint256 _apy, bool _active) public onlyOwner {
+        require(stakingPool != address(0), "StakingPool not set");
+        IStakingPool(stakingPool).modifyStakingPlan(planId, _duration, _apy, _active);
+    }
+
+    // Mining Pool
+    function addMiningPlan(uint256 _cost, uint256 _power, uint256 _duration) public onlyOwner {
+        require(miningPool != address(0), "MiningPool not set");
+        IMiningPool(miningPool).addMiningPlan(_cost, _power, _duration);
+    }
+
+    function modifyMiningPlan(uint256 planId, uint256 _cost, uint256 _power, uint256 _duration, bool _active) public onlyOwner {
+        require(miningPool != address(0), "MiningPool not set");
+        IMiningPool(miningPool).modifyMiningPlan(planId, _cost, _power, _duration, _active);
+    }
+
+    // Wheel of Fortune
+    function setWheelSegments(uint256[] calldata multipliers, uint256[] calldata probabilities) public onlyOwner {
+        require(wheelOfFortune != address(0), "WheelOfFortune not set");
+        IWheelOfFortune(wheelOfFortune).setWheelSegments(multipliers, probabilities);
+    }
+
     // Função de emergência para transferir a propriedade de todos os contratos
     function transferAllOwnership(address newOwner) public onlyOwner {
         transferAllChildContractsOwnership(newOwner);
         transferOwnership(newOwner);
     }
 }
+

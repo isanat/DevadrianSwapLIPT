@@ -29,8 +29,8 @@ const CONTRACT_ADDRESSES = {
 // SUA CARTEIRA - Para onde quer transferir o ownership
 const TARGET_WALLET = '0x642dA0e0C51e02d4Fe7C4b557C49F9D1111cF903';
 
-// Private key da carteira que é owner atual (ou configure no .env)
-const OWNER_PRIVATE_KEY = process.env.OWNER_PRIVATE_KEY || '';
+// Private key da carteira que é owner atual (do .env)
+const OWNER_PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 // ABI mínimo para transferOwnership
 const OWNER_ABI = [
@@ -63,9 +63,19 @@ async function transferOwnership(contractName, contractAddress, signer) {
     console.log(`   Owner atual: ${currentOwner}`);
     console.log(`   Signer: ${signerAddress}`);
     
+    // Verificar se o owner atual é o ProtocolController
+    if (currentOwner.toLowerCase() === CONTRACT_ADDRESSES.protocolController.toLowerCase()) {
+      console.log(`   ⚠️  O owner é o ProtocolController (${currentOwner})`);
+      console.log(`   ❌ NÃO É POSSÍVEL transferir ownership diretamente!`);
+      console.log(`   💡 O ProtocolController precisa ter funções proxy para isso.`);
+      return { success: false, error: 'Owner é ProtocolController - requer funções proxy' };
+    }
+    
     // Verificar se o signer é o owner
     if (currentOwner.toLowerCase() !== signerAddress.toLowerCase()) {
       console.log(`   ❌ ERRO: O signer não é o owner atual!`);
+      console.log(`   Owner atual: ${currentOwner}`);
+      console.log(`   Signer: ${signerAddress}`);
       return { success: false, error: 'Signer não é owner' };
     }
     

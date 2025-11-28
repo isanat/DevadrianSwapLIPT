@@ -82,7 +82,7 @@ export default function AdminStakingPage() {
     const { address: userAddress } = useAccount();
     const { toast } = useToast();
     const { mutate } = useSWRConfig();
-    const { data: stakingData, isLoading } = useSWR('staking', getStakingData);
+    const { data: stakingData, isLoading } = useSWR(userAddress ? ['admin-staking', userAddress] : null, () => getStakingData(userAddress || ''));
     const { data: contractPlans, isLoading: isLoadingPlans, mutate: mutatePlans } = useSWR('stakingPlans', getStakingPlans);
     const [editingPlan, setEditingPlan] = useState<{ plan: StakingPlan; planId?: number } | null>(null);
     const [isClient, setIsClient] = useState(false);
