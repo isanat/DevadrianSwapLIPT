@@ -9,7 +9,16 @@ import { getDashboardStats } from '@/services/mock-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/stats-card';
 
-const recentActivities = [
+type ActivityItem = {
+    id: string;
+    type: string;
+    user: string;
+    amount: string;
+    status: string;
+    time: string;
+};
+
+const recentActivities: ActivityItem[] = [
     { id: 'TXN12345', type: 'Stake', user: '0x1a2b...c3d4', amount: '5,000 LIPT', status: 'Completed', time: '2 minutes ago' },
     { id: 'TXN12346', type: 'Swap', user: '0x5e6f...a7b8', amount: '1.2 ETH <> 1,500 LIPT', status: 'Completed', time: '5 minutes ago' },
     { id: 'TXN12347', type: 'Unstake', user: '0x9c8d...e7f6', amount: '2,500 LIPT', status: 'Pending', time: '8 minutes ago' },
@@ -105,7 +114,7 @@ export default function AdminDashboardPage() {
                                         </TableRow>
                                     ))
                                 ) : (
-                                    recentActivities.map((activity) => (
+                                    recentActivities.map((activity: ActivityItem) => (
                                         <TableRow key={activity.id}>
                                             <TableCell>
                                                 <div className="font-mono text-xs">{activity.user}</div>

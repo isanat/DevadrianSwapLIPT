@@ -132,7 +132,7 @@ export default function AdminWheelPage() {
         }
     };
 
-    const totalWeight = segments.reduce((acc, seg) => acc + seg.weight, 0);
+    const totalWeight = segments.reduce((acc: number, seg: Segment) => acc + seg.weight, 0);
 
     return (
         <div className="flex flex-1 flex-col gap-4">
