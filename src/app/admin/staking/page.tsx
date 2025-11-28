@@ -119,37 +119,48 @@ export default function AdminStakingPage() {
             return;
         }
 
-        // Verificar se o usuário é owner do contrato StakingPool
+        // Verificar se o usuário é owner do contrato StakingPool ANTES de tentar salvar
+        let isOwner = false;
+        let contractOwner: string | null = null;
+        let ownershipDetails = '';
+        
         try {
-            const contractOwner = await getContractOwnerAddress(CONTRACT_ADDRESSES.stakingPool as Address);
+            contractOwner = await getContractOwnerAddress(CONTRACT_ADDRESSES.stakingPool as Address);
             const isProtocolControllerOwner = await isLIPTOwner(userAddress as Address);
-            const isOwner = await checkContractOwner(CONTRACT_ADDRESSES.stakingPool as Address, userAddress as Address);
+            isOwner = await checkContractOwner(CONTRACT_ADDRESSES.stakingPool as Address, userAddress as Address);
+            
+            // Log detalhado para debug
+            console.log('🔍 Verificação de Ownership:', {
+                userAddress,
+                contractAddress: CONTRACT_ADDRESSES.stakingPool,
+                contractOwner,
+                isProtocolControllerOwner,
+                isOwner,
+            });
             
             if (!isOwner) {
-                let errorMessage = 'Apenas o owner do contrato StakingPool pode criar ou modificar planos.';
-                if (contractOwner) {
-                    errorMessage += `\n\nOwner atual do contrato: ${contractOwner}`;
-                }
+                ownershipDetails = `\n\nOwner atual: ${contractOwner || 'Desconhecido'}`;
+                ownershipDetails += `\n\nSua carteira: ${userAddress}`;
                 if (isProtocolControllerOwner) {
-                    errorMessage += `\n\nVocê é owner do ProtocolController, mas o StakingPool pode ter um owner diferente.`;
+                    ownershipDetails += `\n\n⚠️ Você é owner do ProtocolController, mas o StakingPool tem um owner diferente.`;
                 }
-                errorMessage += `\n\nCarteira conectada: ${userAddress}`;
                 
                 toast({ 
                     variant: 'destructive', 
-                    title: 'Acesso Negado', 
-                    description: errorMessage
+                    title: '❌ Acesso Negado', 
+                    description: `Apenas o owner do contrato StakingPool pode criar/modificar planos.${ownershipDetails}`,
+                    duration: 10000, // Mostrar por mais tempo
                 });
-                return;
+                return; // BLOQUEAR - não continuar
             }
         } catch (error: any) {
-            console.error('Error checking owner:', error);
+            console.error('❌ Erro ao verificar ownership:', error);
             toast({ 
                 variant: 'destructive', 
-                title: 'Erro', 
-                description: `Não foi possível verificar ownership. Erro: ${error.message}` 
+                title: 'Erro na Verificação', 
+                description: `Não foi possível verificar ownership. Erro: ${error.message}. Não será possível salvar.` 
             });
-            return;
+            return; // BLOQUEAR em caso de erro na verificação
         }
 
         setIsSaving(true);

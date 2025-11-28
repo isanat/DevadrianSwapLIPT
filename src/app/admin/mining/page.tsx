@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Save, Trash2, Edit, X, Loader2 } from 'lucide-react';
 import useSWR, { useSWRConfig } from 'swr';
 import { getMiningData, Miner } from '@/services/mock-api';
-import { getMiningPlans, addMiningPlan, modifyMiningPlan, checkContractOwner } from '@/services/web3-api';
+import { getMiningPlans, addMiningPlan, modifyMiningPlan, checkContractOwner, getContractOwnerAddress, isLIPTOwner } from '@/services/web3-api';
 import { CONTRACT_ADDRESSES } from '@/config/contracts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAccount } from 'wagmi';
@@ -67,25 +67,47 @@ export default function AdminMiningPage() {
             return;
         }
 
-        // Verificar se o usuário é owner do contrato MiningPool
+        // Verificar se o usuário é owner do contrato MiningPool ANTES de tentar salvar
+        let isOwner = false;
+        let contractOwner: string | null = null;
+        
         try {
-            const isOwner = await checkContractOwner(CONTRACT_ADDRESSES.miningPool as Address, userAddress as Address);
+            contractOwner = await getContractOwnerAddress(CONTRACT_ADDRESSES.miningPool as Address);
+            const isProtocolControllerOwner = await isLIPTOwner(userAddress as Address);
+            isOwner = await checkContractOwner(CONTRACT_ADDRESSES.miningPool as Address, userAddress as Address);
+            
+            console.log('🔍 Verificação de Ownership (MiningPool):', {
+                userAddress,
+                contractAddress: CONTRACT_ADDRESSES.miningPool,
+                contractOwner,
+                isProtocolControllerOwner,
+                isOwner,
+            });
+            
             if (!isOwner) {
+                let errorMessage = 'Apenas o owner do contrato MiningPool pode criar ou modificar planos.';
+                errorMessage += `\n\nOwner atual: ${contractOwner || 'Desconhecido'}`;
+                errorMessage += `\n\nSua carteira: ${userAddress}`;
+                if (isProtocolControllerOwner) {
+                    errorMessage += `\n\n⚠️ Você é owner do ProtocolController, mas o MiningPool tem um owner diferente.`;
+                }
+                
                 toast({ 
                     variant: 'destructive', 
-                    title: 'Acesso Negado', 
-                    description: 'Apenas o owner do contrato MiningPool pode criar ou modificar planos. Conecte a carteira do owner.' 
+                    title: '❌ Acesso Negado', 
+                    description: errorMessage,
+                    duration: 10000,
                 });
-                return;
+                return; // BLOQUEAR
             }
         } catch (error: any) {
-            console.error('Error checking owner:', error);
+            console.error('❌ Erro ao verificar ownership:', error);
             toast({ 
                 variant: 'destructive', 
-                title: 'Erro', 
-                description: 'Não foi possível verificar se você é owner do contrato.' 
+                title: 'Erro na Verificação', 
+                description: `Não foi possível verificar ownership. Erro: ${error.message}. Não será possível salvar.` 
             });
-            return;
+            return; // BLOQUEAR
         }
 
         setIsSaving(true);
