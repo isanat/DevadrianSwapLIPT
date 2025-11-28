@@ -36,8 +36,9 @@ export default function AdminReferralsPage() {
         setCommissionLevels(newLevels);
     };
 
-    const network = Array.isArray(data?.network) ? data.network : [];
-    const totalTeamMembers = network.reduce((sum: number, ref: { members?: number }) => {
+    type NetworkItem = { id?: number; level: number; members: number; commission: number };
+    const network: NetworkItem[] = Array.isArray(data?.network) ? (data.network as NetworkItem[]) : [];
+    const totalTeamMembers = network.reduce((sum: number, ref: NetworkItem) => {
         return sum + (typeof ref?.members === 'number' ? ref.members : 0);
     }, 0);
 
@@ -116,7 +117,7 @@ export default function AdminReferralsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {data?.network.map(level => (
+                                    {network.map(level => (
                                         <TableRow key={level.id}>
                                             <TableCell className='font-bold'>{level.level}</TableCell>
                                             <TableCell>
