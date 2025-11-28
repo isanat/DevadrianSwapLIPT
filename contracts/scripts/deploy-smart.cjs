@@ -88,24 +88,61 @@ async function deployWithTimeout(contractFactory, constructorArgs, contractName,
 }
 
 async function loadExistingAddresses() {
-  const deploymentFile = path.join(__dirname, '../deployment-addresses.json');
-  if (fs.existsSync(deploymentFile)) {
-    const data = JSON.parse(fs.readFileSync(deploymentFile, 'utf8'));
-    return data.addresses || {};
+  try {
+    const deploymentFile = path.join(__dirname, '../deployment-addresses.json');
+    if (fs.existsSync(deploymentFile)) {
+      const fileContent = fs.readFileSync(deploymentFile, 'utf8');
+      if (!fileContent || fileContent.trim() === '') {
+        log(`⚠️  Arquivo deployment-addresses.json está vazio`, 'yellow');
+        return {};
+      }
+      const data = JSON.parse(fileContent);
+      return data.addresses || {};
+    }
+    return {};
+  } catch (error) {
+    log(`⚠️  Erro ao carregar endereços existentes: ${error.message}`, 'yellow');
+    log(`   Continuando sem endereços pré-existentes...`, 'yellow');
+    return {};
   }
-  return {};
 }
 
 async function saveDeploymentAddresses(addresses) {
-  const deploymentFile = path.join(__dirname, '../deployment-addresses.json');
-  const deploymentData = {
-    network: hre.network.name,
-    timestamp: new Date().toISOString(),
-    addresses: addresses
-  };
-  
-  fs.writeFileSync(deploymentFile, JSON.stringify(deploymentData, null, 2));
-  log(`\n📝 Endereços salvos em: ${deploymentFile}`, 'cyan');
+  try {
+    const deploymentFile = path.join(__dirname, '../deployment-addresses.json');
+    const deploymentDir = path.dirname(deploymentFile);
+    
+    // Garantir que o diretório existe
+    if (!fs.existsSync(deploymentDir)) {
+      fs.mkdirSync(deploymentDir, { recursive: true });
+    }
+    
+    const deploymentData = {
+      network: hre.network.name,
+      timestamp: new Date().toISOString(),
+      addresses: addresses
+    };
+    
+    const jsonContent = JSON.stringify(deploymentData, null, 2);
+    fs.writeFileSync(deploymentFile, jsonContent, 'utf8');
+    log(`\n📝 Endereços salvos em: ${deploymentFile}`, 'cyan');
+    
+    // Verificar se o arquivo foi salvo corretamente
+    if (fs.existsSync(deploymentFile)) {
+      const savedData = JSON.parse(fs.readFileSync(deploymentFile, 'utf8'));
+      if (savedData.addresses && Object.keys(savedData.addresses).length > 0) {
+        log(`   ✅ ${Object.keys(savedData.addresses).length} endereços salvos com sucesso`, 'green');
+      } else {
+        log(`   ⚠️  Arquivo salvo mas sem endereços`, 'yellow');
+      }
+    } else {
+      throw new Error('Arquivo não foi criado após writeFileSync');
+    }
+  } catch (error) {
+    log(`\n❌ ERRO ao salvar endereços: ${error.message}`, 'red');
+    console.error(error);
+    throw error;
+  }
 }
 
 async function waitForConfirmations(txHash, confirmations = 1) {
