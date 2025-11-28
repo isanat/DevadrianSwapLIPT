@@ -216,17 +216,20 @@ export default function AdminSettingsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {Object.entries(addresses).map(([name, address]) => (
-                            <div key={name} className="space-y-1">
-                                <Label className="capitalize text-muted-foreground">{name.replace(/([A-Z])/g, ' $1')}</Label>
-                                <div className="flex items-center gap-2">
-                                    <Input readOnly value={address} className="font-mono text-xs h-9 bg-muted" />
-                                    <Button variant="ghost" size="icon" onClick={() => copyToClipboard(address)}>
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
+                        {Object.entries(addresses).map(([name, address]) => {
+                            const addressStr = typeof address === 'string' ? address : String(address || '');
+                            return (
+                                <div key={name} className="space-y-1">
+                                    <Label className="capitalize text-muted-foreground">{name.replace(/([A-Z])/g, ' $1')}</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input readOnly value={addressStr} className="font-mono text-xs h-9 bg-muted" />
+                                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(addressStr)}>
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </CardContent>
                 </Card>
 
