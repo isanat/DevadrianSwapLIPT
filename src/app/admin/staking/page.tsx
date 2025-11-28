@@ -121,7 +121,6 @@ export default function AdminStakingPage() {
 
         // Verificar se o usuário é owner do contrato StakingPool
         try {
-            const { getContractOwnerAddress, isLIPTOwner } = await import('@/services/web3-api');
             const contractOwner = await getContractOwnerAddress(CONTRACT_ADDRESSES.stakingPool as Address);
             const isProtocolControllerOwner = await isLIPTOwner(userAddress as Address);
             const isOwner = await checkContractOwner(CONTRACT_ADDRESSES.stakingPool as Address, userAddress as Address);
