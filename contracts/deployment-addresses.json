@@ -1,17 +1,17 @@
 {
   "network": "mainnet",
-  "timestamp": "2025-11-28T14:58:13.227Z",
+  "timestamp": "2025-11-28T15:57:31.723Z",
   "addresses": {
-    "mockUsdt": "0x3c229B6909d7c996681145fbd0997FC04198999a",
-    "liptToken": "0x6C7bAdcfd2d9656f92EBB5dA6c08730f13102050",
-    "protocolController": "0x4C3ee4b4196FB76a6e8F6Db3959Ee12C83891f01",
-    "taxHandler": "0x0fF858E01f346Ae81C70AE8438D90F626d5D92bd",
-    "swapPool": "0x5B8Ce4C3C5afc9b4A7F9D07dAD621C3F7a5e3D07",
-    "stakingPool": "0x7353BeCC510B4a2f639C49c03F6283Eae41f437B",
-    "miningPool": "0x12273ef4eB443ba9573E9692Fa5729B09c9735b2",
-    "referralProgram": "0xe8e686694b68Badb5bA11E1D2cf0CDab3019286b",
-    "wheelOfFortune": "0x57e3ff7B35579eF06464a8A66Fa237A8c8405da1",
-    "rocketGame": "0x936193E48640b730aB493C457Bd1ac8954E33dd2",
-    "lottery": "0x1C82699BD520F977A1345ba00183FD329D1b06C3"
+    "mockUsdt": "0x36a56e4Ee8bA64D1a489C1FE3291d7BbF5F70066",
+    "liptToken": "0xC2D56dCe89b6cD0015B9f7D915Bc08ce1164b789",
+    "protocolController": "0x19aeB4f157cb96B70E1e07Db98c5E3503c932C02",
+    "taxHandler": "0x3EBa2B8ab8d6235448Bd0cABCD630944279A01D2",
+    "swapPool": "0xB45a9cC6eA4ec799cc045231c630778BF019DBbF",
+    "stakingPool": "0xc30A0590cd68795C5D340d3cc8fF09d8d6C80602",
+    "miningPool": "0x73B902f9Fcadc12C0016d5779f17bCbBCADcb81F",
+    "referralProgram": "0x18a11366a8f6B906976aBb60FdF7970cbBbaBeBE",
+    "wheelOfFortune": "0x87aAc4Bb8D0d0B1349C1793bC3EA53c43839B135",
+    "rocketGame": "0xB7198062d9ae200dA5cBc68a1eF6Ea39cef5eb22",
+    "lottery": "0x9883Ef2e6405c2aEabc260e8A2dCEd73A413aACC"
   }
 }
