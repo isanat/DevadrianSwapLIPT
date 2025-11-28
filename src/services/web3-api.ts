@@ -1235,6 +1235,7 @@ export async function mintLIPT(userAddress: Address, toAddress: Address, amount:
 
 /**
  * Verificar se um endereço é owner de um contrato
+ * Verifica tanto o owner direto quanto via ProtocolController (se o contrato foi transferido)
  */
 export async function checkContractOwner(contractAddress: Address, userAddress: Address): Promise<boolean> {
   const { publicClient } = getClients();
@@ -1263,7 +1264,47 @@ export async function checkContractOwner(contractAddress: Address, userAddress: 
     });
 
     const owner = await contract.read.owner();
-    return owner.toLowerCase() === userAddress.toLowerCase();
+    const PROTOCOL_CONTROLLER_ADDRESS = CONTRACT_ADDRESSES.protocolController as Address;
+    
+    // Se o owner direto é o usuário, retornar true
+    if (owner.toLowerCase() === userAddress.toLowerCase()) {
+      console.log(`checkContractOwner: ${contractAddress} - Owner direto encontrado`);
+      return true;
+    }
+    
+    // Se o owner do contrato é o ProtocolController, verificar se o usuário é owner do ProtocolController
+    if (owner.toLowerCase() === PROTOCOL_CONTROLLER_ADDRESS.toLowerCase()) {
+      try {
+        const protocolControllerContract = getContract({
+          address: PROTOCOL_CONTROLLER_ADDRESS,
+          abi: CONTRACT_ABIS.protocolController,
+          client: publicClient,
+        });
+
+        const protocolControllerOwner = await protocolControllerContract.read.owner();
+        const isOwner = protocolControllerOwner.toLowerCase() === userAddress.toLowerCase();
+        
+        console.log(`checkContractOwner: ${contractAddress} - Verificado via ProtocolController`, {
+          contractOwner: owner,
+          protocolControllerOwner: protocolControllerOwner,
+          userAddress,
+          isOwner,
+        });
+        
+        return isOwner;
+      } catch (error) {
+        console.error('Error checking ProtocolController owner:', error);
+        return false;
+      }
+    }
+    
+    // Owner não é o usuário nem o ProtocolController
+    console.log(`checkContractOwner: ${contractAddress} - Usuário não é owner`, {
+      contractOwner: owner,
+      userAddress,
+    });
+    
+    return false;
   } catch (error) {
     console.error('Error checking contract owner:', error);
     return false;
