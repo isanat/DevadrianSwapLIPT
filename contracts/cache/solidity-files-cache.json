@@ -962,53 +962,6 @@
       "artifacts": [
         "MockUSDT"
       ]
-    },
-    "C:\\Users\\morei\\Desktop\\DevadrianSwapLIPT\\contracts\\contracts\\ProtocolControllerV2.sol": {
-      "lastModificationDate": 1764298804555,
-      "contentHash": "9f93281f7c76831993bf585b9d3ae160",
-      "sourceName": "contracts/ProtocolControllerV2.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "@openzeppelin/contracts/utils/Pausable.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.24"
-      ],
-      "artifacts": [
-        "ILIPTToken",
-        "ILottery",
-        "IMiningPool",
-        "IReferralProgram",
-        "IRocketGame",
-        "IStakingPool",
-        "ISwapPool",
-        "IWheelOfFortune",
-        "ProtocolControllerV2"
-      ]
     }
   }
 }
