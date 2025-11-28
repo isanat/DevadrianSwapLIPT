@@ -77,7 +77,11 @@ async function deployWithTimeout(contractFactory, constructorArgs, contractName,
     }
     
     log(`   ⚠️  Ainda aguardando mineração. Continuando...`, 'yellow');
-    log(`   💡 A transação está pendente. Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    if (txHash) {
+      log(`   💡 A transação está pendente. Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    } else {
+      log(`   💡 Transação pendente. Verifique o endereço: ${address}`, 'cyan');
+    }
     
     return address;
   }
