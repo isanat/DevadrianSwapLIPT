@@ -258,6 +258,15 @@ async function main() {
     
     // 12.3. Transferir Ownership para ProtocolController
     log("   Transferindo ownership dos contratos para ProtocolController...", 'yellow');
+    const liptToken = await LIPTToken.attach(liptTokenAddress);
+    const swapPool = await DevAdrianSwapPool.attach(swapPoolAddress);
+    const stakingPool = await StakingPool.attach(stakingPoolAddress);
+    const miningPool = await MiningPool.attach(miningPoolAddress);
+    const referralProgram = await ReferralProgram.attach(referralProgramAddress);
+    const wheelOfFortune = await WheelOfFortune.attach(wheelOfFortuneAddress);
+    const rocketGame = await RocketGame.attach(rocketGameAddress);
+    const lottery = await Lottery.attach(lotteryAddress);
+    
     const tx10 = await liptToken.transferOwnership(protocolControllerAddress);
     await waitForConfirmations(tx10.hash);
     const tx11 = await swapPool.transferOwnership(protocolControllerAddress);
