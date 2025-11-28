@@ -131,7 +131,6 @@ async function main() {
     const initialSupply = hre.ethers.parseUnits("1000000000", 18); // 1 bilhão
     const mockUSDTAddress = await deployWithTimeout(MockUSDT, [initialSupply], 'MockUSDT');
     deploymentAddresses.mockUsdt = mockUSDTAddress;
-    const mockUSDT = await MockUSDT.attach(mockUSDTAddress);
     
     // ============================================================================
     // 2. DEPLOY LIPT TOKEN
@@ -149,7 +148,6 @@ async function main() {
     const ProtocolController = await hre.ethers.getContractFactory("ProtocolController");
     const protocolControllerAddress = await deployWithTimeout(ProtocolController, [], 'ProtocolController');
     deploymentAddresses.protocolController = protocolControllerAddress;
-    const protocolController = await ProtocolController.attach(protocolControllerAddress);
     
     // ============================================================================
     // 4. DEPLOY TAX HANDLER
@@ -158,7 +156,6 @@ async function main() {
     const TaxHandler = await hre.ethers.getContractFactory("TaxHandler");
     const taxHandlerAddress = await deployWithTimeout(TaxHandler, [liptTokenAddress], 'TaxHandler');
     deploymentAddresses.taxHandler = taxHandlerAddress;
-    const taxHandler = await TaxHandler.attach(taxHandlerAddress);
     
     // ============================================================================
     // 5. DEPLOY SWAP POOL
@@ -167,7 +164,6 @@ async function main() {
     const DevAdrianSwapPool = await hre.ethers.getContractFactory("DevAdrianSwapPool");
     const swapPoolAddress = await deployWithTimeout(DevAdrianSwapPool, [liptTokenAddress, deploymentAddresses.mockUsdt], 'DevAdrianSwapPool');
     deploymentAddresses.swapPool = swapPoolAddress;
-    const swapPool = await DevAdrianSwapPool.attach(swapPoolAddress);
     
     // ============================================================================
     // 6. DEPLOY STAKING POOL
@@ -176,7 +172,6 @@ async function main() {
     const StakingPool = await hre.ethers.getContractFactory("StakingPool");
     const stakingPoolAddress = await deployWithTimeout(StakingPool, [liptTokenAddress], 'StakingPool');
     deploymentAddresses.stakingPool = stakingPoolAddress;
-    const stakingPool = await StakingPool.attach(stakingPoolAddress);
     
     // ============================================================================
     // 7. DEPLOY MINING POOL
@@ -185,7 +180,6 @@ async function main() {
     const MiningPool = await hre.ethers.getContractFactory("MiningPool");
     const miningPoolAddress = await deployWithTimeout(MiningPool, [liptTokenAddress], 'MiningPool');
     deploymentAddresses.miningPool = miningPoolAddress;
-    const miningPool = await MiningPool.attach(miningPoolAddress);
     
     // ============================================================================
     // 8. DEPLOY REFERRAL PROGRAM
@@ -194,7 +188,6 @@ async function main() {
     const ReferralProgram = await hre.ethers.getContractFactory("ReferralProgram");
     const referralProgramAddress = await deployWithTimeout(ReferralProgram, [liptTokenAddress], 'ReferralProgram');
     deploymentAddresses.referralProgram = referralProgramAddress;
-    const referralProgram = await ReferralProgram.attach(referralProgramAddress);
     
     // ============================================================================
     // 9. DEPLOY WHEEL OF FORTUNE
@@ -203,7 +196,6 @@ async function main() {
     const WheelOfFortune = await hre.ethers.getContractFactory("WheelOfFortune");
     const wheelOfFortuneAddress = await deployWithTimeout(WheelOfFortune, [liptTokenAddress], 'WheelOfFortune');
     deploymentAddresses.wheelOfFortune = wheelOfFortuneAddress;
-    const wheelOfFortune = await WheelOfFortune.attach(wheelOfFortuneAddress);
     
     // ============================================================================
     // 10. DEPLOY ROCKET GAME
@@ -212,7 +204,6 @@ async function main() {
     const RocketGame = await hre.ethers.getContractFactory("RocketGame");
     const rocketGameAddress = await deployWithTimeout(RocketGame, [liptTokenAddress], 'RocketGame');
     deploymentAddresses.rocketGame = rocketGameAddress;
-    const rocketGame = await RocketGame.attach(rocketGameAddress);
     
     // ============================================================================
     // 11. DEPLOY LOTTERY
@@ -221,7 +212,6 @@ async function main() {
     const Lottery = await hre.ethers.getContractFactory("Lottery");
     const lotteryAddress = await deployWithTimeout(Lottery, [liptTokenAddress], 'Lottery');
     deploymentAddresses.lottery = lotteryAddress;
-    const lottery = await Lottery.attach(lotteryAddress);
     
     // ============================================================================
     // 12. CONFIGURAÇÃO PÓS-DEPLOY
@@ -230,7 +220,8 @@ async function main() {
     
     // 12.1. Configurar ProtocolController
     log("   Configurando ProtocolController com endereços...", 'yellow');
-    const protocolController = await ProtocolController.attach(protocolControllerAddress);
+    const ProtocolControllerFactory = await hre.ethers.getContractFactory("ProtocolController");
+    const protocolController = await ProtocolControllerFactory.attach(protocolControllerAddress);
     const tx1 = await protocolController.setLiptToken(liptTokenAddress);
     await waitForConfirmations(tx1.hash);
     const tx2 = await protocolController.setSwapPool(swapPoolAddress);
