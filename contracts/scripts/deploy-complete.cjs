@@ -62,7 +62,7 @@ async function waitForConfirmations(txHash, confirmations = 1) {
   }
 }
 
-async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 120000) {
+async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 30000) {
   log(`   Deployando ${contractName}...`, 'yellow');
   const deployTx = await contractFactory.deploy(...constructorArgs);
   const txHash = await deployTx.deploymentTransaction()?.hash;
@@ -70,27 +70,25 @@ async function deployWithTimeout(contractFactory, constructorArgs, contractName,
   if (txHash) {
     log(`   🔗 Ver: https://polygonscan.com/tx/${txHash}`, 'cyan');
   }
-  log(`   ⏳ Aguardando confirmação (máximo ${timeout/1000}s)...`, 'yellow');
   
+  // Tentar obter endereço imediatamente (pode funcionar antes da confirmação)
   try {
-    await deployTx.waitForDeployment({ timeout });
     const address = await deployTx.getAddress();
-    log(`   ✅ ${contractName} confirmado em: ${address}`, 'green');
-    return address;
-  } catch (error) {
-    log(`   ⚠️  Timeout aguardando confirmação de ${contractName}.`, 'yellow');
-    if (txHash) {
-      log(`   🔗 Verifique: https://polygonscan.com/tx/${txHash}`, 'cyan');
-    }
-    // Tentar obter endereço mesmo assim
+    log(`   ✅ ${contractName} será deployado em: ${address}`, 'green');
+    log(`   ⏳ Aguardando confirmação rápida (${timeout/1000}s)...`, 'yellow');
+    
+    // Aguardar apenas um tempo curto
     try {
-      const address = await deployTx.getAddress();
-      log(`   ✅ Endereço obtido: ${address}`, 'green');
-      return address;
-    } catch (e) {
-      log(`   ❌ Não foi possível obter endereço. Erro: ${e.message}`, 'red');
-      throw new Error(`${contractName} deployment failed. Check: https://polygonscan.com/tx/${txHash || 'N/A'}`);
+      await deployTx.waitForDeployment({ timeout });
+      log(`   ✅ ${contractName} confirmado!`, 'green');
+    } catch (waitError) {
+      log(`   ⚠️  Aguardando confirmação em background. Continue acompanhando no Polygonscan.`, 'yellow');
     }
+    return address;
+  } catch (e) {
+    log(`   ⚠️  Não foi possível obter endereço ainda. Verifique no Polygonscan: https://polygonscan.com/tx/${txHash}`, 'yellow');
+    log(`   ⏭️  Continuando... A transação está pendente na blockchain.`, 'yellow');
+    throw new Error(`${contractName} - Transação enviada mas endereço não disponível. Hash: ${txHash}`);
   }
 }
 
