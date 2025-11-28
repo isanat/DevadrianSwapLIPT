@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 echo Executando deploy completo...
 echo.
 set HARDHAT_DISABLE_TELEMETRY=1
