@@ -62,34 +62,26 @@ async function waitForConfirmations(txHash, confirmations = 1) {
   }
 }
 
-async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 30000) {
+async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 60000) {
   log(`   Deployando ${contractName}...`, 'yellow');
   const deployTx = await contractFactory.deploy(...constructorArgs);
+  
+  // Obter endereço IMEDIATAMENTE (calculado antes da confirmação)
+  const address = await deployTx.getAddress();
+  log(`   ✅ ${contractName} será deployado em: ${address}`, 'green');
+  
   const txHash = await deployTx.deploymentTransaction()?.hash;
-  log(`   ✅ Transação enviada! Hash: ${txHash || 'pending'}`, 'green');
   if (txHash) {
+    log(`   ✅ Transação enviada! Hash: ${txHash}`, 'green');
     log(`   🔗 Ver: https://polygonscan.com/tx/${txHash}`, 'cyan');
   }
   
-  // Tentar obter endereço imediatamente (pode funcionar antes da confirmação)
-  try {
-    const address = await deployTx.getAddress();
-    log(`   ✅ ${contractName} será deployado em: ${address}`, 'green');
-    log(`   ⏳ Aguardando confirmação rápida (${timeout/1000}s)...`, 'yellow');
-    
-    // Aguardar apenas um tempo curto
-    try {
-      await deployTx.waitForDeployment({ timeout });
-      log(`   ✅ ${contractName} confirmado!`, 'green');
-    } catch (waitError) {
-      log(`   ⚠️  Aguardando confirmação em background. Continue acompanhando no Polygonscan.`, 'yellow');
-    }
-    return address;
-  } catch (e) {
-    log(`   ⚠️  Não foi possível obter endereço ainda. Verifique no Polygonscan: https://polygonscan.com/tx/${txHash}`, 'yellow');
-    log(`   ⏭️  Continuando... A transação está pendente na blockchain.`, 'yellow');
-    throw new Error(`${contractName} - Transação enviada mas endereço não disponível. Hash: ${txHash}`);
-  }
+  // NÃO aguardar confirmação - apenas enviar e continuar
+  log(`   ⏭️  Continuando... Confirmação acontecerá na blockchain.`, 'yellow');
+  log(`   💡 Você pode acompanhar no Polygonscan.`, 'cyan');
+  
+  // Retornar endereço imediatamente (NÃO espera confirmação)
+  return address;
 }
 
 async function saveDeploymentAddresses(addresses) {

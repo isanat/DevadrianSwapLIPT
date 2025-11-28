@@ -1,0 +1,17 @@
+{
+  "network": "mainnet",
+  "timestamp": "2025-11-28T14:58:13.227Z",
+  "addresses": {
+    "mockUsdt": "0x3c229B6909d7c996681145fbd0997FC04198999a",
+    "liptToken": "0x6C7bAdcfd2d9656f92EBB5dA6c08730f13102050",
+    "protocolController": "0x4C3ee4b4196FB76a6e8F6Db3959Ee12C83891f01",
+    "taxHandler": "0x0fF858E01f346Ae81C70AE8438D90F626d5D92bd",
+    "swapPool": "0x5B8Ce4C3C5afc9b4A7F9D07dAD621C3F7a5e3D07",
+    "stakingPool": "0x7353BeCC510B4a2f639C49c03F6283Eae41f437B",
+    "miningPool": "0x12273ef4eB443ba9573E9692Fa5729B09c9735b2",
+    "referralProgram": "0xe8e686694b68Badb5bA11E1D2cf0CDab3019286b",
+    "wheelOfFortune": "0x57e3ff7B35579eF06464a8A66Fa237A8c8405da1",
+    "rocketGame": "0x936193E48640b730aB493C457Bd1ac8954E33dd2",
+    "lottery": "0x1C82699BD520F977A1345ba00183FD329D1b06C3"
+  }
+}
