@@ -185,12 +185,35 @@ export function StakingPool() {
     if(walletData && amount > 0 && amount <= walletData.liptBalance) {
       setIsStaking(true);
       try {
-        const result = await stakeLipt(userAddress!, amount, selectedPlan);
-        // Aguardar um pouco para garantir que o contrato atualizou antes de buscar dados
-        // Se já aguardou na função stakeLipt, não precisa aguardar novamente
+        // A função stakeLipt já aguarda confirmação, mas precisamos passar o planIndex correto
+        const { getStakingPlans, getTokenDecimals } = await import('@/services/web3-api');
+        const { CONTRACT_ADDRESSES } = await import('@/config/contracts');
+        
+        // Buscar planos do contrato para encontrar o planIndex correto
+        const plans = await getStakingPlans();
+        if (!plans || plans.length === 0) {
+          throw new Error('Nenhum plano de staking disponível no contrato. Por favor, contate o administrador.');
+        }
+        
+        const planIndex = plans.findIndex(p => 
+          Math.abs(p.duration - selectedPlan.duration) < 0.01 && 
+          Math.abs(p.apy - selectedPlan.apy) < 0.01
+        );
+        
+        if (planIndex === -1) {
+          throw new Error('Plano de staking não encontrado. Por favor, recarregue a página e tente novamente.');
+        }
+        
+        const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
+        const amountBigInt = BigInt(Math.floor(amount * (10 ** liptDecimals)));
+        
+        const hash = await stakeLipt(userAddress!, amountBigInt, planIndex);
+        
+        // A função stakeLipt já aguarda confirmação, mas adicionar um pequeno delay
+        // para garantir que o estado do contrato foi atualizado
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Atualizar dados do cache
+        // Atualizar dados do cache após confirmação
         await Promise.all([
           mutate(['staking', userAddress]),
           mutate(['wallet', userAddress])
@@ -202,6 +225,7 @@ export function StakingPool() {
         });
         setStakeAmount('');
       } catch (error: any) {
+        console.error('Error staking LIPT:', error);
         toast({ variant: 'destructive', title: t('errors.generic'), description: error.message || t('errors.genericDescription') });
       } finally {
         setIsStaking(false);

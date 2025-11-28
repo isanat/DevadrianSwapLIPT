@@ -157,11 +157,26 @@ export function MiningPool() {
       }
       
       // Encontrar planId do selectedPlan nos planos do contrato
-      const planId = contractPlans.findIndex(p => 
-        Math.abs(p.cost - selectedPlan.cost) < 0.01 && // Comparar custos (com tolerância para erros de float)
-        Math.abs(p.power - selectedPlan.power) < 0.01 && // Comparar power
-        Math.abs(p.duration - selectedPlan.duration) < 0.01 // Comparar duration
-      );
+      // Usar tolerância relativa para power (1% ou mínimo 0.0000001) para valores muito pequenos
+      const planId = contractPlans.findIndex(p => {
+        const costDiff = Math.abs(p.cost - selectedPlan.cost);
+        const powerDiff = Math.abs(p.power - selectedPlan.power);
+        const durationDiff = Math.abs(p.duration - selectedPlan.duration);
+        
+        // Tolerância absoluta para cost e duration (0.01 é razoável)
+        const costMatch = costDiff < 0.01;
+        const durationMatch = durationDiff < 0.01;
+        
+        // Tolerância relativa para power: 1% do valor ou 0.0000001, o que for maior
+        // Isso funciona tanto para valores grandes quanto pequenos
+        const powerTolerance = Math.max(
+          Math.abs(selectedPlan.power) * 0.01, // 1% do valor
+          0.0000001 // Mínimo absoluto para valores muito pequenos
+        );
+        const powerMatch = powerDiff < powerTolerance;
+        
+        return costMatch && powerMatch && durationMatch;
+      });
       
       if (planId === -1) {
         toast({ variant: 'destructive', title: t('errors.generic'), description: 'Plano não encontrado. Por favor, selecione um plano válido.' });

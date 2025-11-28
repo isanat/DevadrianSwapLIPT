@@ -50,9 +50,18 @@ export function TokenPurchase() {
         try {
             // Passar cost (USDT amount) ao invés de amountToBuy (LIPT amount)
             // O contrato faz swap de USDT -> LIPT, então precisa do valor em USDT
-            await purchaseLipt(userAddress!, cost);
-            mutate('wallet'); // Re-fetch wallet data
-            mutate(['stats', userAddress]); // Re-fetch stats para atualizar preço
+            const hash = await purchaseLipt(userAddress!, cost);
+            
+            // A função purchaseLipt já aguarda confirmação, mas adicionar um pequeno delay
+            // para garantir que o estado do contrato foi atualizado
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Atualizar dados do cache após confirmação
+            await Promise.all([
+              mutate(['wallet', userAddress]),
+              mutate(['stats', userAddress])
+            ]);
+            
             toast({
                 title: t('tokenPurchase.toast.success.title'),
                 description: t('tokenPurchase.toast.success.description', { amount: amountToBuy.toFixed(2) }),
@@ -60,6 +69,7 @@ export function TokenPurchase() {
             setLiptAmount('');
             setUsdtAmount('');
         } catch (error: any) {
+            console.error('Error purchasing LIPT:', error);
             toast({ 
                 variant: 'destructive', 
                 title: t('errors.generic'), 

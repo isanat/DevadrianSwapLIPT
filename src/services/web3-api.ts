@@ -130,7 +130,7 @@ export async function getMiningPlans() {
     return plans.map((plan: any, index: number) => ({
       name: `Plan ${index + 1}`, // O contrato não tem name, gerar baseado no índice
       cost: Number(plan.cost) / 10 ** liptDecimals, // Converter de wei para tokens
-      power: Number(plan.power) / 10 ** 18, // Power geralmente em 18 decimais (tokens por segundo)
+      power: Number(plan.power) / 10 ** liptDecimals, // Power usa os mesmos decimais do token
       duration: Number(plan.duration) / (24 * 60 * 60), // Converter segundos para dias
     }));
   } catch (error) {
@@ -559,7 +559,7 @@ export async function getWheelSegments() {
 
 export async function stakeLipt(userAddress: Address, amount: bigint, planId: number) {
   const { publicClient, walletClient } = getClients();
-  if (!walletClient) throw new Error('Wallet not connected');
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
 
   const liptContract = getContract({
     address: LIPT_ADDRESS,
@@ -573,13 +573,21 @@ export async function stakeLipt(userAddress: Address, amount: bigint, planId: nu
     client: { public: publicClient, wallet: walletClient },
   });
 
-  // 1. Aprovar
-  const { request: approveRequest } = await liptContract.simulate.approve([STAKING_ADDRESS, amount], { account: userAddress });
-  const approveHash = await walletClient.writeContract(approveRequest);
+  // Verificar allowance atual
+  const currentAllowance = await liptContract.read.allowance([userAddress, STAKING_ADDRESS]);
   
-  // Aguardar confirmação do approve
-  if (publicClient) {
+  // 1. Aprovar se necessário (adicionar 10% de margem)
+  if (currentAllowance < amount) {
+    const approveAmount = amount + (amount * BigInt(10) / BigInt(100)); // +10% margem
+    console.log(`Aprovando LIPT para staking: ${approveAmount.toString()} (necessário: ${amount.toString()}, atual: ${currentAllowance.toString()})`);
+    const { request: approveRequest } = await liptContract.simulate.approve([STAKING_ADDRESS, approveAmount], { account: userAddress });
+    const approveHash = await walletClient.writeContract(approveRequest);
+    console.log(`LIPT approved for staking, hash: ${approveHash}`);
+    
+    // Aguardar confirmação do approve
     await publicClient.waitForTransactionReceipt({ hash: approveHash });
+  } else {
+    console.log(`LIPT já tem allowance suficiente para staking: ${currentAllowance.toString()}`);
   }
 
   // 2. Stake
@@ -587,9 +595,7 @@ export async function stakeLipt(userAddress: Address, amount: bigint, planId: nu
   const hash = await walletClient.writeContract(stakeRequest);
   
   // Aguardar confirmação do stake para garantir que foi gravado no contrato
-  if (publicClient) {
-    await publicClient.waitForTransactionReceipt({ hash });
-  }
+  await publicClient.waitForTransactionReceipt({ hash });
   
   return hash;
 }
@@ -611,7 +617,7 @@ export async function unstakeLipt(userAddress: Address, stakeId: number) {
 
 export async function purchaseLipt(userAddress: Address, usdtAmount: bigint) {
   const { publicClient, walletClient } = getClients();
-  if (!walletClient) throw new Error('Wallet not connected');
+  if (!walletClient || !publicClient) throw new Error('Wallet not connected');
 
   const usdtContract = getContract({
     address: USDT_ADDRESS,
@@ -625,14 +631,31 @@ export async function purchaseLipt(userAddress: Address, usdtAmount: bigint) {
     client: { public: publicClient, wallet: walletClient },
   });
 
-  // 1. Aprovar
-  const { request: approveRequest } = await usdtContract.simulate.approve([SWAP_ADDRESS, usdtAmount], { account: userAddress });
-  await walletClient.writeContract(approveRequest);
+  // Verificar allowance atual
+  const currentAllowance = await usdtContract.read.allowance([userAddress, SWAP_ADDRESS]);
+  
+  // 1. Aprovar se necessário (adicionar 10% de margem)
+  if (currentAllowance < usdtAmount) {
+    const approveAmount = usdtAmount + (usdtAmount * BigInt(10) / BigInt(100)); // +10% margem
+    console.log(`Aprovando USDT: ${approveAmount.toString()} (necessário: ${usdtAmount.toString()}, atual: ${currentAllowance.toString()})`);
+    const { request: approveRequest } = await usdtContract.simulate.approve([SWAP_ADDRESS, approveAmount], { account: userAddress });
+    const approveHash = await walletClient.writeContract(approveRequest);
+    console.log(`USDT approved, hash: ${approveHash}`);
+    
+    // Aguardar confirmação do approve antes de fazer o swap
+    await publicClient.waitForTransactionReceipt({ hash: approveHash });
+  } else {
+    console.log(`USDT já tem allowance suficiente: ${currentAllowance.toString()}`);
+  }
 
   // 2. Swap
   const { request: swapRequest } = await swapContract.simulate.swap([USDT_ADDRESS, usdtAmount], { account: userAddress });
-  const hash = await walletClient.writeContract(swapRequest);
-  return hash;
+  const swapHash = await walletClient.writeContract(swapRequest);
+  
+  // Aguardar confirmação do swap antes de retornar
+  await publicClient.waitForTransactionReceipt({ hash: swapHash });
+  
+  return swapHash;
 }
 
 // --- FUNÇÕES DE AÇÃO (MUTATIONS) - CONTINUAÇÃO ---
@@ -1529,9 +1552,9 @@ export async function addMiningPlan(userAddress: Address, cost: number, power: n
   // Buscar decimais do LIPT para converter corretamente
   const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
   
-  // Converter cost e power para wei
+  // Converter cost e power para wei usando os mesmos decimais do token
   const costWei = BigInt(Math.floor(cost * (10 ** liptDecimals)));
-  const powerWeiPerSecond = BigInt(Math.floor(power * (10 ** 18))); // Power em tokens por segundo, usar 18 decimais
+  const powerWeiPerSecond = BigInt(Math.floor(power * (10 ** liptDecimals))); // Power usa os mesmos decimais do token
   
   // Converter dias para segundos
   const durationSeconds = BigInt(durationDays * 24 * 60 * 60);
@@ -1568,9 +1591,9 @@ export async function modifyMiningPlan(
   // Buscar decimais do LIPT para converter corretamente
   const liptDecimals = await getTokenDecimals(LIPT_ADDRESS);
   
-  // Converter cost e power para wei
+  // Converter cost e power para wei usando os mesmos decimais do token
   const costWei = BigInt(Math.floor(cost * (10 ** liptDecimals)));
-  const powerWeiPerSecond = BigInt(Math.floor(power * (10 ** 18)));
+  const powerWeiPerSecond = BigInt(Math.floor(power * (10 ** liptDecimals))); // Power usa os mesmos decimais do token
   
   // Converter dias para segundos
   const durationSeconds = BigInt(durationDays * 24 * 60 * 60);
