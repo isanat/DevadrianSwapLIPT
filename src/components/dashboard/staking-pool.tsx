@@ -185,29 +185,13 @@ export function StakingPool() {
     if(walletData && amount > 0 && amount <= walletData.liptBalance) {
       setIsStaking(true);
       try {
-        // A função stakeLipt já aguarda confirmação, mas precisamos passar o planIndex correto
-        const { getStakingPlans, getTokenDecimals } = await import('@/services/web3-api');
-        const { CONTRACT_ADDRESSES } = await import('@/config/contracts');
-        
-        // Buscar planos do contrato para encontrar o planIndex correto
-        const plans = await getStakingPlans();
-        if (!plans || plans.length === 0) {
-          throw new Error('Nenhum plano de staking disponível no contrato. Por favor, contate o administrador.');
-        }
-        
-        const planIndex = plans.findIndex(p => 
-          Math.abs(p.duration - selectedPlan.duration) < 0.01 && 
-          Math.abs(p.apy - selectedPlan.apy) < 0.01
-        );
-        
-        if (planIndex === -1) {
-          throw new Error('Plano de staking não encontrado. Por favor, recarregue a página e tente novamente.');
-        }
-        
-        const liptDecimals = await getTokenDecimals(CONTRACT_ADDRESSES.liptToken as any);
-        const amountBigInt = BigInt(Math.floor(amount * (10 ** liptDecimals)));
-        
-        const hash = await stakeLipt(userAddress!, amountBigInt, planIndex);
+        // A função stakeLipt do mock-api já faz toda a lógica:
+        // - Busca planos do contrato
+        // - Encontra o planIndex correto
+        // - Converte amount para bigint
+        // - Chama web3StakeLipt com os argumentos corretos
+        // Passamos apenas: userAddress, amount (number), e selectedPlan (objeto)
+        await stakeLipt(userAddress!, amount, selectedPlan);
         
         // A função stakeLipt já aguarda confirmação, mas adicionar um pequeno delay
         // para garantir que o estado do contrato foi atualizado

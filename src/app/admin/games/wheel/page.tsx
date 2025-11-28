@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { Save, Trash2, Plus, Loader2 } from 'lucide-react';
-import { getWheelSegments, setWheelSegments } from '@/services/web3-api';
+import { getWheelSegments, setWheelSegments, checkContractOwner } from '@/services/web3-api';
+import { CONTRACT_ADDRESSES } from '@/config/contracts';
 import { useAccount } from 'wagmi';
 import { useToast } from '@/hooks/use-toast';
 import useSWR, { useSWRConfig } from 'swr';
@@ -82,6 +83,27 @@ export default function AdminWheelPage() {
 
         if (segments.length === 0) {
             toast({ variant: 'destructive', title: 'Erro', description: 'Adicione pelo menos um segmento.' });
+            return;
+        }
+
+        // Verificar se o usuário é owner do contrato WheelOfFortune
+        try {
+            const isOwner = await checkContractOwner(CONTRACT_ADDRESSES.wheelOfFortune as Address, userAddress as Address);
+            if (!isOwner) {
+                toast({ 
+                    variant: 'destructive', 
+                    title: 'Acesso Negado', 
+                    description: 'Apenas o owner do contrato WheelOfFortune pode configurar segmentos. Conecte a carteira do owner.' 
+                });
+                return;
+            }
+        } catch (error: any) {
+            console.error('Error checking owner:', error);
+            toast({ 
+                variant: 'destructive', 
+                title: 'Erro', 
+                description: 'Não foi possível verificar se você é owner do contrato.' 
+            });
             return;
         }
 

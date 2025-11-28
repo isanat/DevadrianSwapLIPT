@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import useSWR, { useSWRConfig } from 'swr';
 import { getStakingData, Stake } from '@/services/mock-api';
-import { getStakingPlans, addStakingPlan, modifyStakingPlan } from '@/services/web3-api';
+import { getStakingPlans, addStakingPlan, modifyStakingPlan, checkContractOwner } from '@/services/web3-api';
+import { CONTRACT_ADDRESSES } from '@/config/contracts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
@@ -115,6 +116,27 @@ export default function AdminStakingPage() {
 
         if (!editingPlan.plan.duration || !editingPlan.plan.apy) {
             toast({ variant: 'destructive', title: 'Erro', description: 'Preencha todos os campos.' });
+            return;
+        }
+
+        // Verificar se o usuário é owner do contrato StakingPool
+        try {
+            const isOwner = await checkContractOwner(CONTRACT_ADDRESSES.stakingPool as Address, userAddress as Address);
+            if (!isOwner) {
+                toast({ 
+                    variant: 'destructive', 
+                    title: 'Acesso Negado', 
+                    description: 'Apenas o owner do contrato StakingPool pode criar ou modificar planos. Conecte a carteira do owner.' 
+                });
+                return;
+            }
+        } catch (error: any) {
+            console.error('Error checking owner:', error);
+            toast({ 
+                variant: 'destructive', 
+                title: 'Erro', 
+                description: 'Não foi possível verificar se você é owner do contrato.' 
+            });
             return;
         }
 

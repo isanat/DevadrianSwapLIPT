@@ -8,7 +8,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Save, Trash2, Edit, X, Loader2 } from 'lucide-react';
 import useSWR, { useSWRConfig } from 'swr';
 import { getMiningData, Miner } from '@/services/mock-api';
-import { getMiningPlans, addMiningPlan, modifyMiningPlan } from '@/services/web3-api';
+import { getMiningPlans, addMiningPlan, modifyMiningPlan, checkContractOwner } from '@/services/web3-api';
+import { CONTRACT_ADDRESSES } from '@/config/contracts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAccount } from 'wagmi';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +64,27 @@ export default function AdminMiningPage() {
 
         if (!editingPlan.plan.cost || !editingPlan.plan.power || !editingPlan.plan.duration) {
             toast({ variant: 'destructive', title: 'Erro', description: 'Preencha todos os campos.' });
+            return;
+        }
+
+        // Verificar se o usuário é owner do contrato MiningPool
+        try {
+            const isOwner = await checkContractOwner(CONTRACT_ADDRESSES.miningPool as Address, userAddress as Address);
+            if (!isOwner) {
+                toast({ 
+                    variant: 'destructive', 
+                    title: 'Acesso Negado', 
+                    description: 'Apenas o owner do contrato MiningPool pode criar ou modificar planos. Conecte a carteira do owner.' 
+                });
+                return;
+            }
+        } catch (error: any) {
+            console.error('Error checking owner:', error);
+            toast({ 
+                variant: 'destructive', 
+                title: 'Erro', 
+                description: 'Não foi possível verificar se você é owner do contrato.' 
+            });
             return;
         }
 
