@@ -62,11 +62,22 @@ async function waitForConfirmations(txHash, confirmations = 1) {
   }
 }
 
-async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 60000) {
+async function waitForContractCode(address, maxRetries = 30, delay = 2000) {
+  for (let i = 0; i < maxRetries; i++) {
+    const code = await hre.ethers.provider.getCode(address);
+    if (code && code !== "0x") {
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  return false;
+}
+
+async function deployWithTimeout(contractFactory, constructorArgs, contractName, timeout = 120000) {
   log(`   Deployando ${contractName}...`, 'yellow');
   const deployTx = await contractFactory.deploy(...constructorArgs);
   
-  // Obter endereço IMEDIATAMENTE (calculado antes da confirmação)
+  // Obter endereço (calculado antes da confirmação)
   const address = await deployTx.getAddress();
   log(`   ✅ ${contractName} será deployado em: ${address}`, 'green');
   
@@ -76,12 +87,27 @@ async function deployWithTimeout(contractFactory, constructorArgs, contractName,
     log(`   🔗 Ver: https://polygonscan.com/tx/${txHash}`, 'cyan');
   }
   
-  // NÃO aguardar confirmação - apenas enviar e continuar
-  log(`   ⏭️  Continuando... Confirmação acontecerá na blockchain.`, 'yellow');
-  log(`   💡 Você pode acompanhar no Polygonscan.`, 'cyan');
+  // AGUARDAR confirmação do deploy (necessário para usar o contrato depois)
+  log(`   ⏳ Aguardando confirmação do deploy (timeout ${timeout/1000}s)...`, 'yellow');
   
-  // Retornar endereço imediatamente (NÃO espera confirmação)
-  return address;
+  try {
+    await deployTx.waitForDeployment({ timeout });
+    log(`   ✅ ${contractName} deployado e confirmado!`, 'green');
+    return address;
+  } catch (error) {
+    log(`   ⚠️  Timeout aguardando confirmação. Verificando se contrato existe...`, 'yellow');
+    
+    // Tentar verificar se o código já foi minerado
+    const codeExists = await waitForContractCode(address, 10, 3000);
+    if (codeExists) {
+      log(`   ✅ Código do contrato encontrado em ${address}`, 'green');
+      return address;
+    }
+    
+    log(`   ❌ Contrato ainda não foi minerado. Hash: ${txHash}`, 'red');
+    log(`   🔗 Verifique no Polygonscan: https://polygonscan.com/tx/${txHash}`, 'cyan');
+    throw new Error(`${contractName} deployment not confirmed. Contract code not found at ${address}. Check transaction: ${txHash}`);
+  }
 }
 
 async function saveDeploymentAddresses(addresses) {
@@ -210,6 +236,13 @@ async function main() {
     
     // 12.1. Configurar ProtocolController
     log("   Configurando ProtocolController com endereços...", 'yellow');
+    
+    // Verificar se o contrato existe antes de anexar
+    const protocolControllerCode = await hre.ethers.provider.getCode(protocolControllerAddress);
+    if (!protocolControllerCode || protocolControllerCode === "0x") {
+      throw new Error(`ProtocolController não existe ainda em ${protocolControllerAddress}. Aguarde confirmação do deploy.`);
+    }
+    
     const ProtocolControllerFactory = await hre.ethers.getContractFactory("ProtocolController");
     const protocolController = await ProtocolControllerFactory.attach(protocolControllerAddress);
     const tx1 = await protocolController.setLiptToken(liptTokenAddress);
@@ -232,6 +265,13 @@ async function main() {
     
     // 12.2. Configurar TaxHandler
     log("   Configurando TaxHandler...", 'yellow');
+    
+    // Verificar se o contrato existe antes de anexar
+    const taxHandlerCode = await hre.ethers.provider.getCode(taxHandlerAddress);
+    if (!taxHandlerCode || taxHandlerCode === "0x") {
+      throw new Error(`TaxHandler não existe ainda em ${taxHandlerAddress}. Aguarde confirmação do deploy.`);
+    }
+    
     const taxHandler = await TaxHandler.attach(taxHandlerAddress);
     const tx9 = await taxHandler.setLiquidityPoolAddress(swapPoolAddress);
     await waitForConfirmations(tx9.hash);
@@ -239,6 +279,26 @@ async function main() {
     
     // 12.3. Transferir Ownership para ProtocolController
     log("   Transferindo ownership dos contratos para ProtocolController...", 'yellow');
+    
+    // Verificar se todos os contratos existem antes de anexar
+    const contractsToCheck = [
+      { name: 'LIPTToken', address: liptTokenAddress },
+      { name: 'DevAdrianSwapPool', address: swapPoolAddress },
+      { name: 'StakingPool', address: stakingPoolAddress },
+      { name: 'MiningPool', address: miningPoolAddress },
+      { name: 'ReferralProgram', address: referralProgramAddress },
+      { name: 'WheelOfFortune', address: wheelOfFortuneAddress },
+      { name: 'RocketGame', address: rocketGameAddress },
+      { name: 'Lottery', address: lotteryAddress }
+    ];
+    
+    for (const contract of contractsToCheck) {
+      const code = await hre.ethers.provider.getCode(contract.address);
+      if (!code || code === "0x") {
+        throw new Error(`${contract.name} não existe ainda em ${contract.address}. Aguarde confirmação do deploy.`);
+      }
+    }
+    
     const liptToken = await LIPTToken.attach(liptTokenAddress);
     const swapPool = await DevAdrianSwapPool.attach(swapPoolAddress);
     const stakingPool = await StakingPool.attach(stakingPoolAddress);
