@@ -25,19 +25,19 @@ export const CONTRACT_ABIS = {
 };
 
 const ADDRESSES = {
-  // Endere?os para a rede principal (Polygon Mainnet)
+  // Endereços para a rede principal (Polygon Mainnet)
   mainnet: {
-    liptToken: '0x15F6CAfD1fE68B0BCddecb28a739d14dB38947e6',
-    mockUsdt: '0x47A50422F81327139A4796C7494E7B8725D3EB30',
-    protocolController: '0x5BC8aB3884aFEf2D4c361856Bb24EC286B395263',
-    taxHandler: '0x4D2bEaaBc3C4063319d11F9EB5184a05A3B956B0',
-    swapPool: '0xD22e4AcB94A063e929D0bA0b232475d297EE16c7',
-    stakingPool: '0x5B9F5e752596b7dFE1123EFdb5b86c2B7b86d8D3',
-    miningPool: '0xb56BaAa0f328cf09734862142bF42bA291017a08',
-    referralProgram: '0x839a9B70FCb941Ce6357C95eacd38a617DaDaE5a',
-    wheelOfFortune: '0x71aF40Dab1Eb76B0fAcB6A5eeC6B8F27e48d71be',
-    rocketGame: '0x1a189De97DfDa1B7231B1aD1E6c1c7c6C8E71dC6',
-    lottery: '0x4e67a5c97889863AC0794584f9c6e20F288fF1EA',
+    liptToken: '0xC2D56dCe89b6cD0015B9f7D915Bc08ce1164b789',
+    mockUsdt: '0x36a56e4Ee8bA64D1a489C1FE3291d7BbF5F70066',
+    protocolController: '0x19aeB4f157cb96B70E1e07Db98c5E3503c932C02',
+    taxHandler: '0x3EBa2B8ab8d6235448Bd0cABCD630944279A01D2',
+    swapPool: '0xB45a9cC6eA4ec799cc045231c630778BF019DBbF',
+    stakingPool: '0xc30A0590cd68795C5D340d3cc8fF09d8d6C80602',
+    miningPool: '0x73B902f9Fcadc12C0016d5779f17bCbBCADcb81F',
+    referralProgram: '0x18a11366a8f6B906976aBb60FdF7970cbBbaBeBE',
+    wheelOfFortune: '0x87aAc4Bb8D0d0B1349C1793bC3EA53c43839B135',
+    rocketGame: '0xB7198062d9ae200dA5cBc68a1eF6Ea39cef5eb22',
+    lottery: '0x9883Ef2e6405c2aEabc260e8A2dCEd73A413aACC',
   },
   // Endere?os para a rede de testes (Polygon Amoy)
   amoy: {
