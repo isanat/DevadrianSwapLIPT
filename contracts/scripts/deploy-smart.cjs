@@ -436,8 +436,14 @@ async function main() {
     console.error(error);
     
     if (Object.keys(deploymentAddresses).length > 0) {
-      log('\n💾 Salvando endereços parciais...', 'yellow');
-      await saveDeploymentAddresses(deploymentAddresses);
+      log('\n💾 Tentando salvar endereços parciais...', 'yellow');
+      try {
+        await saveDeploymentAddresses(deploymentAddresses);
+      } catch (saveError) {
+        log(`\n⚠️  Erro ao salvar endereços parciais: ${saveError.message}`, 'yellow');
+        log(`   Os endereços estão na memória mas não foram salvos no arquivo.`, 'yellow');
+        console.error(saveError);
+      }
     }
     
     process.exitCode = 1;
