@@ -27,6 +27,7 @@ const navLinks = [
     { href: '/admin/referrals', label: 'Referrals' },
     { href: '/admin/tokens', label: 'Token Management' },
     { href: '/admin/settings', label: 'Platform Settings' },
+    { href: '/admin/ownership-check', label: 'Ownership Check' },
 ];
 
 const gameLinks = [
