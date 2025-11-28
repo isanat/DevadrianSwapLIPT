@@ -14,11 +14,14 @@ async function checkContract(address, name) {
     const code = await hre.ethers.provider.getCode(address);
     const hasCode = code && code !== "0x";
     
+    // Calcular tamanho em bytes: (tamanho da string - 2 para "0x") / 2 hex chars por byte
+    const codeSize = hasCode ? (code.length - 2) / 2 : 0;
+    
     return {
       name,
       address,
       deployed: hasCode,
-      codeSize: hasCode ? code.length : 0
+      codeSize: codeSize
     };
   } catch (error) {
     return {
