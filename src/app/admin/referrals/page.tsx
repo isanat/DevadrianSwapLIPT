@@ -36,7 +36,10 @@ export default function AdminReferralsPage() {
         setCommissionLevels(newLevels);
     };
 
-    const totalTeamMembers = data?.network.reduce((sum, ref) => sum + ref.members, 0) || 0;
+    const network = Array.isArray(data?.network) ? data.network : [];
+    const totalTeamMembers = network.reduce((sum: number, ref: { members?: number }) => {
+        return sum + (typeof ref?.members === 'number' ? ref.members : 0);
+    }, 0);
 
     const stats = !data ? [] : [
         { name: 'Total Direct Referrals', value: data.totalReferrals, icon: <Users /> },
