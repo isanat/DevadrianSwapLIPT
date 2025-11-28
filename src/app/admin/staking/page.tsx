@@ -406,7 +406,7 @@ export default function AdminStakingPage() {
                                         </TableRow>
                                     ))
                                 ) : stakingData && stakingData.stakes.length > 0 ? (
-                                    stakingData.stakes.map((stake) => <StakingTableRow key={stake.id} stake={stake} />)
+                                    stakingData.stakes.map((stake: Stake) => <StakingTableRow key={stake.id} stake={stake} />)
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center h-24">No active stakes found.</TableCell>
