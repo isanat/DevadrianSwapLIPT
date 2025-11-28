@@ -66,106 +66,117 @@ contract ProtocolController is Ownable, Pausable {
         _unpause();
     }
 
-    // --- INTERFACES PARA OS CONTRATOS FILHOS ---
-    interface IStakingPool {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IMiningPool {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface ILIPTToken {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface ISwapPool {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IWheelOfFortune {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IRocketGame {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface ILottery {
-        function transferOwnership(address newOwner) external;
-    }
-    
-    interface IReferralProgram {
-        function transferOwnership(address newOwner) external;
-    }
-
     // --- FUNÇÕES PROXY PARA TRANSFERIR OWNERSHIP DOS CONTRATOS FILHOS ---
+    // Usamos interface inline ou casting direto
     
     function transferStakingPoolOwnership(address newOwner) public onlyOwner {
         require(stakingPool != address(0), "StakingPool not set");
-        IStakingPool(stakingPool).transferOwnership(newOwner);
+        (bool success, ) = stakingPool.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "StakingPool transfer failed");
     }
 
     function transferMiningPoolOwnership(address newOwner) public onlyOwner {
         require(miningPool != address(0), "MiningPool not set");
-        IMiningPool(miningPool).transferOwnership(newOwner);
+        (bool success, ) = miningPool.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "MiningPool transfer failed");
     }
 
     function transferLIPTTokenOwnership(address newOwner) public onlyOwner {
         require(liptToken != address(0), "LIPTToken not set");
-        ILIPTToken(liptToken).transferOwnership(newOwner);
+        (bool success, ) = liptToken.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "LIPTToken transfer failed");
     }
 
     function transferSwapPoolOwnership(address newOwner) public onlyOwner {
         require(swapPool != address(0), "SwapPool not set");
-        ISwapPool(swapPool).transferOwnership(newOwner);
+        (bool success, ) = swapPool.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "SwapPool transfer failed");
     }
 
     function transferWheelOfFortuneOwnership(address newOwner) public onlyOwner {
         require(wheelOfFortune != address(0), "WheelOfFortune not set");
-        IWheelOfFortune(wheelOfFortune).transferOwnership(newOwner);
+        (bool success, ) = wheelOfFortune.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "WheelOfFortune transfer failed");
     }
 
     function transferRocketGameOwnership(address newOwner) public onlyOwner {
         require(rocketGame != address(0), "RocketGame not set");
-        IRocketGame(rocketGame).transferOwnership(newOwner);
+        (bool success, ) = rocketGame.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "RocketGame transfer failed");
     }
 
     function transferLotteryOwnership(address newOwner) public onlyOwner {
         require(lottery != address(0), "Lottery not set");
-        ILottery(lottery).transferOwnership(newOwner);
+        (bool success, ) = lottery.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "Lottery transfer failed");
     }
 
     function transferReferralProgramOwnership(address newOwner) public onlyOwner {
         require(referralProgram != address(0), "ReferralProgram not set");
-        IReferralProgram(referralProgram).transferOwnership(newOwner);
+        (bool success, ) = referralProgram.call(
+            abi.encodeWithSignature("transferOwnership(address)", newOwner)
+        );
+        require(success, "ReferralProgram transfer failed");
     }
 
     // Função para transferir ownership de todos os contratos filhos de uma vez
     function transferAllChildContractsOwnership(address newOwner) public onlyOwner {
         if (stakingPool != address(0)) {
-            try IStakingPool(stakingPool).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = stakingPool.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
+            if (!success) {
+                // Continuar mesmo se falhar
+            }
         }
         if (miningPool != address(0)) {
-            try IMiningPool(miningPool).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = miningPool.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
         if (liptToken != address(0)) {
-            try ILIPTToken(liptToken).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = liptToken.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
         if (swapPool != address(0)) {
-            try ISwapPool(swapPool).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = swapPool.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
         if (wheelOfFortune != address(0)) {
-            try IWheelOfFortune(wheelOfFortune).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = wheelOfFortune.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
         if (rocketGame != address(0)) {
-            try IRocketGame(rocketGame).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = rocketGame.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
         if (lottery != address(0)) {
-            try ILottery(lottery).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = lottery.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
         if (referralProgram != address(0)) {
-            try IReferralProgram(referralProgram).transferOwnership(newOwner) {} catch {}
+            (bool success, ) = referralProgram.call(
+                abi.encodeWithSignature("transferOwnership(address)", newOwner)
+            );
         }
     }
 

@@ -1,12 +1,16 @@
-# ⏳ Deploy em Andamento
+# 🚀 Deploy em Andamento
 
-## 🚀 Status
+## ✅ Status Atual
 
-O deploy completo foi iniciado e está rodando em background. Este processo pode levar **5-10 minutos**.
+**Deploy iniciado e rodando!**
+
+- ✅ Processos Node ativos detectados
+- ✅ Deploy rodando em background
+- ⏳ Aguardando conclusão (5-10 minutos)
 
 ## 📋 O Que Está Acontecendo
 
-O script está fazendo deploy de todos os 11 contratos na ordem correta:
+O script está fazendo deploy sequencial de todos os contratos:
 
 1. MockUSDT
 2. LIPT Token
@@ -20,27 +24,29 @@ O script está fazendo deploy de todos os 11 contratos na ordem correta:
 10. RocketGame
 11. Lottery
 
-Depois vai:
-- Configurar ProtocolController
-- Configurar TaxHandler
-- Transferir ownership para ProtocolController
-- Salvar todos os endereços
+Depois configura tudo e salva os endereços.
 
-## 📝 Após o Deploy
+## 🔍 Como Verificar
 
-Quando terminar, você encontrará:
-- Arquivo `contracts/deployment-addresses.json` com todos os endereços
-- Logs detalhados no console
-- Links do Polygonscan para cada contrato
-
-Depois execute:
+Execute no PowerShell:
 ```powershell
-node scripts/update-contracts-config.cjs
+cd C:\Users\morei\Desktop\DevadrianSwapLIPT\contracts
+Test-Path "deployment-addresses.json"
 ```
 
-Para atualizar o frontend automaticamente.
+Se retornar `True`, o deploy terminou!
 
-## ⏱️ Aguarde...
+## 🔄 Após Concluir
 
-O deploy está em andamento. Por favor, aguarde a conclusão!
+Quando o arquivo `deployment-addresses.json` existir, vou atualizar automaticamente o frontend.
+
+## ✅ Resultado Final
+
+Após concluir:
+- ✅ Novos contratos deployados
+- ✅ Frontend atualizado automaticamente
+- ✅ Admin e frontend usando novos endereços
+- ✅ ProtocolController funcionando com funções proxy
+
+**Aguarde a conclusão...** ⏳
 
