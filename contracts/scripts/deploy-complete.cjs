@@ -52,9 +52,14 @@ async function verifyContract(name, address, constructorArgs = []) {
 
 async function waitForConfirmations(txHash, confirmations = 1) {
   log(`   ⏳ Aguardando ${confirmations} confirmação(ões)...`, 'yellow');
-  const receipt = await hre.ethers.provider.waitForTransaction(txHash, confirmations);
-  log(`   ✅ Transação confirmada! Hash: ${txHash}`, 'green');
-  return receipt;
+  try {
+    const receipt = await hre.ethers.provider.waitForTransaction(txHash, confirmations, 120000); // timeout 2 minutos
+    log(`   ✅ Transação confirmada! Hash: ${txHash}`, 'green');
+    return receipt;
+  } catch (error) {
+    log(`   ⚠️  Timeout aguardando confirmações. Continuando...`, 'yellow');
+    throw error;
+  }
 }
 
 async function saveDeploymentAddresses(addresses) {
@@ -94,7 +99,8 @@ async function main() {
     const initialSupply = hre.ethers.parseUnits("1000000000", 18); // 1 bilhão
     log("   Deployando MockUSDT...", 'yellow');
     const mockUSDT = await MockUSDT.deploy(initialSupply);
-    await mockUSDT.waitForDeployment();
+    log("   ⏳ Aguardando confirmação do deployment (pode levar alguns minutos)...", 'yellow');
+    await mockUSDT.waitForDeployment({ timeout: 300000 }); // 5 minutos timeout
     const mockUSDTAddress = await mockUSDT.getAddress();
     deploymentAddresses.mockUsdt = mockUSDTAddress;
     log(`   ✅ MockUSDT deployado em: ${mockUSDTAddress}`, 'green');
