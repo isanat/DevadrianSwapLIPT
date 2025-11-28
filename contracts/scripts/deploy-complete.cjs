@@ -98,10 +98,11 @@ async function main() {
     const MockUSDT = await hre.ethers.getContractFactory("MockUSDT");
     const initialSupply = hre.ethers.parseUnits("1000000000", 18); // 1 bilhão
     log("   Deployando MockUSDT...", 'yellow');
-    const mockUSDT = await MockUSDT.deploy(initialSupply);
-    log("   ⏳ Aguardando confirmação do deployment (pode levar alguns minutos)...", 'yellow');
-    await mockUSDT.waitForDeployment({ timeout: 300000 }); // 5 minutos timeout
-    const mockUSDTAddress = await mockUSDT.getAddress();
+    const deployTx = await MockUSDT.deploy(initialSupply);
+    log("   ⏳ Transação de deploy enviada. Aguardando confirmação...", 'yellow');
+    log("   Hash da transação: " + (await deployTx.deploymentTransaction()?.hash || 'pending'), 'cyan');
+    await deployTx.waitForDeployment({ timeout: 600000 }); // 10 minutos timeout
+    const mockUSDTAddress = await deployTx.getAddress();
     deploymentAddresses.mockUsdt = mockUSDTAddress;
     log(`   ✅ MockUSDT deployado em: ${mockUSDTAddress}`, 'green');
     
